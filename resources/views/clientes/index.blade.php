@@ -13,10 +13,10 @@
                     <th>#</th>
                     <th>Nombre</th>
                     <th>Apellido</th>
+                    <th>Documento</th>
                     <th>CUIT</th>
                     <th>Teléfono</th>
                     <th>Email</th>
-                    <th>Localidad</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -26,10 +26,10 @@
                     <td>{{ $c->id }}</td>
                     <td>{{ $c->nombre }}</td>
                     <td>{{ $c->apellido }}</td>
+                    <td><small class="text-muted">{{ $c->tipo_documento }}:</small> {{ $c->numero_documento }}</td>
                     <td>{{ $c->cuit }}</td>
                     <td>{{ $c->telefono }}</td>
                     <td>{{ $c->email }}</td>
-                    <td>{{ $c->localidad }}</td>
                     <td>
                         @can('clientes.edit')<a href="{{ route('clientes.edit', $c) }}"
                             class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>@endcan

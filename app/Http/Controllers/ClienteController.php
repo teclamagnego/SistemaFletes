@@ -23,6 +23,8 @@ class ClienteController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'apellido' => 'nullable|string|max:255',
+            'tipo_documento' => 'required|string|max:20',
+            'numero_documento' => 'nullable|string|max:20',
             'cuit' => 'nullable|string|max:13',
             'email' => 'nullable|email',
         ]);
@@ -42,6 +44,8 @@ class ClienteController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'apellido' => 'nullable|string|max:255',
+            'tipo_documento' => 'required|string|max:20',
+            'numero_documento' => 'nullable|string|max:20',
             'cuit' => 'nullable|string|max:13',
             'email' => 'nullable|email',
         ]);

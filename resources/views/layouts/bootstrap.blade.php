@@ -55,6 +55,22 @@
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
+                    @can('agencies.index')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('agencies.*') ? 'active' : '' }}"
+                            href="{{ route('agencies.index') }}">
+                            <i class="bi bi-shop"></i> Agencias
+                        </a>
+                    </li>
+                    @endcan
+                    @can('shipments.index')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('shipments.*') ? 'active' : '' }}"
+                            href="{{ route('shipments.index') }}">
+                            <i class="bi bi-file-earmark-text"></i> Envíos
+                        </a>
+                    </li>
+                    @endcan
                     @can('clientes.index')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('clientes.*') ? 'active' : '' }}"
@@ -84,6 +100,14 @@
                         <a class="nav-link {{ request()->routeIs('articulos.*') ? 'active' : '' }}"
                             href="{{ route('articulos.index') }}">
                             <i class="bi bi-box-seam"></i> Artículos
+                        </a>
+                    </li>
+                    @endcan
+                    @can('carriers.index')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('carriers.*') ? 'active' : '' }}"
+                            href="{{ route('carriers.index') }}">
+                            <i class="bi bi-truck"></i> Transportistas
                         </a>
                     </li>
                     @endcan

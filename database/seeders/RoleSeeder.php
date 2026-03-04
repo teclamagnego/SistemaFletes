@@ -19,6 +19,9 @@ class RoleSeeder extends Seeder
             'rubros.index', 'rubros.create', 'rubros.edit', 'rubros.delete',
             'proveedores.index', 'proveedores.create', 'proveedores.edit', 'proveedores.delete',
             'articulos.index', 'articulos.create', 'articulos.edit', 'articulos.delete',
+            'agencies.index', 'agencies.create', 'agencies.edit', 'agencies.delete',
+            'carriers.index', 'carriers.create', 'carriers.edit', 'carriers.delete',
+            'shipments.index', 'shipments.create', 'shipments.view',
         ];
 
         foreach ($permissions as $permission) {
@@ -35,11 +38,14 @@ class RoleSeeder extends Seeder
             'rubros.index', 'rubros.create', 'rubros.edit',
             'proveedores.index', 'proveedores.create', 'proveedores.edit',
             'articulos.index', 'articulos.create', 'articulos.edit',
+            'agencies.index', 'agencies.create', 'agencies.edit',
+            'carriers.index', 'carriers.create', 'carriers.edit',
+            'shipments.index', 'shipments.create', 'shipments.view',
         ]);
 
         $consulta = Role::firstOrCreate(['name' => 'consulta']);
         $consulta->givePermissionTo([
-            'clientes.index', 'rubros.index', 'proveedores.index', 'articulos.index',
+            'clientes.index', 'rubros.index', 'proveedores.index', 'articulos.index', 'agencies.index', 'carriers.index', 'shipments.index', 'shipments.view',
         ]);
 
         // Usuario Admin

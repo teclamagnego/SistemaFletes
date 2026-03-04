@@ -7,6 +7,9 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\RubroController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ArticuloController;
+use App\Http\Controllers\AgencyController;
+use App\Http\Controllers\CarrierController;
+use App\Http\Controllers\ShipmentController;
 use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
@@ -46,6 +49,18 @@ Route::middleware('auth')->group(function () {
     // Artículos
     Route::resource('articulos', ArticuloController::class)->except(['show'])
         ->middleware('permission:articulos.index|articulos.create|articulos.edit|articulos.delete');
+
+    // Agencias
+    Route::resource('agencies', AgencyController::class)->except(['show'])
+        ->middleware('permission:agencies.index|agencies.create|agencies.edit|agencies.delete');
+
+    // Transportistas
+    Route::resource('carriers', CarrierController::class)->except(['show'])
+        ->middleware('permission:carriers.index|carriers.create|carriers.edit|carriers.delete');
+
+    // Envíos (Guías)
+    Route::resource('shipments', ShipmentController::class)->except(['edit', 'update', 'destroy'])
+        ->middleware('permission:shipments.index|shipments.create|shipments.view');
 });
 
 require __DIR__ . '/auth.php';
