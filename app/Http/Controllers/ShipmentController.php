@@ -8,6 +8,7 @@ use App\Models\ShipmentLog;
 use App\Models\Cliente;
 use App\Models\Agency;
 use App\Models\Carrier;
+use App\Models\FormaPago;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -25,10 +26,10 @@ class ShipmentController extends Controller
 
     public function create()
     {
-        $clientes = Cliente::all();
-        $agencies = Agency::where('activa', true)->get();
+        $agencies = Agency::where('activa', true)->orderBy('nombre')->get();
         $carriers = Carrier::where('activo', true)->get();
-        return view('shipments.create', compact('clientes', 'agencies', 'carriers'));
+        $formas_pago = FormaPago::orderBy('nombre')->get();
+        return view('shipments.create', compact('agencies', 'carriers', 'formas_pago'));
     }
 
     public function store(Request $request)
@@ -38,6 +39,9 @@ class ShipmentController extends Controller
             'receiver_id' => 'required|exists:clientes,id',
             'origin_agency_id' => 'required|exists:agencies,id',
             'destination_agency_id' => 'required|exists:agencies,id',
+            'fecha' => 'nullable|date',
+            'direccion_entrega' => 'nullable|string|max:255',
+            'forma_pago_id' => 'required|exists:forma_pagos,id',
             'total_flete' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.descripcion' => 'required|string|max:255',
@@ -56,7 +60,9 @@ class ShipmentController extends Controller
                 'destination_agency_id' => $request->destination_agency_id,
                 'carrier_id' => $request->carrier_id,
                 'commission_agency_id' => $request->origin_agency_id, // Default to origin
-                'payment_mode' => $request->payment_mode ?? 'PP',
+                'forma_pago_id' => $request->forma_pago_id,
+                'fecha' => $request->fecha,
+                'direccion_entrega' => $request->direccion_entrega,
                 'status' => 'Admitted',
                 'total_flete' => $request->total_flete,
                 'comision_monto' => $commissionMonto,

@@ -18,6 +18,39 @@ class ClienteController extends Controller
         return view('clientes.index', compact('clientes'));
     }
 
+    public function search(Request $request)
+    {
+        $query = $request->get('q');
+
+        $clientes = Cliente::where('nombre_fantasia', 'LIKE', "%{$query}%")
+            ->limit(10)
+            ->get(['id', 'nombre_fantasia', 'documento_nro']);
+
+        return response()->json($clientes);
+    }
+
+    public function storeQuick(Request $request)
+    {
+        $request->validate([
+            'nombre_fantasia' => 'required|string|max:255',
+            'direccion' => 'nullable|string|max:255',
+        ]);
+
+        $cliente = Cliente::create([
+            'nombre_fantasia' => $request->nombre_fantasia,
+            'direccion' => $request->direccion,
+            'tipodoc_id' => TipoDoc::first()->id ?? 1,
+            'documento_nro' => 'A CONFIRMAR',
+            'localidad_id' => Localidad::first()->id ?? 1,
+            'tipocuenta_id' => TipoCuenta::first()->id ?? 1,
+            'tipoiva_id' => TipoIva::first()->id ?? 1,
+            'agenciaorigen_id' => Agency::where('activa', true)->first()->id ?? 1,
+            'agenciadestino_id' => Agency::where('activa', true)->first()->id ?? 1,
+        ]);
+
+        return response()->json($cliente);
+    }
+
     public function create()
     {
         $tiposDoc = TipoDoc::all();

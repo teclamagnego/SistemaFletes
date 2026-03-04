@@ -17,7 +17,9 @@ class Shipment extends Model
         'destination_agency_id',
         'carrier_id',
         'commission_agency_id',
-        'payment_mode',
+        'forma_pago_id',
+        'fecha',
+        'direccion_entrega',
         'status',
         'total_flete',
         'comision_monto',
@@ -62,5 +64,10 @@ class Shipment extends Model
     public function logs()
     {
         return $this->hasMany(ShipmentLog::class);
+    }
+
+    public function formaPago()
+    {
+        return $this->belongsTo(FormaPago::class , 'forma_pago_id');
     }
 }

@@ -43,13 +43,13 @@
                         <div class="col-md-6">
                             <p><strong>Remitente:</strong> {{ $shipment->sender->nombre_fantasia }}</p>
                             <p><strong>Destinatario:</strong> {{ $shipment->receiver->nombre_fantasia }}</p>
-                            <p><strong>Origen:</strong> {{ $shipment->originAgency->name }}</p>
-                            <p><strong>Destino:</strong> {{ $shipment->destinationAgency->name }}</p>
+                            <p><strong>Origen:</strong> {{ $shipment->originAgency->nombre }}</p>
+                            <p><strong>Destino:</strong> {{ $shipment->destinationAgency->nombre }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Fecha Emisión:</strong> {{ $shipment->created_at->format('d/m/Y H:i') }}</p>
-                            <p><strong>Modo Pago:</strong> {{ $shipment->payment_mode == 'PP' ? 'Pagado en Origen' :
-                                'Pago en Destino' }}</p>
+                            <p><strong>Modo Pago:</strong> {{ $shipment->formaPago?->nombre ?? '-' }}</p>
+                            <p><strong>Fecha:</strong> {{ $shipment->fecha }}</p>
+                            <p><strong>Dirección Entrega:</strong> {{ $shipment->direccion_entrega ?? '-' }}</p>
                             <p><strong>Flete Total:</strong> ${{ number_format($shipment->total_flete, 2) }}</p>
                             <p><strong>Comisión Agencia:</strong> ${{ number_format($shipment->comision_monto, 2) }}</p>
                         </div>

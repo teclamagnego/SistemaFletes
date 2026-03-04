@@ -25,7 +25,7 @@
                     <td><strong>{{ $s->tracking_number }}</strong></td>
                     <td>{{ $s->sender->nombre_fantasia }}</td>
                     <td>{{ $s->receiver->nombre_fantasia }}</td>
-                    <td>{{ $s->originAgency->name }}</td>
+                    <td>{{ $s->originAgency->nombre }}</td>
                     <td>
                         @php
                         $badgeClass = match($s->status) {

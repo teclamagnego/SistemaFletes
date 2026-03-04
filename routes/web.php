@@ -36,6 +36,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:roles.index|roles.create|roles.edit|roles.delete');
 
     // Clientes
+    Route::get('clientes/search', [ClienteController::class , 'search'])->name('clientes.search')->middleware('permission:clientes.index');
+    Route::post('clientes/quick', [ClienteController::class , 'storeQuick'])->name('clientes.storeQuick')->middleware('permission:clientes.create');
     Route::resource('clientes', ClienteController::class)->except(['show'])
         ->middleware('permission:clientes.index|clientes.create|clientes.edit|clientes.delete');
 
