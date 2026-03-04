@@ -13,7 +13,8 @@
                     <th>Código</th>
                     <th>Nombre</th>
                     <th>Precio</th>
-                    <th>Stock</th>
+                    <th>Com. Origen</th>
+                    <th>Com. Destino</th>
                     <th>Rubros</th>
                     <th>Proveedores</th>
                     <th>Acciones</th>
@@ -25,7 +26,8 @@
                     <td><code>{{ $a->codigo }}</code></td>
                     <td>{{ $a->nombre }}</td>
                     <td>${{ number_format($a->precio, 2) }}</td>
-                    <td>{{ $a->stock }}</td>
+                    <td>{{ $a->com_origen }}%</td>
+                    <td>{{ $a->com_destino }}%</td>
                     <td>@foreach($a->rubros as $r)<span class="badge bg-info text-dark">{{ $r->nombre }}</span>
                         @endforeach</td>
                     <td>@foreach($a->proveedores as $p)<span class="badge bg-success">{{ $p->nombre }}</span>

@@ -63,6 +63,14 @@
                         </a>
                     </li>
                     @endcan
+                    @can('localidades.index')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('localidades.*') ? 'active' : '' }}"
+                            href="{{ route('localidades.index') }}">
+                            <i class="bi bi-geo-alt"></i> Localidades
+                        </a>
+                    </li>
+                    @endcan
                     @can('shipments.index')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('shipments.*') ? 'active' : '' }}"

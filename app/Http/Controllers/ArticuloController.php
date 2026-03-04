@@ -28,12 +28,13 @@ class ArticuloController extends Controller
             'codigo' => 'required|string|unique:articulos',
             'nombre' => 'required|string|max:255',
             'precio' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            'com_origen' => 'required|numeric|min:0|max:100',
+            'com_destino' => 'required|numeric|min:0|max:100',
             'rubros' => 'nullable|array',
             'proveedores' => 'nullable|array',
         ]);
 
-        $articulo = Articulo::create($request->only(['codigo', 'nombre', 'descripcion', 'precio', 'stock']));
+        $articulo = Articulo::create($request->only(['codigo', 'nombre', 'descripcion', 'precio', 'com_origen', 'com_destino']));
 
         if ($request->filled('rubros')) {
             $articulo->rubros()->sync($request->rubros);
@@ -65,12 +66,13 @@ class ArticuloController extends Controller
             'codigo' => 'required|string|unique:articulos,codigo,' . $articulo->id,
             'nombre' => 'required|string|max:255',
             'precio' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            'com_origen' => 'required|numeric|min:0|max:100',
+            'com_destino' => 'required|numeric|min:0|max:100',
             'rubros' => 'nullable|array',
             'proveedores' => 'nullable|array',
         ]);
 
-        $articulo->update($request->only(['codigo', 'nombre', 'descripcion', 'precio', 'stock']));
+        $articulo->update($request->only(['codigo', 'nombre', 'descripcion', 'precio', 'com_origen', 'com_destino']));
 
         $articulo->rubros()->sync($request->rubros ?? []);
 

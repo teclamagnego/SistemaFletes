@@ -11,6 +11,7 @@ use App\Http\Controllers\AgencyController;
 use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ShipmentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LocalidadController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -57,6 +58,10 @@ Route::middleware('auth')->group(function () {
     // Transportistas
     Route::resource('carriers', CarrierController::class)->except(['show'])
         ->middleware('permission:carriers.index|carriers.create|carriers.edit|carriers.delete');
+
+    // Localidades
+    Route::resource('localidades', LocalidadController::class)->except(['show'])
+        ->middleware('permission:localidades.index|localidades.create|localidades.edit|localidades.delete');
 
     // Envíos (Guías)
     Route::get('shipments/consolidation', [ShipmentController::class , 'consolidation'])->name('shipments.consolidation')

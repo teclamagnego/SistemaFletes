@@ -46,7 +46,7 @@ class ShipmentController extends Controller
 
         return DB::transaction(function () use ($request) {
             $originAgency = Agency::findOrFail($request->origin_agency_id);
-            $commissionMonto = $request->total_flete * ($originAgency->comision_porcentaje / 100);
+            $commissionMonto = $request->total_flete * ($originAgency->com_origen / 100);
 
             $shipment = Shipment::create([
                 'tracking_number' => 'G-' . strtoupper(Str::random(8)),

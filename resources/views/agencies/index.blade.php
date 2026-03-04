@@ -13,9 +13,9 @@
                     <th>Código</th>
                     <th>Nombre</th>
                     <th>Localidad</th>
-                    <th>Provincia</th>
                     <th>Teléfono</th>
-                    <th>Comisión %</th>
+                    <th>Com. Origen</th>
+                    <th>Com. Destino</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>

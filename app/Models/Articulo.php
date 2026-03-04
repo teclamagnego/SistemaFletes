@@ -14,7 +14,14 @@ class Articulo extends Model
         'nombre',
         'descripcion',
         'precio',
-        'stock',
+        'com_origen',
+        'com_destino',
+    ];
+
+    protected $casts = [
+        'precio' => 'decimal:2',
+        'com_origen' => 'decimal:2',
+        'com_destino' => 'decimal:2',
     ];
 
     public function rubros()

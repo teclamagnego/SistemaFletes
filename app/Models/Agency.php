@@ -13,16 +13,22 @@ class Agency extends Model
         'codigo',
         'nombre',
         'direccion',
-        'localidad',
-        'provincia',
+        'localidad_id',
         'telefono',
         'email',
-        'comision_porcentaje',
+        'com_origen',
+        'com_destino',
         'activa',
     ];
 
     protected $casts = [
-        'comision_porcentaje' => 'decimal:2',
+        'com_origen' => 'decimal:2',
+        'com_destino' => 'decimal:2',
         'activa' => 'boolean',
     ];
+
+    public function localidad()
+    {
+        return $this->belongsTo(Localidad::class);
+    }
 }

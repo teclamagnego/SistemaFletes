@@ -3,19 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agency;
+use App\Models\Localidad;
 use Illuminate\Http\Request;
 
 class AgencyController extends Controller
 {
     public function index()
     {
-        $agencies = Agency::paginate(15);
+        $agencies = Agency::with('localidad')->paginate(15);
         return view('agencies.index', compact('agencies'));
     }
 
     public function create()
     {
-        return view('agencies.create');
+        $localidades = Localidad::orderBy('nombre')->get();
+        return view('agencies.create', compact('localidades'));
     }
 
     public function store(Request $request)
@@ -24,7 +26,9 @@ class AgencyController extends Controller
             'codigo' => 'required|string|max:10|unique:agencies',
             'nombre' => 'required|string|max:255',
             'email' => 'nullable|email',
-            'comision_porcentaje' => 'required|numeric|min:0|max:100',
+            'localidad_id' => 'required|exists:localidades,id',
+            'com_origen' => 'required|numeric|min:0|max:100',
+            'com_destino' => 'required|numeric|min:0|max:100',
         ]);
 
         Agency::create($request->all());
@@ -34,7 +38,8 @@ class AgencyController extends Controller
 
     public function edit(Agency $agency)
     {
-        return view('agencies.edit', compact('agency'));
+        $localidades = Localidad::orderBy('nombre')->get();
+        return view('agencies.edit', compact('agency', 'localidades'));
     }
 
     public function update(Request $request, Agency $agency)
@@ -43,7 +48,9 @@ class AgencyController extends Controller
             'codigo' => 'required|string|max:10|unique:agencies,codigo,' . $agency->id,
             'nombre' => 'required|string|max:255',
             'email' => 'nullable|email',
-            'comision_porcentaje' => 'required|numeric|min:0|max:100',
+            'localidad_id' => 'required|exists:localidades,id',
+            'com_origen' => 'required|numeric|min:0|max:100',
+            'com_destino' => 'required|numeric|min:0|max:100',
         ]);
 
         $agency->update($request->all());
