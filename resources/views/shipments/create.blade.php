@@ -17,7 +17,7 @@
                                 <option value="">Seleccione Remitente...</option>
                                 @foreach($clientes as $c)
                                 <option value="{{ $c->id }}" {{ old('sender_id')==$c->id ? 'selected' : '' }}>{{
-                                    $c->nombre }} {{ $c->apellido }} ({{ $c->numero_documento }})</option>
+                                    $c->nombre_fantasia }} ({{ $c->documento_nro }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -28,7 +28,7 @@
                                 <option value="">Seleccione Destinatario...</option>
                                 @foreach($clientes as $c)
                                 <option value="{{ $c->id }}" {{ old('receiver_id')==$c->id ? 'selected' : '' }}>{{
-                                    $c->nombre }} {{ $c->apellido }} ({{ $c->numero_documento }})</option>
+                                    $c->nombre_fantasia }} ({{ $c->documento_nro }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -122,7 +122,7 @@
 </div>
 
 <script>
-    document.getElementById('addItem').addEventListener('click', function () {
+    document.getElementById('addItem').addEventListener('click', function  () {
         const tableBody = document.querySelector('#itemsTable tbody');
         const rowCount = tableBody.querySelectorAll('tr').length;
         const newRow = document.createElement('tr');
@@ -137,7 +137,7 @@
         tableBody.appendChild(newRow);
     });
 
-    document.querySelector('#itemsTable').addEventListener('click', function (e) {
+    document.querySelector('#itemsTable').addEventListener('click', functio n (e) {
         if (e.target.closest('.remove-item')) {
             e.target.closest('tr').remove();
         }

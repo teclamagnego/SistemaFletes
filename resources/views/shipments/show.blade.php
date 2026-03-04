@@ -41,10 +41,8 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Remitente:</strong> {{ $shipment->sender->nombre }} {{
-                                $shipment->sender->apellido }}</p>
-                            <p><strong>Destinatario:</strong> {{ $shipment->receiver->nombre }} {{
-                                $shipment->receiver->apellido }}</p>
+                            <p><strong>Remitente:</strong> {{ $shipment->sender->nombre_fantasia }}</p>
+                            <p><strong>Destinatario:</strong> {{ $shipment->receiver->nombre_fantasia }}</p>
                             <p><strong>Origen:</strong> {{ $shipment->originAgency->name }}</p>
                             <p><strong>Destino:</strong> {{ $shipment->destinationAgency->name }}</p>
                         </div>

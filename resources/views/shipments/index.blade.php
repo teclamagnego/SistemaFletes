@@ -23,8 +23,8 @@
                 @foreach($shipments as $s)
                 <tr>
                     <td><strong>{{ $s->tracking_number }}</strong></td>
-                    <td>{{ $s->sender->nombre }} {{ $s->sender->apellido }}</td>
-                    <td>{{ $s->receiver->nombre }} {{ $s->receiver->apellido }}</td>
+                    <td>{{ $s->sender->nombre_fantasia }}</td>
+                    <td>{{ $s->receiver->nombre_fantasia }}</td>
                     <td>{{ $s->originAgency->name }}</td>
                     <td>
                         @php

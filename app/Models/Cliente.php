@@ -10,16 +10,48 @@ class Cliente extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nombre',
-        'apellido',
+        'nombre_fantasia',
         'razon_social',
-        'tipo_documento',
-        'numero_documento',
-        'cuit',
+        'tipodoc_id',
+        'documento_nro',
         'telefono',
         'email',
         'direccion',
-        'localidad',
-        'provincia',
+        'localidad_id',
+        'tipocuenta_id',
+        'tipoiva_id',
+        'agenciaorigen_id',
+        'agenciadestino_id',
+        'observacion'
     ];
+
+    public function tipoDoc()
+    {
+        return $this->belongsTo(TipoDoc::class , 'tipodoc_id');
+    }
+
+    public function localidad()
+    {
+        return $this->belongsTo(Localidad::class , 'localidad_id');
+    }
+
+    public function tipoCuenta()
+    {
+        return $this->belongsTo(TipoCuenta::class , 'tipocuenta_id');
+    }
+
+    public function tipoIva()
+    {
+        return $this->belongsTo(TipoIva::class , 'tipoiva_id');
+    }
+
+    public function agenciaOrigen()
+    {
+        return $this->belongsTo(Agency::class , 'agenciaorigen_id');
+    }
+
+    public function agenciaDestino()
+    {
+        return $this->belongsTo(Agency::class , 'agenciadestino_id');
+    }
 }

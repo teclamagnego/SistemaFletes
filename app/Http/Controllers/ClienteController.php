@@ -3,29 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
+use App\Models\TipoDoc;
+use App\Models\Localidad;
+use App\Models\TipoCuenta;
+use App\Models\TipoIva;
+use App\Models\Agency;
 use Illuminate\Http\Request;
 
 class ClienteController extends Controller
 {
     public function index()
     {
-        $clientes = Cliente::paginate(15);
+        $clientes = Cliente::with(['tipoDoc', 'localidad', 'tipoCuenta', 'tipoIva', 'agenciaOrigen', 'agenciaDestino'])->paginate(15);
         return view('clientes.index', compact('clientes'));
     }
 
     public function create()
     {
-        return view('clientes.create');
+        $tiposDoc = TipoDoc::all();
+        $localidades = Localidad::all();
+        $tiposCuenta = TipoCuenta::all();
+        $tiposIva = TipoIva::all();
+        $agencies = Agency::all();
+
+        return view('clientes.create', compact('tiposDoc', 'localidades', 'tiposCuenta', 'tiposIva', 'agencies'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'nullable|string|max:255',
-            'tipo_documento' => 'required|string|max:20',
-            'numero_documento' => 'nullable|string|max:20',
-            'cuit' => 'nullable|string|max:13',
+            'nombre_fantasia' => 'required|string|max:255',
+            'tipodoc_id' => 'required|exists:tipos_doc,id',
+            'documento_nro' => 'required|string|max:20',
+            'localidad_id' => 'required|exists:localidades,id',
+            'tipocuenta_id' => 'required|exists:tipos_cuenta,id',
+            'tipoiva_id' => 'required|exists:tipos_iva,id',
+            'agenciaorigen_id' => 'required|exists:agencies,id',
+            'agenciadestino_id' => 'required|exists:agencies,id',
             'email' => 'nullable|email',
         ]);
 
@@ -36,17 +50,26 @@ class ClienteController extends Controller
 
     public function edit(Cliente $cliente)
     {
-        return view('clientes.edit', compact('cliente'));
+        $tiposDoc = TipoDoc::all();
+        $localidades = Localidad::all();
+        $tiposCuenta = TipoCuenta::all();
+        $tiposIva = TipoIva::all();
+        $agencies = Agency::all();
+
+        return view('clientes.edit', compact('cliente', 'tiposDoc', 'localidades', 'tiposCuenta', 'tiposIva', 'agencies'));
     }
 
     public function update(Request $request, Cliente $cliente)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'nullable|string|max:255',
-            'tipo_documento' => 'required|string|max:20',
-            'numero_documento' => 'nullable|string|max:20',
-            'cuit' => 'nullable|string|max:13',
+            'nombre_fantasia' => 'required|string|max:255',
+            'tipodoc_id' => 'required|exists:tipos_doc,id',
+            'documento_nro' => 'required|string|max:20',
+            'localidad_id' => 'required|exists:localidades,id',
+            'tipocuenta_id' => 'required|exists:tipos_cuenta,id',
+            'tipoiva_id' => 'required|exists:tipos_iva,id',
+            'agenciaorigen_id' => 'required|exists:agencies,id',
+            'agenciadestino_id' => 'required|exists:agencies,id',
             'email' => 'nullable|email',
         ]);
 

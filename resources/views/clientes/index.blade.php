@@ -11,12 +11,11 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
+                    <th>Nombre Fantasía</th>
                     <th>Documento</th>
-                    <th>CUIT</th>
-                    <th>Teléfono</th>
-                    <th>Email</th>
+                    <th>Localidad</th>
+                    <th>IVA / Cuenta</th>
+                    <th>Origen / Destino</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -24,12 +23,22 @@
                 @foreach($clientes as $c)
                 <tr>
                     <td>{{ $c->id }}</td>
-                    <td>{{ $c->nombre }}</td>
-                    <td>{{ $c->apellido }}</td>
-                    <td><small class="text-muted">{{ $c->tipo_documento }}:</small> {{ $c->numero_documento }}</td>
-                    <td>{{ $c->cuit }}</td>
-                    <td>{{ $c->telefono }}</td>
-                    <td>{{ $c->email }}</td>
+                    <td>
+                        <strong>{{ $c->nombre_fantasia }}</strong><br>
+                        <small class="text-muted">{{ $c->razon_social }}</small>
+                    </td>
+                    <td>
+                        <small class="text-muted">{{ $c->tipoDoc->codigo ?? 'N/A' }}:</small> {{ $c->documento_nro }}
+                    </td>
+                    <td>{{ $c->localidad->nombre ?? 'N/A' }}</td>
+                    <td>
+                        <span class="badge bg-info text-dark">{{ $c->tipoIva->nombre ?? 'N/A' }}</span><br>
+                        <small>{{ $c->tipoCuenta->nombre ?? 'N/A' }}</small>
+                    </td>
+                    <td>
+                        <small>De:</small> {{ $c->agenciaOrigen->nombre ?? 'N/A' }}<br>
+                        <small>A:</small> {{ $c->agenciaDestino->nombre ?? 'N/A' }}
+                    </td>
                     <td>
                         @can('clientes.edit')<a href="{{ route('clientes.edit', $c) }}"
                             class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>@endcan
