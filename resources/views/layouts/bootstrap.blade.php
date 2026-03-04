@@ -71,6 +71,14 @@
                         </a>
                     </li>
                     @endcan
+                    @can('shipments.index')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('shipments.consolidation') ? 'active' : '' }}"
+                            href="{{ route('shipments.consolidation') }}">
+                            <i class="bi bi-boxes"></i> Consolidación
+                        </a>
+                    </li>
+                    @endcan
                     @can('clientes.index')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('clientes.*') ? 'active' : '' }}"

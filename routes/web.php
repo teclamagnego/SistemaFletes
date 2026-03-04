@@ -59,6 +59,21 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:carriers.index|carriers.create|carriers.edit|carriers.delete');
 
     // Envíos (Guías)
+    Route::get('shipments/consolidation', [ShipmentController::class , 'consolidation'])->name('shipments.consolidation')
+        ->middleware('permission:shipments.index');
+
+    Route::post('shipments/{shipment}/receive', [ShipmentController::class , 'receive'])->name('shipments.receive')
+        ->middleware('permission:shipments.create');
+
+    Route::post('shipments/dispatch', [ShipmentController::class , 'dispatch'])->name('shipments.dispatch')
+        ->middleware('permission:shipments.create');
+
+    Route::post('shipments/{shipment}/arrive', [ShipmentController::class , 'arrive'])->name('shipments.arrive')
+        ->middleware('permission:shipments.create');
+
+    Route::post('shipments/{shipment}/deliver', [ShipmentController::class , 'deliver'])->name('shipments.deliver')
+        ->middleware('permission:shipments.create');
+
     Route::resource('shipments', ShipmentController::class)->except(['edit', 'update', 'destroy'])
         ->middleware('permission:shipments.index|shipments.create|shipments.view');
 });

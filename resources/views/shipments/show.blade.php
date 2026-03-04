@@ -4,7 +4,32 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Detalle de Guía: {{ $shipment->tracking_number }}</h2>
         <div>
-            <span class="badge {{ $shipment->status == 'Admitted' ? 'bg-info' : 'bg-primary' }} fs-6">{{
+            @if($shipment->status == 'Admitted')
+            <form action="{{ route('shipments.receive', $shipment) }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-success me-2"><i class="bi bi-box-arrow-in-down"></i> Recibir en
+                    Oficina</button>
+            </form>
+            @endif
+
+            @if($shipment->status == 'In Transit')
+            <form action="{{ route('shipments.arrive', $shipment) }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-warning me-2"><i class="bi bi-geo-fill"></i> Marcar Arribo en
+                    Destino</button>
+            </form>
+            @endif
+
+            @if($shipment->status == 'In Destination')
+            <form action="{{ route('shipments.deliver', $shipment) }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-primary me-2"><i class="bi bi-check-circle-fill"></i> Entregar al
+                </button>
+            </form>
+            @endif
+
+            <span
+                class="badge {{ $shipment->status == 'Admitted' ? 'bg-info' : ($shipment->status == 'Delivered' ? 'bg-dark' : 'bg-primary') }} fs-6">{{
                 $shipment->status }}</span>
         </div>
     </div>
