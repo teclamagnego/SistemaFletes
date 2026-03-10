@@ -9,6 +9,7 @@ use App\Models\Cliente;
 use App\Models\Agency;
 use App\Models\Carrier;
 use App\Models\FormaPago;
+use App\Models\Articulo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -28,8 +29,8 @@ class ShipmentController extends Controller
     {
         $agencies = Agency::where('activa', true)->orderBy('nombre')->get();
         $carriers = Carrier::where('activo', true)->get();
-        $formas_pago = FormaPago::orderBy('nombre')->get();
-        return view('shipments.create', compact('agencies', 'carriers', 'formas_pago'));
+        $formasPago = FormaPago::orderBy('nombre')->get();
+        return view('shipments.create', compact('agencies', 'carriers', 'formasPago'));
     }
 
     public function store(Request $request)
@@ -42,15 +43,24 @@ class ShipmentController extends Controller
             'fecha' => 'nullable|date',
             'direccion_entrega' => 'nullable|string|max:255',
             'forma_pago_id' => 'required|exists:forma_pagos,id',
-            'total_flete' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.descripcion' => 'required|string|max:255',
             'items.*.cantidad' => 'required|integer|min:1',
+            'items.*.precio_unitario' => 'required|numeric|min:0',
+            'items.*.bonificacion' => 'nullable|numeric|min:0',
+            'items.*.total' => 'required|numeric|min:0',
+            'items.*.articulo_id' => 'nullable|exists:articulos,id',
         ]);
 
         return DB::transaction(function () use ($request) {
+            // Calculate total from items if not provided or to ensure accuracy
+            $totalFlete = 0;
+            foreach ($request->items as $item) {
+                $totalFlete += $item['total'];
+            }
+
             $originAgency = Agency::findOrFail($request->origin_agency_id);
-            $commissionMonto = $request->total_flete * ($originAgency->com_origen / 100);
+            $commissionMonto = $totalFlete * ($originAgency->com_origen / 100);
 
             $shipment = Shipment::create([
                 'tracking_number' => 'G-' . strtoupper(Str::random(8)),
@@ -59,18 +69,26 @@ class ShipmentController extends Controller
                 'origin_agency_id' => $request->origin_agency_id,
                 'destination_agency_id' => $request->destination_agency_id,
                 'carrier_id' => $request->carrier_id,
-                'commission_agency_id' => $request->origin_agency_id, // Default to origin
+                'commission_agency_id' => $request->origin_agency_id,
                 'forma_pago_id' => $request->forma_pago_id,
-                'fecha' => $request->fecha,
+                'fecha' => $request->fecha ?? now(),
                 'direccion_entrega' => $request->direccion_entrega,
                 'status' => 'Admitted',
-                'total_flete' => $request->total_flete,
+                'total_flete' => $totalFlete,
                 'comision_monto' => $commissionMonto,
                 'notas' => $request->notas,
             ]);
 
             foreach ($request->items as $itemData) {
-                $shipment->items()->create($itemData);
+                $shipment->items()->create([
+                    'articulo_id' => $itemData['articulo_id'] ?? null,
+                    'descripcion' => $itemData['descripcion'],
+                    'cantidad' => $itemData['cantidad'],
+                    'precio_unitario' => $itemData['precio_unitario'],
+                    'bonificacion' => $itemData['bonificacion'] ?? 0,
+                    'total' => $itemData['total'],
+                    'iva' => $itemData['iva'] ?? 0, // Should be calculated or default if needed
+                ]);
             }
 
             ShipmentLog::create([
@@ -87,7 +105,7 @@ class ShipmentController extends Controller
 
     public function show(Shipment $shipment)
     {
-        $shipment->load(['sender', 'receiver', 'originAgency', 'destinationAgency', 'carrier', 'items', 'logs.user']);
+        $shipment->load(['sender', 'receiver', 'originAgency', 'destinationAgency', 'carrier', 'items.articulo', 'logs.user']);
         return view('shipments.show', compact('shipment'));
     }
 
@@ -114,7 +132,6 @@ class ShipmentController extends Controller
 
     public function consolidation()
     {
-        // Agrupamos las guías que están "In Office" por agencia de destino
         $groups = Shipment::where('status', 'In Office')
             ->with(['destinationAgency', 'sender', 'receiver'])
             ->get()

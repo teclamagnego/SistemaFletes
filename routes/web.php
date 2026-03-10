@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:proveedores.index|proveedores.create|proveedores.edit|proveedores.delete');
 
     // Artículos
+    Route::get('articulos/search', [ArticuloController::class , 'search'])->name('articulos.search')->middleware('permission:articulos.index');
     Route::resource('articulos', ArticuloController::class)->except(['show'])
         ->middleware('permission:articulos.index|articulos.create|articulos.edit|articulos.delete');
 

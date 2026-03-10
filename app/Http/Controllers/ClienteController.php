@@ -24,7 +24,7 @@ class ClienteController extends Controller
 
         $clientes = Cliente::where('nombre_fantasia', 'LIKE', "%{$query}%")
             ->limit(10)
-            ->get(['id', 'nombre_fantasia', 'documento_nro']);
+            ->get(['id', 'nombre_fantasia', 'documento_nro', 'direccion']);
 
         return response()->json($clientes);
     }

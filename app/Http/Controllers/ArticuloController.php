@@ -15,6 +15,18 @@ class ArticuloController extends Controller
         return view('articulos.index', compact('articulos'));
     }
 
+    public function search(Request $request)
+    {
+        $query = $request->get('q');
+
+        $articulos = Articulo::where('nombre', 'LIKE', "%{$query}%")
+            ->orWhere('codigo', 'LIKE', "%{$query}%")
+            ->limit(10)
+            ->get(['id', 'nombre', 'codigo', 'precio', 'descripcion']);
+
+        return response()->json($articulos);
+    }
+
     public function create()
     {
         $rubros = Rubro::all();
