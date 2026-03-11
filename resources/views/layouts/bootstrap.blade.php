@@ -73,41 +73,27 @@
                     @endcan
                     @can('shipments.index')
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('shipments.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('shipments.*') && !request()->routeIs('shipments.consolidation') ? 'active' : '' }}"
                             href="{{ route('shipments.index') }}">
                             <i class="bi bi-file-earmark-text"></i> Envíos
                         </a>
                     </li>
                     @endcan
                     @can('shipments.index')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('shipments.consolidation') ? 'active' : '' }}"
-                            href="{{ route('shipments.consolidation') }}">
-                            <i class="bi bi-boxes"></i> Consolidación
-                        </a>
-                    </li>
+                        @if(\App\Models\Carrier::where('activo', true)->count() > 1)
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('shipments.consolidation') ? 'active' : '' }}"
+                                href="{{ route('shipments.consolidation') }}">
+                                <i class="bi bi-boxes"></i> Consolidación
+                            </a>
+                        </li>
+                        @endif
                     @endcan
                     @can('clientes.index')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('clientes.*') ? 'active' : '' }}"
                             href="{{ route('clientes.index') }}">
                             <i class="bi bi-people"></i> Clientes
-                        </a>
-                    </li>
-                    @endcan
-                    @can('rubros.index')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('rubros.*') ? 'active' : '' }}"
-                            href="{{ route('rubros.index') }}">
-                            <i class="bi bi-tags"></i> Rubros
-                        </a>
-                    </li>
-                    @endcan
-                    @can('proveedores.index')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('proveedores.*') ? 'active' : '' }}"
-                            href="{{ route('proveedores.index') }}">
-                            <i class="bi bi-building"></i> Proveedores
                         </a>
                     </li>
                     @endcan
@@ -127,22 +113,28 @@
                         </a>
                     </li>
                     @endcan
-                    @can('users.index')
+                    @canany(['users.index', 'roles.index', 'formas_pago.index'])
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') || request()->routeIs('roles.*') ? 'active' : '' }}"
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('formas_pago.*') ? 'active' : '' }}"
                             href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-gear"></i> Admin
                         </a>
                         <ul class="dropdown-menu">
+                            @can('users.index')
                             <li><a class="dropdown-item" href="{{ route('users.index') }}"><i
                                         class="bi bi-person-gear"></i> Usuarios</a></li>
+                            @endcan
                             @can('roles.index')
                             <li><a class="dropdown-item" href="{{ route('roles.index') }}"><i
                                         class="bi bi-shield-lock"></i> Roles</a></li>
                             @endcan
+                            @can('formas_pago.index')
+                            <li><a class="dropdown-item" href="{{ route('formas_pago.index') }}"><i
+                                        class="bi bi-credit-card"></i> Formas de Pago</a></li>
+                            @endcan
                         </ul>
                     </li>
-                    @endcan
+                    @endcanany
                     @endauth
                 </ul>
                 <ul class="navbar-nav">

@@ -35,14 +35,19 @@ class ShipmentController extends Controller
 
     public function store(Request $request)
     {
+        $carriers = Carrier::where('activo', true)->get();
+        $singleCarrierId = $carriers->count() === 1 ? $carriers->first()->id : null;
+
         $request->validate([
             'sender_id' => 'required|exists:clientes,id',
             'receiver_id' => 'required|exists:clientes,id',
             'origin_agency_id' => 'required|exists:agencies,id',
             'destination_agency_id' => 'required|exists:agencies,id',
+            'carrier_id' => $singleCarrierId ? 'nullable' : 'required|exists:carriers,id',
             'fecha' => 'nullable|date',
             'direccion_entrega' => 'nullable|string|max:255',
             'forma_pago_id' => 'required|exists:forma_pagos,id',
+            'payer' => 'required|in:sender,receiver',
             'items' => 'required|array|min:1',
             'items.*.descripcion' => 'required|string|max:255',
             'items.*.cantidad' => 'required|integer|min:1',
@@ -52,8 +57,7 @@ class ShipmentController extends Controller
             'items.*.articulo_id' => 'nullable|exists:articulos,id',
         ]);
 
-        return DB::transaction(function () use ($request) {
-            // Calculate total from items if not provided or to ensure accuracy
+        return DB::transaction(function () use ($request, $singleCarrierId) {
             $totalFlete = 0;
             foreach ($request->items as $item) {
                 $totalFlete += $item['total'];
@@ -62,18 +66,22 @@ class ShipmentController extends Controller
             $originAgency = Agency::findOrFail($request->origin_agency_id);
             $commissionMonto = $totalFlete * ($originAgency->com_origen / 100);
 
+            $carrierId = $singleCarrierId ?? $request->carrier_id;
+            $status = $singleCarrierId ? 'In Transit' : 'Admitted';
+
             $shipment = Shipment::create([
                 'tracking_number' => 'G-' . strtoupper(Str::random(8)),
                 'sender_id' => $request->sender_id,
                 'receiver_id' => $request->receiver_id,
+                'cliente_id' => $request->payer === 'sender' ? $request->sender_id : $request->receiver_id,
                 'origin_agency_id' => $request->origin_agency_id,
                 'destination_agency_id' => $request->destination_agency_id,
-                'carrier_id' => $request->carrier_id,
+                'carrier_id' => $carrierId,
                 'commission_agency_id' => $request->origin_agency_id,
                 'forma_pago_id' => $request->forma_pago_id,
                 'fecha' => $request->fecha ?? now(),
                 'direccion_entrega' => $request->direccion_entrega,
-                'status' => 'Admitted',
+                'status' => $status,
                 'total_flete' => $totalFlete,
                 'comision_monto' => $commissionMonto,
                 'notas' => $request->notas,
@@ -87,7 +95,7 @@ class ShipmentController extends Controller
                     'precio_unitario' => $itemData['precio_unitario'],
                     'bonificacion' => $itemData['bonificacion'] ?? 0,
                     'total' => $itemData['total'],
-                    'iva' => $itemData['iva'] ?? 0, // Should be calculated or default if needed
+                    'iva' => $itemData['iva'] ?? 0,
                 ]);
             }
 
@@ -95,8 +103,8 @@ class ShipmentController extends Controller
                 'shipment_id' => $shipment->id,
                 'user_id' => Auth::id(),
                 'status_from' => 'None',
-                'status_to' => 'Admitted',
-                'notas' => 'Guía admitida en sistema.',
+                'status_to' => $status,
+                'notas' => $singleCarrierId ? 'Guía admitida y puesta en tránsito automáticamente.' : 'Guía admitida en sistema.',
             ]);
 
             return redirect()->route('shipments.index')->with('success', "Guía {$shipment->tracking_number} creada correctamente.");
@@ -105,7 +113,7 @@ class ShipmentController extends Controller
 
     public function show(Shipment $shipment)
     {
-        $shipment->load(['sender', 'receiver', 'originAgency', 'destinationAgency', 'carrier', 'items.articulo', 'logs.user']);
+        $shipment->load(['sender', 'receiver', 'cliente', 'originAgency', 'destinationAgency', 'carrier', 'items.articulo', 'logs.user']);
         return view('shipments.show', compact('shipment'));
     }
 

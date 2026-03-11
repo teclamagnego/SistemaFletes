@@ -12,6 +12,8 @@ use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ShipmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LocalidadController;
+use App\Http\Controllers\FormaPagoController;
+use App\Http\Controllers\ClienteReciboController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -38,8 +40,13 @@ Route::middleware('auth')->group(function () {
     // Clientes
     Route::get('clientes/search', [ClienteController::class , 'search'])->name('clientes.search')->middleware('permission:clientes.index');
     Route::post('clientes/quick', [ClienteController::class , 'storeQuick'])->name('clientes.storeQuick')->middleware('permission:clientes.create');
+    Route::get('clientes/{cliente}/history', [ClienteController::class , 'history'])->name('clientes.history')->middleware('permission:clientes.index');
     Route::resource('clientes', ClienteController::class)->except(['show'])
         ->middleware('permission:clientes.index|clientes.create|clientes.edit|clientes.delete');
+
+    // Recibos de Clientes
+    Route::resource('cliente_recibos', ClienteReciboController::class)->except(['show'])
+        ->middleware('permission:clientes.index');
 
     // Rubros
     Route::resource('rubros', RubroController::class)->except(['show'])
@@ -65,6 +72,10 @@ Route::middleware('auth')->group(function () {
     // Localidades
     Route::resource('localidades', LocalidadController::class)->except(['show'])
         ->middleware('permission:localidades.index|localidades.create|localidades.edit|localidades.delete');
+
+    // Forma de Pago
+    Route::resource('formas_pago', FormaPagoController::class)->except(['show'])
+        ->middleware('permission:formas_pago.index|formas_pago.create|formas_pago.edit|formas_pago.delete');
 
     // Envíos (Guías)
     Route::get('shipments/consolidation', [ShipmentController::class , 'consolidation'])->name('shipments.consolidation')

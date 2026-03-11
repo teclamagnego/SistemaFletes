@@ -13,6 +13,7 @@ class Shipment extends Model
         'tracking_number',
         'sender_id',
         'receiver_id',
+        'cliente_id',
         'origin_agency_id',
         'destination_agency_id',
         'carrier_id',
@@ -34,6 +35,11 @@ class Shipment extends Model
     public function receiver()
     {
         return $this->belongsTo(Cliente::class , 'receiver_id');
+    }
+
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class , 'cliente_id');
     }
 
     public function originAgency()

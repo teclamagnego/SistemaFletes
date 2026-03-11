@@ -40,6 +40,9 @@
                         <small>A:</small> {{ $c->agenciaDestino->nombre ?? 'N/A' }}
                     </td>
                     <td>
+                        <a href="{{ route('clientes.history', $c) }}" class="btn btn-sm btn-info" title="Estado de Cuenta">
+                            <i class="bi bi-file-earmark-bar-graph"></i>
+                        </a>
                         @can('clientes.edit')<a href="{{ route('clientes.edit', $c) }}"
                             class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>@endcan
                         @can('clientes.delete')

@@ -40,6 +40,12 @@
                                     <input type="hidden" name="sender_id" id="sender_id">
                                     <div id="sender_results" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none;"></div>
                                 </div>
+                                <div class="mt-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="payer" id="payer_sender" value="sender" checked>
+                                        <label class="form-check-label text-primary fw-bold" for="payer_sender">Paga Remitente</label>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label for="receiver_search" class="form-label fw-semibold">Destinatario</label>
@@ -47,6 +53,12 @@
                                     <input type="text" id="receiver_search" class="form-control" placeholder="Buscar cliente..." autocomplete="off">
                                     <input type="hidden" name="receiver_id" id="receiver_id">
                                     <div id="receiver_results" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none;"></div>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="payer" id="payer_receiver" value="receiver">
+                                        <label class="form-check-label text-primary fw-bold" for="payer_receiver">Paga Destinatario</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -73,16 +85,21 @@
                         </div>
 
                         <div class="row mb-4">
-                            <div class="col-md-4 mb-3">
-                                <label for="carrier_id" class="form-label fw-semibold">Transportista</label>
-                                <select name="carrier_id" id="carrier_id" class="form-select" required>
-                                    <option value="">Seleccionar...</option>
-                                    @foreach($carriers as $carrier)
-                                        <option value="{{ $carrier->id }}">{{ $carrier->nombre }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
+                            @if($carriers->count() === 1)
+                                <input type="hidden" name="carrier_id" value="{{ $carriers->first()->id }}">
+                            @else
+                                <div class="col-md-4 mb-3">
+                                    <label for="carrier_id" class="form-label fw-semibold">Transportista</label>
+                                    <select name="carrier_id" id="carrier_id" class="form-select" required>
+                                        <option value="">Seleccionar...</option>
+                                        @foreach($carriers as $carrier)
+                                            <option value="{{ $carrier->id }}">{{ $carrier->nombre }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+                            
+                            <div class="{{ $carriers->count() === 1 ? 'col-md-6' : 'col-md-4' }} mb-3">
                                 <label for="forma_pago_id" class="form-label fw-semibold">Forma de Pago</label>
                                 <select name="forma_pago_id" id="forma_pago_id" class="form-select" required>
                                     <option value="">Seleccionar...</option>
@@ -91,7 +108,8 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            
+                            <div class="{{ $carriers->count() === 1 ? 'col-md-6' : 'col-md-4' }} mb-3">
                                 <label for="direccion_entrega" class="form-label fw-semibold">Lugar de Entrega</label>
                                 <input type="text" name="direccion_entrega" id="direccion_entrega" class="form-control" placeholder="Dirección de entrega">
                             </div>

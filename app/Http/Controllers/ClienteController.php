@@ -8,6 +8,7 @@ use App\Models\Localidad;
 use App\Models\TipoCuenta;
 use App\Models\TipoIva;
 use App\Models\Agency;
+use App\Models\FormaPago;
 use Illuminate\Http\Request;
 
 class ClienteController extends Controller
@@ -49,6 +50,45 @@ class ClienteController extends Controller
         ]);
 
         return response()->json($cliente);
+    }
+
+    public function history(Cliente $cliente)
+    {
+        $shipments = $cliente->shipmentsPaid()->orderBy('fecha', 'desc')->get();
+        $recibos = $cliente->recibos()->orderBy('fecha', 'desc')->get();
+
+        // Identificar ID de Cuenta Corriente (usualmente 2 en base a los datos actuales)
+        $idCuentaCorriente = FormaPago::where('nombre', 'LIKE', '%Cuenta Corriente%')->first()?->id ?? 2;
+
+        // Combinar y ordenar por fecha para el estado de cuenta
+        $movimientos = collect();
+        foreach ($shipments as $s) {
+            $esCuentaCorriente = ($s->forma_pago_id == $idCuentaCorriente);
+            $movimientos->push([
+                'fecha' => $s->fecha,
+                'tipo' => 'Guía',
+                'referencia' => $s->tracking_number,
+                'detalle' => $s->formaPago?->nombre,
+                'debe' => $s->total_flete,
+                'haber' => $esCuentaCorriente ? 0 : $s->total_flete,
+                'link' => route('shipments.show', $s)
+            ]);
+        }
+        foreach ($recibos as $r) {
+            $movimientos->push([
+                'fecha' => $r->fecha,
+                'tipo' => 'Recibo',
+                'referencia' => $r->nro_recibo ?? 'Recibo #' . $r->id,
+                'detalle' => $r->formaPago?->nombre,
+                'debe' => 0,
+                'haber' => $r->monto,
+                'link' => null
+            ]);
+        }
+
+        $movimientos = $movimientos->sortBy('fecha');
+
+        return view('clientes.history', compact('cliente', 'movimientos'));
     }
 
     public function create()

@@ -54,4 +54,14 @@ class Cliente extends Model
     {
         return $this->belongsTo(Agency::class , 'agenciadestino_id');
     }
+
+    public function shipmentsPaid()
+    {
+        return $this->hasMany(Shipment::class , 'cliente_id');
+    }
+
+    public function recibos()
+    {
+        return $this->hasMany(ClienteRecibo::class);
+    }
 }

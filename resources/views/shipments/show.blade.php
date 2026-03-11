@@ -24,6 +24,7 @@
             <form action="{{ route('shipments.deliver', $shipment) }}" method="POST" class="d-inline">
                 @csrf
                 <button type="submit" class="btn btn-primary me-2"><i class="bi bi-check-circle-fill"></i> Entregar al
+                    Destinatario
                 </button>
             </form>
             @endif
@@ -36,65 +37,92 @@
 
     <div class="row">
         <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-header"><strong>Información General</strong></div>
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-white"><strong>Información General</strong></div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-6 border-end">
                             <p><strong>Remitente:</strong> {{ $shipment->sender->nombre_fantasia }}</p>
                             <p><strong>Destinatario:</strong> {{ $shipment->receiver->nombre_fantasia }}</p>
                             <p><strong>Origen:</strong> {{ $shipment->originAgency->nombre }}</p>
                             <p><strong>Destino:</strong> {{ $shipment->destinationAgency->nombre }}</p>
                         </div>
-                        <div class="col-md-6">
-                            <p><strong>Modo Pago:</strong> {{ $shipment->formaPago?->nombre ?? '-' }}</p>
+                        <div class="col-md-6 ps-md-4">
+                            <p><strong>Pagador:</strong> 
+                                <span class="badge bg-primary">
+                                    {{ $shipment->cliente->nombre_fantasia ?? $shipment->sender->nombre_fantasia }}
+                                </span>
+                            </p>
+                            <p><strong>Forma Pago:</strong> {{ $shipment->formaPago?->nombre ?? '-' }}</p>
                             <p><strong>Fecha:</strong> {{ $shipment->fecha }}</p>
                             <p><strong>Dirección Entrega:</strong> {{ $shipment->direccion_entrega ?? '-' }}</p>
-                            <p><strong>Flete Total:</strong> ${{ number_format($shipment->total_flete, 2) }}</p>
-                            <p><strong>Comisión Agencia:</strong> ${{ number_format($shipment->comision_monto, 2) }}</p>
+                            <p class="fs-5 text-primary"><strong>Flete Total:</strong> ${{ number_format($shipment->total_flete, 2) }}</p>
                         </div>
                     </div>
+                    @if($shipment->notas)
+                    <div class="mt-3 p-2 bg-light rounded border">
+                        <strong>Notas:</strong> {{ $shipment->notas }}
+                    </div>
+                    @endif
                 </div>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-header"><strong>Detalle de Items</strong></div>
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-white"><strong>Detalle de Items</strong></div>
                 <div class="card-body p-0">
-                    <table class="table table-striped mb-0">
-                        <thead>
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
                                 <th>Cant.</th>
-                                <th>Descripción</th>
-                                <th>Peso</th>
-                                <th>Dimensiones</th>
+                                <th>Artículo / Descripción</th>
+                                <th class="text-end">P. Unitario</th>
+                                <th class="text-end">Bonif. (%)</th>
+                                <th class="text-end">Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($shipment->items as $item)
                             <tr>
                                 <td>{{ $item->cantidad }}</td>
-                                <td>{{ $item->descripcion }}</td>
-                                <td>{{ $item->peso ? $item->peso . ' kg' : '-' }}</td>
-                                <td>{{ $item->dimensiones ?? '-' }}</td>
+                                <td>
+                                    @if($item->articulo)
+                                        <small class="text-muted d-block">{{ $item->articulo->codigo }}</small>
+                                    @endif
+                                    {{ $item->descripcion }}
+                                </td>
+                                <td class="text-end">${{ number_format($item->precio_unitario, 2) }}</td>
+                                <td class="text-end">{{ number_format($item->bonificacion, 2) }}%</td>
+                                <td class="text-end fw-bold">${{ number_format($item->total, 2) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="4" class="text-end fw-bold">TOTAL:</td>
+                                <td class="text-end fw-bold text-primary">${{ number_format($shipment->total_flete, 2) }}</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-header"><strong>Historial de Estados</strong></div>
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-white"><strong>Historial de Estados</strong></div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         @foreach($shipment->logs as $log)
-                        <li class="list-group-item ps-0">
-                            <div><small class="text-muted">{{ $log->created_at->format('d/m/Y H:i') }}</small></div>
-                            <strong>{{ $log->status_to }}</strong>
-                            <div class="small text-muted">Por: {{ $log->user->name }}</div>
-                            @if($log->notas)<div class="small mt-1 fst-italic">"{{ $log->notas }}"</div>@endif
+                        <li class="list-group-item ps-0 border-0 mb-3 pb-0">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle me-2" style="width: 10px; height: 10px;"></div>
+                                <small class="text-muted">{{ $log->created_at->format('d/m/Y H:i') }}</small>
+                            </div>
+                            <div class="ms-3 border-start ps-3 pb-2">
+                                <strong>{{ $log->status_to }}</strong>
+                                <div class="small text-muted">Por: {{ $log->user->name }}</div>
+                                @if($log->notas)<div class="small mt-1 text-secondary">"{{ $log->notas }}"</div>@endif
+                            </div>
                         </li>
                         @endforeach
                     </ul>
@@ -104,7 +132,7 @@
     </div>
 
     <div class="mb-5">
-        <a href="{{ route('shipments.index') }}" class="btn btn-secondary">Volver al Listado</a>
+        <a href="{{ route('shipments.index') }}" class="btn btn-secondary px-4">Volver al Listado</a>
     </div>
 </div>
 @endsection

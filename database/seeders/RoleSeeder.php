@@ -22,6 +22,7 @@ class RoleSeeder extends Seeder
             'agencies.index', 'agencies.create', 'agencies.edit', 'agencies.delete',
             'carriers.index', 'carriers.create', 'carriers.edit', 'carriers.delete',
             'localidades.index', 'localidades.create', 'localidades.edit', 'localidades.delete',
+            'formas_pago.index', 'formas_pago.create', 'formas_pago.edit', 'formas_pago.delete',
             'shipments.index', 'shipments.create', 'shipments.view',
         ];
 
