@@ -37,6 +37,10 @@
                         @endif
                     </td>
                     <td>
+                        <a href="{{ route('agencies.shipments', $a) }}" class="btn btn-sm btn-outline-info"
+                            title="Historial de envíos">
+                            <i class="bi bi-clock-history"></i>
+                        </a>
                         @can('agencies.edit')<a href="{{ route('agencies.edit', $a) }}"
                             class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>@endcan
                         @can('agencies.delete')

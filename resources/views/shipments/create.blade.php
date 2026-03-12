@@ -419,6 +419,29 @@
         setupAutocomplete('sender_search', 'sender_id', 'sender_results');
         setupAutocomplete('receiver_search', 'receiver_id', 'receiver_results');
 
+        // Event delegation para el botón "Agregar Cliente" (generado dinámicamente con innerHTML)
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-quick-client');
+            if (!btn) return;
+            e.preventDefault();
+
+            const targetInputId = btn.getAttribute('data-target-input');
+            const targetHiddenId = btn.getAttribute('data-target-hidden');
+
+            // Completamos el nombre sugerido desde el campo de búsqueda
+            const searchInput = document.getElementById(targetInputId);
+            document.getElementById('qc_nombre_fantasia').value = searchInput ? searchInput.value.trim() : '';
+            document.getElementById('qc_direccion').value = '';
+            document.getElementById('qc_target_input').value = targetInputId;
+            document.getElementById('qc_target_hidden').value = targetHiddenId;
+
+            // Ocultar el dropdown antes de abrir el modal
+            const resultsEl = document.getElementById(targetInputId === 'sender_search' ? 'sender_results' : 'receiver_results');
+            if (resultsEl) resultsEl.style.display = 'none';
+
+            quickClientModal.show();
+        });
+
         document.getElementById('quickClientForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const btn = document.getElementById('qc_submit_btn');

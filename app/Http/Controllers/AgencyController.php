@@ -58,6 +58,28 @@ class AgencyController extends Controller
         return redirect()->route('agencies.index')->with('success', 'Agencia actualizada correctamente.');
     }
 
+    public function shipments(Agency $agency, \Illuminate\Http\Request $request)
+    {
+        $tab = $request->get('tab', 'all'); // 'origin', 'destination', 'all'
+
+        $query = \App\Models\Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency', 'formaPago'])
+            ->when($tab === 'origin', fn($q) => $q->where('origin_agency_id', $agency->id))
+            ->when($tab === 'destination', fn($q) => $q->where('destination_agency_id', $agency->id))
+            ->when($tab === 'all', fn($q) => $q->where(function ($q) use ($agency) {
+            $q->where('origin_agency_id', $agency->id)
+                ->orWhere('destination_agency_id', $agency->id);
+        }
+        ))
+            ->orderByDesc('created_at');
+
+        $shipments = $query->paginate(20)->appends($request->query());
+
+        $totalOrigen = \App\Models\Shipment::where('origin_agency_id', $agency->id)->count();
+        $totalDestino = \App\Models\Shipment::where('destination_agency_id', $agency->id)->count();
+
+        return view('agencies.shipments', compact('agency', 'shipments', 'tab', 'totalOrigen', 'totalDestino'));
+    }
+
     public function destroy(Agency $agency)
     {
         $agency->delete();

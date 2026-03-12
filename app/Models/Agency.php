@@ -31,4 +31,14 @@ class Agency extends Model
     {
         return $this->belongsTo(Localidad::class);
     }
+
+    public function shipmentsAsOrigin()
+    {
+        return $this->hasMany(\App\Models\Shipment::class , 'origin_agency_id');
+    }
+
+    public function shipmentsAsDestination()
+    {
+        return $this->hasMany(\App\Models\Shipment::class , 'destination_agency_id');
+    }
 }

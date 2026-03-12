@@ -62,6 +62,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:articulos.index|articulos.create|articulos.edit|articulos.delete');
 
     // Agencias
+    Route::get('agencies/{agency}/shipments', [AgencyController::class , 'shipments'])->name('agencies.shipments')
+        ->middleware('permission:agencies.index');
     Route::resource('agencies', AgencyController::class)->except(['show'])
         ->middleware('permission:agencies.index|agencies.create|agencies.edit|agencies.delete');
 
