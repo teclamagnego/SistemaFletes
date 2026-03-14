@@ -42,21 +42,23 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 border-end">
-                            <p><strong>Remitente:</strong> {{ $shipment->sender->nombre_fantasia }}</p>
-                            <p><strong>Destinatario:</strong> {{ $shipment->receiver->nombre_fantasia }}</p>
-                            <p><strong>Origen:</strong> {{ $shipment->originAgency->nombre }}</p>
-                            <p><strong>Destino:</strong> {{ $shipment->destinationAgency->nombre }}</p>
+                            <p><strong>Remitente:</strong> {{ $shipment->sender?->nombre_fantasia ?? 'N/A' }}</p>
+                            <p><strong>Destinatario:</strong> {{ $shipment->receiver?->nombre_fantasia ?? 'N/A' }}</p>
+                            <p><strong>Origen:</strong> {{ $shipment->originAgency?->nombre ?? 'N/A' }}</p>
+                            <p><strong>Destino:</strong> {{ $shipment->destinationAgency?->nombre ?? 'N/A' }}</p>
                         </div>
                         <div class="col-md-6 ps-md-4">
-                            <p><strong>Pagador:</strong> 
+                            <p><strong>Pagador:</strong>
                                 <span class="badge bg-primary">
-                                    {{ $shipment->cliente->nombre_fantasia ?? $shipment->sender->nombre_fantasia }}
+                                    {{ $shipment->cliente?->nombre_fantasia ?? $shipment->sender?->nombre_fantasia ??
+                                    'N/A' }}
                                 </span>
                             </p>
                             <p><strong>Forma Pago:</strong> {{ $shipment->formaPago?->nombre ?? '-' }}</p>
                             <p><strong>Fecha:</strong> {{ $shipment->fecha }}</p>
                             <p><strong>Dirección Entrega:</strong> {{ $shipment->direccion_entrega ?? '-' }}</p>
-                            <p class="fs-5 text-primary"><strong>Flete Total:</strong> ${{ number_format($shipment->total_flete, 2) }}</p>
+                            <p class="fs-5 text-primary"><strong>Flete Total:</strong> ${{
+                                number_format($shipment->total_flete, 2) }}</p>
                         </div>
                     </div>
                     @if($shipment->notas)
@@ -86,7 +88,7 @@
                                 <td>{{ $item->cantidad }}</td>
                                 <td>
                                     @if($item->articulo)
-                                        <small class="text-muted d-block">{{ $item->articulo->codigo }}</small>
+                                    <small class="text-muted d-block">{{ $item->articulo->codigo }}</small>
                                     @endif
                                     {{ $item->descripcion }}
                                 </td>
@@ -99,7 +101,8 @@
                         <tfoot>
                             <tr class="table-light">
                                 <td colspan="4" class="text-end fw-bold">TOTAL:</td>
-                                <td class="text-end fw-bold text-primary">${{ number_format($shipment->total_flete, 2) }}</td>
+                                <td class="text-end fw-bold text-primary">${{ number_format($shipment->total_flete, 2)
+                                    }}</td>
                             </tr>
                         </tfoot>
                     </table>

@@ -23,9 +23,9 @@
                 @foreach($shipments as $s)
                 <tr>
                     <td><strong>{{ $s->tracking_number }}</strong></td>
-                    <td>{{ $s->sender->nombre_fantasia }}</td>
-                    <td>{{ $s->receiver->nombre_fantasia }}</td>
-                    <td>{{ $s->originAgency->nombre }}</td>
+                    <td>{{ $s->sender?->nombre_fantasia ?? 'N/A' }}</td>
+                    <td>{{ $s->receiver?->nombre_fantasia ?? 'N/A' }}</td>
+                    <td>{{ $s->originAgency?->nombre ?? 'N/A' }}</td>
                     <td>
                         @php
                         $badgeClass = match($s->status) {
