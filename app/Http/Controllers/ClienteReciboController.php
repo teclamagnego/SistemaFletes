@@ -5,10 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\ClienteRecibo;
 use App\Models\Cliente;
 use App\Models\FormaPago;
+use App\Models\Empresa;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ClienteReciboController extends Controller
 {
+    public function print(ClienteRecibo $recibo)
+    {
+        $recibo->load(['cliente', 'formaPago']);
+        $empresa = Empresa::first();
+        $pdf = Pdf::loadView('cliente_recibos.print', compact('recibo', 'empresa'));
+        return $pdf->stream("Recibo_{$recibo->id}.pdf");
+    }
+
     public function index()
     {
         $recibos = ClienteRecibo::with(['cliente', 'formaPago'])->latest()->paginate(15);
@@ -20,7 +30,15 @@ class ClienteReciboController extends Controller
         $clientes = Cliente::orderBy('nombre_fantasia')->get();
         $formasPago = FormaPago::orderBy('nombre')->get();
         $selected_cliente_id = $request->get('cliente_id');
-        return view('cliente_recibos.create', compact('clientes', 'formasPago', 'selected_cliente_id'));
+
+        $saldo = 0;
+        if ($selected_cliente_id) {
+            $totalFacturas = \App\Models\ClienteFactura::where('cliente_id', $selected_cliente_id)->sum('total');
+            $totalRecibos = \App\Models\ClienteRecibo::where('cliente_id', $selected_cliente_id)->sum('monto');
+            $saldo = $totalFacturas - $totalRecibos;
+        }
+
+        return view('cliente_recibos.create', compact('clientes', 'formasPago', 'selected_cliente_id', 'saldo'));
     }
 
     public function store(Request $request)
@@ -36,7 +54,7 @@ class ClienteReciboController extends Controller
 
         ClienteRecibo::create($request->all());
 
-        return redirect()->route('cliente_recibos.index')->with('success', 'Recibo creado correctamente.');
+        return redirect()->route('clientes.history', $request->cliente_id)->with('success', 'Recibo creado correctamente.');
     }
 
     public function edit(ClienteRecibo $clienteRecibo)

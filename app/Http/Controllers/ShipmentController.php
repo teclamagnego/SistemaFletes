@@ -14,15 +14,53 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ShipmentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $shipments = Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency'])
-            ->latest()
-            ->paginate(15);
-        return view('shipments.index', compact('shipments'));
+        $query = Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency']);
+
+        // Filtro por guía (tracking number)
+        if ($request->filled('tracking_number')) {
+            $query->where('tracking_number', 'LIKE', "%{$request->tracking_number}%");
+        }
+
+        // Filtro por remitente o destinatario (vía relación con cliente)
+        if ($request->filled('cliente')) {
+            $clienteSearch = $request->cliente;
+            $query->where(function ($q) use ($clienteSearch) {
+                $q->whereHas('sender', function ($sq) use ($clienteSearch) {
+                        $sq->where('nombre_fantasia', 'LIKE', "%{$clienteSearch}%")
+                            ->orWhere('razon_social', 'LIKE', "%{$clienteSearch}%");
+                    }
+                    )->orWhereHas('receiver', function ($sq) use ($clienteSearch) {
+                        $sq->where('nombre_fantasia', 'LIKE', "%{$clienteSearch}%")
+                            ->orWhere('razon_social', 'LIKE', "%{$clienteSearch}%");
+                    }
+                    );
+                });
+        }
+
+        // Filtro por agencia (origen o destino)
+        if ($request->filled('agency_id')) {
+            $agencyId = $request->agency_id;
+            $query->where(function ($q) use ($agencyId) {
+                $q->where('origin_agency_id', $agencyId)
+                    ->orWhere('destination_agency_id', $agencyId);
+            });
+        }
+
+        // Filtro por estado
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $shipments = $query->latest()->paginate(15)->withQueryString();
+        $agencies = Agency::orderBy('nombre')->get();
+
+        return view('shipments.index', compact('shipments', 'agencies'));
     }
 
     public function create()
@@ -220,5 +258,32 @@ class ShipmentController extends Controller
         });
 
         return back()->with('success', "Guía {$shipment->tracking_number} entregada correctamente.");
+    }
+
+    public function print(Shipment $shipment)
+    {
+        $shipment->load([
+            'sender.localidad',
+            'receiver.localidad',
+            'originAgency.localidad',
+            'destinationAgency.localidad',
+            'items.articulo',
+            'formaPago'
+        ]);
+
+        $empresa = \App\Models\Empresa::first();
+        $sucursal = \App\Models\Sucursal::first();
+
+        $logoBase64 = null;
+        if ($empresa && $empresa->logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($empresa->logo)) {
+            $path = storage_path('app/public/' . $empresa->logo);
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+
+        $pdf = Pdf::loadView('shipments.pdf', compact('shipment', 'empresa', 'sucursal', 'logoBase64'));
+
+        return $pdf->stream("Guia_{$shipment->tracking_number}.pdf");
     }
 }

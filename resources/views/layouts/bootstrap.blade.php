@@ -80,14 +80,14 @@
                     </li>
                     @endcan
                     @can('shipments.index')
-                        @if(\App\Models\Carrier::where('activo', true)->count() > 1)
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('shipments.consolidation') ? 'active' : '' }}"
-                                href="{{ route('shipments.consolidation') }}">
-                                <i class="bi bi-boxes"></i> Consolidación
-                            </a>
-                        </li>
-                        @endif
+                    @if(\App\Models\Carrier::where('activo', true)->count() > 1)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('shipments.consolidation') ? 'active' : '' }}"
+                            href="{{ route('shipments.consolidation') }}">
+                            <i class="bi bi-boxes"></i> Consolidación
+                        </a>
+                    </li>
+                    @endif
                     @endcan
                     @can('clientes.index')
                     <li class="nav-item">
@@ -113,9 +113,9 @@
                         </a>
                     </li>
                     @endcan
-                    @canany(['users.index', 'roles.index', 'formas_pago.index'])
+                    @canany(['users.index', 'roles.index', 'formas_pago.index', 'empresas.index', 'sucursales.index'])
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('formas_pago.*') ? 'active' : '' }}"
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('formas_pago.*') || request()->routeIs('empresas.*') || request()->routeIs('sucursales.*') ? 'active' : '' }}"
                             href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-gear"></i> Admin
                         </a>
@@ -132,6 +132,13 @@
                             <li><a class="dropdown-item" href="{{ route('formas_pago.index') }}"><i
                                         class="bi bi-credit-card"></i> Formas de Pago</a></li>
                             @endcan
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{{ route('empresas.index') }}"><i
+                                        class="bi bi-buildings"></i> Empresas</a></li>
+                            <li><a class="dropdown-item" href="{{ route('sucursales.index') }}"><i
+                                        class="bi bi-shop"></i> Sucursales</a></li>
                         </ul>
                     </li>
                     @endcanany

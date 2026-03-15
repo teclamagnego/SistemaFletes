@@ -25,10 +25,10 @@
                 <tr>
                     <td><code>{{ $a->codigo }}</code></td>
                     <td>{{ $a->nombre }}</td>
-                    <td>{{ $a->localidad }}</td>
-                    <td>{{ $a->provincia }}</td>
+                    <td>{{ $a->localidad?->nombre }}</td>
                     <td>{{ $a->telefono }}</td>
-                    <td>{{ $a->comision_porcentaje }}%</td>
+                    <td>{{ $a->com_origen }}%</td>
+                    <td>{{ $a->com_destino }}%</td>
                     <td>
                         @if($a->activa)
                         <span class="badge bg-success">Activa</span>
@@ -37,17 +37,29 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('agencies.shipments', $a) }}" class="btn btn-sm btn-outline-info"
-                            title="Historial de envíos">
-                            <i class="bi bi-clock-history"></i>
-                        </a>
-                        @can('agencies.edit')<a href="{{ route('agencies.edit', $a) }}"
-                            class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>@endcan
-                        @can('agencies.delete')
-                        <form action="{{ route('agencies.destroy', $a) }}" method="POST" class="d-inline"
-                            onsubmit="return confirm('¿Eliminar agencia?')">@csrf @method('DELETE')<button
-                                class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button></form>
-                        @endcan
+                        <div class="btn-group">
+                            <a href="{{ route('agencies.history', $a) }}" class="btn btn-sm btn-outline-primary"
+                                title="Cuenta Corriente">
+                                <i class="bi bi-wallet2"></i>
+                            </a>
+                            <a href="{{ route('agencies.billing', $a) }}" class="btn btn-sm btn-outline-success"
+                                title="Facturar Comisiones">
+                                <i class="bi bi-receipt"></i>
+                            </a>
+                            <a href="{{ route('agencies.shipments', $a) }}" class="btn btn-sm btn-outline-info"
+                                title="Historial de envíos">
+                                <i class="bi bi-clock-history"></i>
+                            </a>
+                            @can('agencies.edit')<a href="{{ route('agencies.edit', $a) }}"
+                                class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>@endcan
+                            @can('agencies.delete')
+                            <form action="{{ route('agencies.destroy', $a) }}" method="POST" class="d-inline"
+                                onsubmit="return confirm('¿Eliminar agencia?')">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                            @endcan
+                        </div>
                     </td>
                 </tr>
                 @endforeach

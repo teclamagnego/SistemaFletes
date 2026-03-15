@@ -29,6 +29,10 @@
             </form>
             @endif
 
+            <a href="{{ route('shipments.print', $shipment) }}" target="_blank" class="btn btn-outline-dark me-2">
+                <i class="bi bi-printer"></i> Imprimir Guía
+            </a>
+
             <span
                 class="badge {{ $shipment->status == 'Admitted' ? 'bg-info' : ($shipment->status == 'Delivered' ? 'bg-dark' : 'bg-primary') }} fs-6">{{
                 $shipment->status }}</span>

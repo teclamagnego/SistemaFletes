@@ -5,31 +5,31 @@
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold">Nuevo Recibo de Cliente</h5>
+                <h5 class="mb-0 fw-bold">Registrar Pago a Agencia</h5>
             </div>
             <div class="card-body p-4">
-                <form action="{{ route('cliente_recibos.store') }}" method="POST">
+                <form action="{{ route('agencia_recibos.store') }}" method="POST">
                     @csrf
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="cliente_id" class="form-label fw-semibold">Cliente</label>
-                            <select name="cliente_id" id="cliente_id"
-                                class="form-select @error('cliente_id') is-invalid @enderror" required
-                                onchange="window.location.href = '{{ route('cliente_recibos.create') }}?cliente_id=' + this.value">
-                                <option value="">Seleccionar Cliente...</option>
-                                @foreach($clientes as $cliente)
-                                <option value="{{ $cliente->id }}" {{ (old('cliente_id')==$cliente->id ||
-                                    $selected_cliente_id == $cliente->id) ? 'selected' : '' }}>
-                                    {{ $cliente->nombre_fantasia }}
+                            <label for="agency_id" class="form-label fw-semibold">Agencia</label>
+                            <select name="agency_id" id="agency_id"
+                                class="form-select @error('agency_id') is-invalid @enderror" required
+                                onchange="window.location.href = '{{ route('agencia_recibos.create') }}?agency_id=' + this.value">
+                                <option value="">Seleccionar Agencia...</option>
+                                @foreach($agencies as $agency)
+                                <option value="{{ $agency->id }}" {{ (old('agency_id')==$agency->id ||
+                                    $selected_agency_id == $agency->id) ? 'selected' : '' }}>
+                                    {{ $agency->nombre }}
                                 </option>
                                 @endforeach
                             </select>
-                            @if($selected_cliente_id)
-                            <div class="mt-2 text-primary fw-bold">
-                                Saldo Pendiente: $ {{ number_format($saldo, 2) }}
+                            @if($selected_agency_id)
+                            <div class="mt-2 text-danger fw-bold">
+                                Saldo Pendiente (Comisiones): $ {{ number_format($saldo, 2) }}
                             </div>
                             @endif
-                            @error('cliente_id')
+                            @error('agency_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -46,7 +46,7 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="monto" class="form-label fw-semibold">Monto</label>
+                            <label for="monto" class="form-label fw-semibold">Monto Pagado</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="number" step="0.01" name="monto" id="monto"
@@ -75,10 +75,10 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="nro_recibo" class="form-label fw-semibold">Nro. de Recibo (Opcional)</label>
+                        <label for="nro_recibo" class="form-label fw-semibold">Nro. de Comprobante / Recibo</label>
                         <input type="text" name="nro_recibo" id="nro_recibo"
                             class="form-control @error('nro_recibo') is-invalid @enderror"
-                            value="{{ old('nro_recibo') }}">
+                            value="{{ old('nro_recibo') }}" placeholder="Ej: 0001-12345678">
                         @error('nro_recibo')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -94,9 +94,9 @@
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 pt-3">
-                        <a href="{{ $selected_cliente_id ? route('clientes.history', $selected_cliente_id) : route('cliente_recibos.index') }}"
+                        <a href="{{ $selected_agency_id ? route('agencies.history', $selected_agency_id) : route('agencies.index') }}"
                             class="btn btn-light px-4">Cancelar</a>
-                        <button type="submit" class="btn btn-primary px-4">Guardar Recibo</button>
+                        <button type="submit" class="btn btn-primary px-4">Registrar Pago</button>
                     </div>
                 </form>
             </div>

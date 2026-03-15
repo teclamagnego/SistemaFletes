@@ -9,7 +9,13 @@ use App\Models\TipoCuenta;
 use App\Models\TipoIva;
 use App\Models\Agency;
 use App\Models\FormaPago;
+use App\Models\Shipment;
+use App\Models\ClienteFactura;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ShipmentsBillingExport;
 
 class ClienteController extends Controller
 {
@@ -21,12 +27,12 @@ class ClienteController extends Controller
 
     public function search(Request $request)
     {
-        $query = $request->get('q');
-
-        $clientes = Cliente::where('nombre_fantasia', 'LIKE', "%{$query}%")
+        $q = $request->query('q');
+        $clientes = Cliente::where('nombre_fantasia', 'LIKE', "%$q%")
+            ->orWhere('razon_social', 'LIKE', "%$q%")
+            ->orWhere('documento_nro', 'LIKE', "%$q%")
             ->limit(10)
-            ->get(['id', 'nombre_fantasia', 'documento_nro', 'direccion']);
-
+            ->get();
         return response()->json($clientes);
     }
 
@@ -39,56 +45,169 @@ class ClienteController extends Controller
 
         $cliente = Cliente::create([
             'nombre_fantasia' => $request->nombre_fantasia,
+            'razon_social' => $request->nombre_fantasia,
             'direccion' => $request->direccion,
-            'tipodoc_id' => TipoDoc::first()->id ?? 1,
-            'documento_nro' => 'A CONFIRMAR',
-            'localidad_id' => Localidad::first()->id ?? 1,
-            'tipocuenta_id' => TipoCuenta::first()->id ?? 1,
-            'tipoiva_id' => TipoIva::first()->id ?? 1,
-            'agenciaorigen_id' => Agency::where('activa', true)->first()->id ?? 1,
-            'agenciadestino_id' => Agency::where('activa', true)->first()->id ?? 1,
+            'tipodoc_id' => 1,
+            'documento_nro' => '0',
+            'localidad_id' => 1,
+            'tipocuenta_id' => 1,
+            'tipoiva_id' => 1,
+            'agenciaorigen_id' => 1,
+            'agenciadestino_id' => 1,
         ]);
 
         return response()->json($cliente);
     }
 
-    public function history(Cliente $cliente)
+    public function history(Request $request, Cliente $cliente)
     {
-        $shipments = $cliente->shipmentsPaid()->orderBy('fecha', 'desc')->get();
-        $recibos = $cliente->recibos()->orderBy('fecha', 'desc')->get();
+        $data = $this->getHistoryData($request, $cliente);
+        return view('clientes.history', array_merge(['cliente' => $cliente], $data));
+    }
 
-        // Identificar ID de Cuenta Corriente (usualmente 2 en base a los datos actuales)
+    public function printHistory(Request $request, Cliente $cliente)
+    {
+        $data = $this->getHistoryData($request, $cliente);
+        $empresa = \App\Models\Empresa::first();
+        
+        $pdf = Pdf::loadView('clientes.history_pdf', array_merge(['cliente' => $cliente, 'empresa' => $empresa], $data));
+        return $pdf->stream("Historial_{$cliente->nombre_fantasia}.pdf");
+    }
+
+    public function billing(Request $request, Cliente $cliente)
+    {
+        $from = $request->input('from', now()->startOfMonth()->format('Y-m-d'));
+        $to = $request->input('to', now()->endOfMonth()->format('Y-m-d'));
+        $status_factura = $request->input('status_factura', 'all');
+
+        $query = $cliente->shipmentsPaid()->whereBetween('fecha', [$from, $to]);
+
+        if ($status_factura === 'billed') {
+            $query->where('factura_id', '>', 0);
+        } elseif ($status_factura === 'unbilled') {
+            $query->where('factura_id', 0);
+        }
+
+        $shipments = $query->with('formaPago')->orderBy('fecha')->get();
+
+        if ($request->has('export')) {
+            if ($request->export === 'excel') {
+                return Excel::download(new ShipmentsBillingExport($shipments), "Guias_Facturacion_{$cliente->nombre_fantasia}.xlsx");
+            }
+            if ($request->export === 'pdf') {
+                $empresa = \App\Models\Empresa::first();
+                $pdf = Pdf::loadView('clientes.billing_pdf', compact('cliente', 'shipments', 'from', 'to', 'empresa'));
+                return $pdf->stream("Guias_Facturacion_{$cliente->nombre_fantasia}.pdf");
+            }
+        }
+
+        return view('clientes.billing', compact('cliente', 'shipments', 'from', 'to', 'status_factura'));
+    }
+
+    public function generateInvoice(Request $request, Cliente $cliente)
+    {
+        $request->validate([
+            'shipment_ids' => 'required|array|min:1',
+            'shipment_ids.*' => 'exists:shipments,id',
+            'fecha' => 'required|date',
+            'nro_factura' => 'nullable|string',
+        ]);
+
+        return DB::transaction(function () use ($request, $cliente) {
+            $shipments = Shipment::whereIn('id', $request->shipment_ids)->get();
+            $total = $shipments->sum('total_flete');
+            $cantidad = $shipments->count();
+
+            $factura = ClienteFactura::create([
+                'cliente_id' => $cliente->id,
+                'nro_factura' => $request->nro_factura,
+                'fecha' => $request->fecha,
+                'total' => $total,
+                'observacion' => "Se factura(n) $cantidad guia(s). Mirar planilla adjunta de guias incluidas.",
+            ]);
+
+            Shipment::whereIn('id', $request->shipment_ids)->update(['factura_id' => $factura->id]);
+
+            return redirect()->route('clientes.billing', $cliente)->with('success', "Factura generada correctamente por un total de $ " . number_format($total, 2));
+        });
+    }
+
+    private function getHistoryData(Request $request, Cliente $cliente)
+    {
+        $from = $request->input('from', now()->startOfMonth()->format('Y-m-d'));
+        $to = $request->input('to', now()->endOfMonth()->format('Y-m-d'));
+        $only_shipments = $request->boolean('only_shipments');
+
         $idCuentaCorriente = FormaPago::where('nombre', 'LIKE', '%Cuenta Corriente%')->first()?->id ?? 2;
 
-        // Combinar y ordenar por fecha para el estado de cuenta
+        // 1. Calcular Saldo Anterior (antes de $from)
+        $prev_facturas = ClienteFactura::where('cliente_id', $cliente->id)->where('fecha', '<', $from)->sum('total');
+        $prev_recibos = $cliente->recibos()->where('fecha', '<', $from)->sum('monto');
+        
+        $saldoAnterior = $prev_facturas - $prev_recibos;
+
+        // 2. Obtener movimientos del periodo
+        $facturas = ClienteFactura::where('cliente_id', $cliente->id)->whereBetween('fecha', [$from, $to])->get();
+        $recibos = $only_shipments ? collect() : $cliente->recibos()->whereBetween('fecha', [$from, $to])->get();
+
         $movimientos = collect();
-        foreach ($shipments as $s) {
-            $esCuentaCorriente = ($s->forma_pago_id == $idCuentaCorriente);
+        foreach ($facturas as $f) {
             $movimientos->push([
-                'fecha' => $s->fecha,
-                'tipo' => 'Guía',
-                'referencia' => $s->tracking_number,
-                'detalle' => $s->formaPago?->nombre,
-                'debe' => $s->total_flete,
-                'haber' => $esCuentaCorriente ? 0 : $s->total_flete,
-                'link' => route('shipments.show', $s)
-            ]);
-        }
-        foreach ($recibos as $r) {
-            $movimientos->push([
-                'fecha' => $r->fecha,
-                'tipo' => 'Recibo',
-                'referencia' => $r->nro_recibo ?? 'Recibo #' . $r->id,
-                'detalle' => $r->formaPago?->nombre,
-                'debe' => 0,
-                'haber' => $r->monto,
+                'fecha' => $f->fecha,
+                'tipo' => 'Factura',
+                'referencia' => $f->nro_factura ?? 'Factura #' . $f->id,
+                'detalle' => "Factura de guias",
+                'debe' => $f->total,
+                'haber' => 0,
+                'factura_id' => $f->id,
                 'link' => null
             ]);
+        }
+        
+        if (!$only_shipments) {
+            foreach ($recibos as $r) {
+                $movimientos->push([
+                    'fecha' => $r->fecha,
+                    'tipo' => 'Recibo',
+                    'referencia' => $r->nro_recibo ?? 'Recibo #' . $r->id,
+                    'detalle' => $r->formaPago?->nombre,
+                    'debe' => 0,
+                    'haber' => $r->monto,
+                    'recibo_id' => $r->id,
+                    'link' => null
+                ]);
+            }
+        }
+
+        if ($only_shipments) {
+            $shipments = $cliente->shipmentsPaid()
+                ->where('factura_id', 0)
+                ->whereBetween('fecha', [$from, $to])
+                ->get();
+            foreach ($shipments as $s) {
+                $esCuentaCorriente = ($s->forma_pago_id == $idCuentaCorriente);
+                $movimientos->push([
+                    'fecha' => $s->fecha,
+                    'tipo' => 'Guia (Pend. Fact)',
+                    'referencia' => $s->tracking_number,
+                    'detalle' => $s->formaPago?->nombre,
+                    'debe' => $esCuentaCorriente ? $s->total_flete : 0,
+                    'haber' => 0,
+                    'factura_id' => 0,
+                    'link' => route('shipments.show', $s)
+                ]);
+            }
         }
 
         $movimientos = $movimientos->sortBy('fecha');
 
-        return view('clientes.history', compact('cliente', 'movimientos'));
+        return [
+            'movimientos' => $movimientos,
+            'from' => $from,
+            'to' => $to,
+            'saldoAnterior' => $saldoAnterior,
+            'only_shipments' => $only_shipments
+        ];
     }
 
     public function create()
