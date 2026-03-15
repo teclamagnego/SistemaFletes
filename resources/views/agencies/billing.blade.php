@@ -41,13 +41,11 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small fw-bold">Estado Guía</label>
-                <select name="status" class="form-select form-select-sm">
-                    <option value="all" {{ $status=='all' ? 'selected' : '' }}>Todos</option>
-                    <option value="Admitted" {{ $status=='Admitted' ? 'selected' : '' }}>Admitida</option>
-                    <option value="In Transit" {{ $status=='In Transit' ? 'selected' : '' }}>En Tránsito</option>
-                    <option value="In Destination" {{ $status=='In Destination' ? 'selected' : '' }}>En Destino</option>
-                    <option value="Delivered" {{ $status=='Delivered' ? 'selected' : '' }}>Entregada</option>
-                    <option value="Cancelled" {{ $status=='Cancelled' ? 'selected' : '' }}>Cancelada</option>
+                <select name="status_id" class="form-select form-select-sm">
+                    <option value="all" {{ $status_id=='all' ? 'selected' : '' }}>Todos</option>
+                    @foreach($statuses as $st)
+                    <option value="{{ $st->id }}" {{ $status_id==$st->id ? 'selected' : '' }}>{{ $st->name }}</option>
+                    @endforeach
                 </select>
             </div>
             <div class="col-md-2 d-flex align-items-end">
@@ -107,17 +105,8 @@
                                 </a>
                             </td>
                             <td>
-                                @php
-                                $statusColors = [
-                                'Admitted' => 'info',
-                                'In Transit' => 'primary',
-                                'In Destination' => 'warning',
-                                'Delivered' => 'success',
-                                'Cancelled' => 'danger',
-                                ];
-                                $color = $statusColors[$s->status] ?? 'secondary';
-                                @endphp
-                                <span class="badge bg-{{ $color }} small">{{ $s->status }}</span>
+                                <span class="badge bg-{{ $s->status->color ?? 'secondary' }} small">{{ $s->status->name
+                                    ?? 'N/A' }}</span>
                             </td>
                             <td>
                                 @foreach($s->role_in_billing as $r)

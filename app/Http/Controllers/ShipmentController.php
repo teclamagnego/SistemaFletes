@@ -9,7 +9,7 @@ use App\Models\Cliente;
 use App\Models\Agency;
 use App\Models\Carrier;
 use App\Models\FormaPago;
-use App\Models\Articulo;
+use App\Models\ShipmentStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -53,14 +53,15 @@ class ShipmentController extends Controller
         }
 
         // Filtro por estado
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if ($request->filled('status_id')) {
+            $query->where('status_id', $request->status_id);
         }
 
         $shipments = $query->latest()->paginate(15)->withQueryString();
         $agencies = Agency::orderBy('nombre')->get();
+        $statuses = ShipmentStatus::all();
 
-        return view('shipments.index', compact('shipments', 'agencies'));
+        return view('shipments.index', compact('shipments', 'agencies', 'statuses'));
     }
 
     public function create()
@@ -105,7 +106,7 @@ class ShipmentController extends Controller
             $commissionMonto = $totalFlete * ($originAgency->com_origen / 100);
 
             $carrierId = $singleCarrierId ?? $request->carrier_id;
-            $status = $singleCarrierId ? 'In Transit' : 'Admitted';
+            $statusId = $singleCarrierId ?ShipmentStatus::IN_TRANSIT : ShipmentStatus::ADMITTED;
 
             $shipment = Shipment::create([
                 'tracking_number' => 'G-' . strtoupper(Str::random(8)),
@@ -119,7 +120,7 @@ class ShipmentController extends Controller
                 'forma_pago_id' => $request->forma_pago_id,
                 'fecha' => $request->fecha ?? now(),
                 'direccion_entrega' => $request->direccion_entrega,
-                'status' => $status,
+                'status_id' => $statusId,
                 'total_flete' => $totalFlete,
                 'comision_monto' => $commissionMonto,
                 'notas' => $request->notas,
@@ -140,10 +141,21 @@ class ShipmentController extends Controller
             ShipmentLog::create([
                 'shipment_id' => $shipment->id,
                 'user_id' => Auth::id(),
-                'status_from' => 'None',
-                'status_to' => $status,
+                'status_from_id' => null,
+                'status_to_id' => $statusId,
                 'notas' => $singleCarrierId ? 'Guía admitida y puesta en tránsito automáticamente.' : 'Guía admitida en sistema.',
             ]);
+
+            // Actualizar agencias habituales de los clientes si no tienen
+            $sender = Cliente::find($request->sender_id);
+            if ($sender && (!$sender->agenciaorigen_id || $sender->agenciaorigen_id == 0)) {
+                $sender->update(['agenciaorigen_id' => $request->origin_agency_id]);
+            }
+
+            $receiver = Cliente::find($request->receiver_id);
+            if ($receiver && (!$receiver->agenciadestino_id || $receiver->agenciadestino_id == 0)) {
+                $receiver->update(['agenciadestino_id' => $request->destination_agency_id]);
+            }
 
             return redirect()->route('shipments.index')->with('success', "Guía {$shipment->tracking_number} creada correctamente.");
         });
@@ -157,18 +169,18 @@ class ShipmentController extends Controller
 
     public function receive(Shipment $shipment)
     {
-        if ($shipment->status !== 'Admitted') {
+        if ($shipment->status_id !== ShipmentStatus::ADMITTED) {
             return back()->with('error', 'Solo se pueden recibir guías en estado Admitida.');
         }
 
         DB::transaction(function () use ($shipment) {
-            $shipment->update(['status' => 'In Office']);
+            $shipment->update(['status_id' => ShipmentStatus::IN_OFFICE]);
 
             ShipmentLog::create([
                 'shipment_id' => $shipment->id,
                 'user_id' => Auth::id(),
-                'status_from' => 'Admitted',
-                'status_to' => 'In Office',
+                'status_from_id' => ShipmentStatus::ADMITTED,
+                'status_to_id' => ShipmentStatus::IN_OFFICE,
                 'notas' => 'Paquete recibido en oficina y almacenado en inventario.',
             ]);
         });
@@ -178,7 +190,7 @@ class ShipmentController extends Controller
 
     public function consolidation()
     {
-        $groups = Shipment::where('status', 'In Office')
+        $groups = Shipment::where('status_id', ShipmentStatus::IN_OFFICE)
             ->with(['destinationAgency', 'sender', 'receiver'])
             ->get()
             ->groupBy('destination_agency_id');
@@ -201,15 +213,15 @@ class ShipmentController extends Controller
 
             foreach ($shipments as $shipment) {
                 $shipment->update([
-                    'status' => 'In Transit',
+                    'status_id' => ShipmentStatus::IN_TRANSIT,
                     'carrier_id' => $request->carrier_id,
                 ]);
 
                 ShipmentLog::create([
                     'shipment_id' => $shipment->id,
                     'user_id' => Auth::id(),
-                    'status_from' => 'In Office',
-                    'status_to' => 'In Transit',
+                    'status_from_id' => ShipmentStatus::IN_OFFICE,
+                    'status_to_id' => ShipmentStatus::IN_TRANSIT,
                     'notas' => "Despachado en tránsito. Transportista asignado ID: {$request->carrier_id}",
                 ]);
             }
@@ -220,18 +232,18 @@ class ShipmentController extends Controller
 
     public function arrive(Shipment $shipment)
     {
-        if ($shipment->status !== 'In Transit') {
+        if ($shipment->status_id !== ShipmentStatus::IN_TRANSIT) {
             return back()->with('error', 'Solo se pueden marcar como arribadas las guías que están en tránsito.');
         }
 
         DB::transaction(function () use ($shipment) {
-            $shipment->update(['status' => 'In Destination']);
+            $shipment->update(['status_id' => ShipmentStatus::IN_DESTINATION]);
 
             ShipmentLog::create([
                 'shipment_id' => $shipment->id,
                 'user_id' => Auth::id(),
-                'status_from' => 'In Transit',
-                'status_to' => 'In Destination',
+                'status_from_id' => ShipmentStatus::IN_TRANSIT,
+                'status_to_id' => ShipmentStatus::IN_DESTINATION,
                 'notas' => 'Carga arribada a la agencia de destino. Lista para retiro o entrega.',
             ]);
         });
@@ -241,18 +253,18 @@ class ShipmentController extends Controller
 
     public function deliver(Shipment $shipment)
     {
-        if ($shipment->status !== 'In Destination') {
+        if ($shipment->status_id !== ShipmentStatus::IN_DESTINATION) {
             return back()->with('error', 'Solo se pueden marcar como entregadas las guías que están en destino.');
         }
 
         DB::transaction(function () use ($shipment) {
-            $shipment->update(['status' => 'Delivered']);
+            $shipment->update(['status_id' => ShipmentStatus::DELIVERED]);
 
             ShipmentLog::create([
                 'shipment_id' => $shipment->id,
                 'user_id' => Auth::id(),
-                'status_from' => 'In Destination',
-                'status_to' => 'Delivered',
+                'status_from_id' => ShipmentStatus::IN_DESTINATION,
+                'status_to_id' => ShipmentStatus::DELIVERED,
                 'notas' => 'Guía entregada satisfactoriamente al destinatario.',
             ]);
         });

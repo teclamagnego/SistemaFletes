@@ -19,10 +19,22 @@ use App\Exports\ShipmentsBillingExport;
 
 class ClienteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $clientes = Cliente::with(['tipoDoc', 'localidad', 'tipoCuenta', 'tipoIva', 'agenciaOrigen', 'agenciaDestino'])->paginate(15);
-        return view('clientes.index', compact('clientes'));
+        $query = Cliente::with(['tipoDoc', 'localidad', 'tipoCuenta', 'tipoIva', 'agenciaOrigen', 'agenciaDestino']);
+
+        if ($request->filled('nombre')) {
+            $query->where('nombre_fantasia', 'LIKE', '%' . $request->nombre . '%');
+        }
+
+        if ($request->filled('localidad_id')) {
+            $query->where('localidad_id', $request->localidad_id);
+        }
+
+        $clientes = $query->paginate(15)->appends($request->all());
+        $localidades = Localidad::all();
+
+        return view('clientes.index', compact('clientes', 'localidades'));
     }
 
     public function search(Request $request)

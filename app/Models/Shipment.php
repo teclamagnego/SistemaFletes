@@ -21,7 +21,7 @@ class Shipment extends Model
         'forma_pago_id',
         'fecha',
         'direccion_entrega',
-        'status',
+        'status_id',
         'total_flete',
         'comision_monto',
         'factura_id',
@@ -29,6 +29,11 @@ class Shipment extends Model
         'agencia_f_destino_id',
         'notas',
     ];
+
+    public function status()
+    {
+        return $this->belongsTo(ShipmentStatus::class , 'status_id');
+    }
 
     public function factura()
     {

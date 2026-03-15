@@ -12,10 +12,20 @@ class ShipmentLog extends Model
     protected $fillable = [
         'shipment_id',
         'user_id',
-        'status_from',
-        'status_to',
+        'status_from_id',
+        'status_to_id',
         'notas',
     ];
+
+    public function statusFrom()
+    {
+        return $this->belongsTo(ShipmentStatus::class , 'status_from_id');
+    }
+
+    public function statusTo()
+    {
+        return $this->belongsTo(ShipmentStatus::class , 'status_to_id');
+    }
 
     public function shipment()
     {

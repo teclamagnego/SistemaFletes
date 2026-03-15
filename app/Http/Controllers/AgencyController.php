@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\FormaPago;
 use App\Models\AgenciaFactura;
 use App\Models\AgenciaRecibo;
+use App\Models\ShipmentStatus;
 
 class AgencyController extends Controller
 {
@@ -89,13 +90,13 @@ class AgencyController extends Controller
         $to = $request->input('to', now()->endOfMonth()->format('Y-m-d'));
         $role = $request->input('role', 'all'); // 'origin', 'destination', 'all'
         $status_factura = $request->input('status_factura', 'all');
-        $status = $request->input('status', 'Delivered');
+        $status_id = $request->input('status_id', ShipmentStatus::DELIVERED);
 
         $query = \App\Models\Shipment::with(['items.articulo', 'originAgency', 'destinationAgency', 'formaPago'])
             ->whereBetween('fecha', [$from, $to]);
 
-        if ($status !== 'all') {
-            $query->where('status', $status);
+        if ($status_id !== 'all') {
+            $query->where('status_id', $status_id);
         }
 
         if ($role === 'origin') {
@@ -126,6 +127,7 @@ class AgencyController extends Controller
         }
 
         $shipments = $query->orderBy('fecha')->get();
+        $statuses = ShipmentStatus::all();
 
         // Calcular comisiones para la vista
         foreach ($shipments as $s) {
@@ -149,7 +151,7 @@ class AgencyController extends Controller
             $s->comision_total_agencia = $com;
         }
 
-        return view('agencies.billing', compact('agency', 'shipments', 'from', 'to', 'role', 'status_factura', 'status'));
+        return view('agencies.billing', compact('agency', 'shipments', 'from', 'to', 'role', 'status_factura', 'status_id', 'statuses'));
     }
 
     public function generateInvoice(Request $request, Agency $agency)

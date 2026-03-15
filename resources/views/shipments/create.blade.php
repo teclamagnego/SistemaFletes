@@ -5,15 +5,19 @@
     .list-group.position-absolute {
         z-index: 2000 !important;
     }
+
     .table-responsive {
         overflow: visible !important;
     }
+
     .list-group-item-action {
         cursor: pointer;
     }
+
     .list-group-item-action:hover {
         background-color: #f8f9fa;
     }
+
     .item-total-display {
         font-weight: bold;
     }
@@ -36,28 +40,36 @@
                             <div class="col-md-6 mb-3 mb-md-0">
                                 <label for="sender_search" class="form-label fw-semibold">Remitente</label>
                                 <div class="position-relative">
-                                    <input type="text" id="sender_search" class="form-control" placeholder="Buscar cliente..." autocomplete="off">
+                                    <input type="text" id="sender_search" class="form-control"
+                                        placeholder="Buscar cliente..." autocomplete="off">
                                     <input type="hidden" name="sender_id" id="sender_id">
-                                    <div id="sender_results" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none;"></div>
+                                    <div id="sender_results" class="list-group position-absolute w-100 shadow-sm"
+                                        style="z-index: 1000; display: none;"></div>
                                 </div>
                                 <div class="mt-2">
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="payer" id="payer_sender" value="sender" checked>
-                                        <label class="form-check-label text-primary fw-bold" for="payer_sender">Paga Remitente</label>
+                                        <input class="form-check-input" type="radio" name="payer" id="payer_sender"
+                                            value="sender" checked>
+                                        <label class="form-check-label text-primary fw-bold" for="payer_sender">Paga
+                                            Remitente</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label for="receiver_search" class="form-label fw-semibold">Destinatario</label>
                                 <div class="position-relative">
-                                    <input type="text" id="receiver_search" class="form-control" placeholder="Buscar cliente..." autocomplete="off">
+                                    <input type="text" id="receiver_search" class="form-control"
+                                        placeholder="Buscar cliente..." autocomplete="off">
                                     <input type="hidden" name="receiver_id" id="receiver_id">
-                                    <div id="receiver_results" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none;"></div>
+                                    <div id="receiver_results" class="list-group position-absolute w-100 shadow-sm"
+                                        style="z-index: 1000; display: none;"></div>
                                 </div>
                                 <div class="mt-2">
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="payer" id="payer_receiver" value="receiver">
-                                        <label class="form-check-label text-primary fw-bold" for="payer_receiver">Paga Destinatario</label>
+                                        <input class="form-check-input" type="radio" name="payer" id="payer_receiver"
+                                            value="receiver">
+                                        <label class="form-check-label text-primary fw-bold" for="payer_receiver">Paga
+                                            Destinatario</label>
                                     </div>
                                 </div>
                             </div>
@@ -69,16 +81,18 @@
                                 <select name="origin_agency_id" id="origin_agency_id" class="form-select" required>
                                     <option value="">Seleccionar...</option>
                                     @foreach($agencies as $agency)
-                                        <option value="{{ $agency->id }}">{{ $agency->nombre }}</option>
+                                    <option value="{{ $agency->id }}">{{ $agency->nombre }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="destination_agency_id" class="form-label fw-semibold">Agencia Destino</label>
-                                <select name="destination_agency_id" id="destination_agency_id" class="form-select" required>
+                                <label for="destination_agency_id" class="form-label fw-semibold">Agencia
+                                    Destino</label>
+                                <select name="destination_agency_id" id="destination_agency_id" class="form-select"
+                                    required>
                                     <option value="">Seleccionar...</option>
                                     @foreach($agencies as $agency)
-                                        <option value="{{ $agency->id }}">{{ $agency->nombre }}</option>
+                                    <option value="{{ $agency->id }}">{{ $agency->nombre }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -86,37 +100,39 @@
 
                         <div class="row mb-4">
                             @if($carriers->count() === 1)
-                                <input type="hidden" name="carrier_id" value="{{ $carriers->first()->id }}">
+                            <input type="hidden" name="carrier_id" value="{{ $carriers->first()->id }}">
                             @else
-                                <div class="col-md-4 mb-3">
-                                    <label for="carrier_id" class="form-label fw-semibold">Transportista</label>
-                                    <select name="carrier_id" id="carrier_id" class="form-select" required>
-                                        <option value="">Seleccionar...</option>
-                                        @foreach($carriers as $carrier)
-                                            <option value="{{ $carrier->id }}">{{ $carrier->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="carrier_id" class="form-label fw-semibold">Transportista</label>
+                                <select name="carrier_id" id="carrier_id" class="form-select" required>
+                                    <option value="">Seleccionar...</option>
+                                    @foreach($carriers as $carrier)
+                                    <option value="{{ $carrier->id }}">{{ $carrier->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             @endif
-                            
+
                             <div class="{{ $carriers->count() === 1 ? 'col-md-6' : 'col-md-4' }} mb-3">
                                 <label for="forma_pago_id" class="form-label fw-semibold">Forma de Pago</label>
                                 <select name="forma_pago_id" id="forma_pago_id" class="form-select" required>
                                     <option value="">Seleccionar...</option>
                                     @foreach($formasPago as $fp)
-                                        <option value="{{ $fp->id }}">{{ $fp->nombre }}</option>
+                                    <option value="{{ $fp->id }}">{{ $fp->nombre }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            
+
                             <div class="{{ $carriers->count() === 1 ? 'col-md-6' : 'col-md-4' }} mb-3">
                                 <label for="direccion_entrega" class="form-label fw-semibold">Lugar de Entrega</label>
-                                <input type="text" name="direccion_entrega" id="direccion_entrega" class="form-control" placeholder="Dirección de entrega">
+                                <input type="text" name="direccion_entrega" id="direccion_entrega" class="form-control"
+                                    placeholder="Dirección de entrega">
                             </div>
                         </div>
 
                         <div class="card mb-4 border-light bg-light bg-opacity-10">
-                            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                            <div
+                                class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0 fw-bold">Artículos / Bultos</h6>
                                 <button type="button" class="btn btn-sm btn-outline-primary" id="addItem">
                                     <i class="bi bi-plus-lg me-1"></i>Añadir Línea
@@ -140,22 +156,38 @@
                                             <tr class="item-row">
                                                 <td>
                                                     <div class="position-relative">
-                                                        <input type="text" class="form-control form-control-sm item-codigo" placeholder="Código" autocomplete="off">
-                                                        <div class="list-group position-absolute w-100 shadow-sm item-codigo-results" style="z-index: 1000; display: none;"></div>
+                                                        <input type="text"
+                                                            class="form-control form-control-sm item-codigo"
+                                                            placeholder="Código" autocomplete="off">
+                                                        <div class="list-group position-absolute w-100 shadow-sm item-codigo-results"
+                                                            style="z-index: 1000; display: none;"></div>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="position-relative">
-                                                        <input type="text" name="items[0][descripcion]" class="form-control form-control-sm item-descripcion" placeholder="Descripción del producto" required autocomplete="off">
-                                                        <input type="hidden" name="items[0][articulo_id]" class="item-articulo-id">
-                                                        <div class="list-group position-absolute w-100 shadow-sm item-descripcion-results" style="z-index: 1000; display: none;"></div>
+                                                        <input type="text" name="items[0][descripcion]"
+                                                            class="form-control form-control-sm item-descripcion"
+                                                            placeholder="Descripción del producto" required
+                                                            autocomplete="off">
+                                                        <input type="hidden" name="items[0][articulo_id]"
+                                                            class="item-articulo-id">
+                                                        <div class="list-group position-absolute w-100 shadow-sm item-descripcion-results"
+                                                            style="z-index: 1000; display: none;"></div>
                                                     </div>
                                                 </td>
-                                                <td><input type="number" name="items[0][cantidad]" class="form-control form-control-sm item-cantidad" value="1" required min="1"></td>
-                                                <td><input type="number" step="0.01" name="items[0][precio_unitario]" class="form-control form-control-sm item-precio" value="0.00" required min="0"></td>
-                                                <td><input type="number" step="0.01" name="items[0][bonificacion]" class="form-control form-control-sm item-bonif" value="0.00" min="0"></td>
+                                                <td><input type="number" name="items[0][cantidad]"
+                                                        class="form-control form-control-sm item-cantidad" value="1"
+                                                        required min="1"></td>
+                                                <td><input type="number" step="0.01" name="items[0][precio_unitario]"
+                                                        class="form-control form-control-sm item-precio" value="0.00"
+                                                        required min="0"></td>
+                                                <td><input type="number" step="0.01" name="items[0][bonificacion]"
+                                                        class="form-control form-control-sm item-bonif" value="0.00"
+                                                        min="0"></td>
                                                 <td>
-                                                    <input type="number" step="0.01" name="items[0][total]" class="form-control form-control-sm item-total" value="0.00" readonly>
+                                                    <input type="number" step="0.01" name="items[0][total]"
+                                                        class="form-control form-control-sm item-total" value="0.00"
+                                                        readonly>
                                                 </td>
                                                 <td class="text-center"></td>
                                             </tr>
@@ -222,7 +254,7 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const quickClientModalElement = document.getElementById('quickClientModal');
         const quickClientModal = new bootstrap.Modal(quickClientModalElement);
 
@@ -230,12 +262,12 @@
             const qty = parseFloat(row.querySelector('.item-cantidad').value) || 0;
             const price = parseFloat(row.querySelector('.item-precio').value) || 0;
             const bonif = parseFloat(row.querySelector('.item-bonif').value) || 0;
-            
+
             let total = qty * price;
             if (bonif > 0) {
                 total = total - (total * (bonif / 100));
             }
-            
+
             row.querySelector('.item-total').value = total.toFixed(2);
             calculateGrandTotal();
         }
@@ -274,7 +306,7 @@
                 <td class="text-center"><button type="button" class="btn btn-sm btn-danger remove-item"><i class="bi bi-x"></i></button></td>
             `;
             tableBody.appendChild(newRow);
-            
+
             setupItemAutocomplete(newRow);
             setupRowListeners(newRow);
         });
@@ -303,37 +335,47 @@
                 timeout = setTimeout(() => {
                     const url = `{{ route('clientes.search') }}?q=${encodeURIComponent(q)}`;
                     fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(res => res.json())
-                    .then(data => {
-                        results.innerHTML = '';
-                        if (data.length === 0) {
-                            results.innerHTML = `
+                        .then(res => res.json())
+                        .then(data => {
+                            results.innerHTML = '';
+                            if (data.length === 0) {
+                                results.innerHTML = `
                                 <div class="list-group-item text-muted">No se encontraron clientes</div>
                                 <a href="#" class="list-group-item list-group-item-action text-primary text-center fw-bold btn-quick-client" 
                                    data-target-input="${inputId}" data-target-hidden="${hiddenId}">
                                     <i class="bi bi-plus-circle"></i> Agregar Cliente
                                 </a>
                             `;
-                            results.style.display = 'block';
-                            return;
-                        }
-                        data.forEach(client => {
-                            const a = document.createElement('a');
-                            a.href = '#'; a.className = 'list-group-item list-group-item-action py-2';
-                            a.innerHTML = `<strong>${client.nombre_fantasia}</strong> <br><small class="text-muted">Doc: ${client.documento_nro}</small>`;
-                            a.addEventListener('click', function (e) {
-                                e.preventDefault();
-                                input.value = client.nombre_fantasia;
-                                hidden.value = client.id;
-                                results.style.display = 'none';
-                                if (inputId === 'receiver_search') {
-                                    document.getElementById('direccion_entrega').value = client.direccion || '';
-                                }
+                                results.style.display = 'block';
+                                return;
+                            }
+                            data.forEach(client => {
+                                const a = document.createElement('a');
+                                a.href = '#'; a.className = 'list-group-item list-group-item-action py-2';
+                                a.innerHTML = `<strong>${client.nombre_fantasia}</strong> <br><small class="text-muted">Doc: ${client.documento_nro}</small>`;
+                                a.onclick = function (e) {
+                                    e.preventDefault();
+                                    input.value = client.nombre_fantasia;
+                                    hidden.value = client.id;
+                                    results.style.display = 'none';
+
+                                    if (inputId === 'sender_search') {
+                                        if (client.agenciaorigen_id) {
+                                            document.getElementById('origin_agency_id').value = client.agenciaorigen_id;
+                                        }
+                                    }
+
+                                    if (inputId === 'receiver_search') {
+                                        document.getElementById('direccion_entrega').value = client.direccion || '';
+                                        if (client.agenciadestino_id) {
+                                            document.getElementById('destination_agency_id').value = client.agenciadestino_id;
+                                        }
+                                    }
+                                };
+                                results.appendChild(a);
                             });
-                            results.appendChild(a);
+                            results.style.display = 'block';
                         });
-                        results.style.display = 'block';
-                    });
                 }, 300);
             });
 
@@ -365,31 +407,31 @@
                     timeout = setTimeout(() => {
                         const url = `{{ route('articulos.search') }}?q=${encodeURIComponent(q)}`;
                         fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-                        .then(res => res.json())
-                        .then(data => {
-                            results.innerHTML = '';
-                            if (data.length === 0) {
-                                results.style.display = 'none';
-                                return;
-                            }
-                            data.forEach(articulo => {
-                                const a = document.createElement('a');
-                                a.href = '#'; a.className = 'list-group-item list-group-item-action py-2';
-                                a.innerHTML = `<strong>${articulo.nombre}</strong> <small class="text-muted">(${articulo.codigo})</small>`;
-                                a.addEventListener('click', function (e) {
-                                    e.preventDefault();
-                                    codigoInput.value = articulo.codigo;
-                                    descInput.value = articulo.nombre;
-                                    articuloIdInput.value = articulo.id;
-                                    precioInput.value = articulo.precio;
-                                    cantidadInput.value = 1;
+                            .then(res => res.json())
+                            .then(data => {
+                                results.innerHTML = '';
+                                if (data.length === 0) {
                                     results.style.display = 'none';
-                                    calculateRowTotal(row);
+                                    return;
+                                }
+                                data.forEach(articulo => {
+                                    const a = document.createElement('a');
+                                    a.href = '#'; a.className = 'list-group-item list-group-item-action py-2';
+                                    a.innerHTML = `<strong>${articulo.nombre}</strong> <small class="text-muted">(${articulo.codigo})</small>`;
+                                    a.addEventListener('click', function (e) {
+                                        e.preventDefault();
+                                        codigoInput.value = articulo.codigo;
+                                        descInput.value = articulo.nombre;
+                                        articuloIdInput.value = articulo.id;
+                                        precioInput.value = articulo.precio;
+                                        cantidadInput.value = 1;
+                                        results.style.display = 'none';
+                                        calculateRowTotal(row);
+                                    });
+                                    results.appendChild(a);
                                 });
-                                results.appendChild(a);
+                                results.style.display = 'block';
                             });
-                            results.style.display = 'block';
-                        });
                     }, 300);
                 });
             }
@@ -420,7 +462,7 @@
         setupAutocomplete('receiver_search', 'receiver_id', 'receiver_results');
 
         // Event delegation para el botón "Agregar Cliente" (generado dinámicamente con innerHTML)
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const btn = e.target.closest('.btn-quick-client');
             if (!btn) return;
             e.preventDefault();
@@ -442,7 +484,7 @@
             quickClientModal.show();
         });
 
-        document.getElementById('quickClientForm').addEventListener('submit', function(e) {
+        document.getElementById('quickClientForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const btn = document.getElementById('qc_submit_btn');
             btn.disabled = true;
@@ -452,16 +494,16 @@
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                 body: JSON.stringify({ nombre_fantasia: document.getElementById('qc_nombre_fantasia').value, direccion: document.getElementById('qc_direccion').value })
             })
-            .then(res => res.json())
-            .then(client => {
-                const tInputId = document.getElementById('qc_target_input').value;
-                const tHiddenId = document.getElementById('qc_target_hidden').value;
-                document.getElementById(tInputId).value = client.nombre_fantasia;
-                document.getElementById(tHiddenId).value = client.id;
-                if (tInputId === 'receiver_search') document.getElementById('direccion_entrega').value = client.direccion || '';
-                quickClientModal.hide(); btn.disabled = false; btn.innerHTML = 'Guardar Cliente';
-            })
-            .catch(() => { alert('Error al crear cliente'); btn.disabled = false; btn.innerHTML = 'Guardar Cliente'; });
+                .then(res => res.json())
+                .then(client => {
+                    const tInputId = document.getElementById('qc_target_input').value;
+                    const tHiddenId = document.getElementById('qc_target_hidden').value;
+                    document.getElementById(tInputId).value = client.nombre_fantasia;
+                    document.getElementById(tHiddenId).value = client.id;
+                    if (tInputId === 'receiver_search') document.getElementById('direccion_entrega').value = client.direccion || '';
+                    quickClientModal.hide(); btn.disabled = false; btn.innerHTML = 'Guardar Cliente';
+                })
+                .catch(() => { alert('Error al crear cliente'); btn.disabled = false; btn.innerHTML = 'Guardar Cliente'; });
         });
     });
 </script>

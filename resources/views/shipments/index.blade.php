@@ -28,10 +28,11 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <select name="status" class="form-select">
+                <select name="status_id" class="form-select">
                     <option value="">Todos los Estados</option>
-                    @foreach(['Admitted', 'In Office', 'In Transit', 'In Destination', 'Delivered', 'Cancelled'] as $st)
-                    <option value="{{ $st }}" {{ request('status')==$st ? 'selected' : '' }}>{{ $st }}</option>
+                    @foreach($statuses as $st)
+                    <option value="{{ $st->id }}" {{ request('status_id')==$st->id ? 'selected' : '' }}>{{ $st->name }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -66,17 +67,8 @@
                     <td>{{ $s->receiver?->nombre_fantasia ?? 'N/A' }}</td>
                     <td>{{ $s->originAgency?->nombre ?? 'N/A' }}</td>
                     <td>
-                        @php
-                        $badgeClass = match($s->status) {
-                        'Admitted' => 'bg-info',
-                        'In Office' => 'bg-primary',
-                        'In Transit' => 'bg-warning',
-                        'Delivered' => 'bg-success',
-                        'Cancelled' => 'bg-danger',
-                        default => 'bg-secondary'
-                        };
-                        @endphp
-                        <span class="badge {{ $badgeClass }}">{{ $s->status }}</span>
+                        <span class="badge bg-{{ $s->status->color ?? 'secondary' }}">{{ $s->status->name ?? 'N/A'
+                            }}</span>
                     </td>
                     <td>${{ number_format($s->total_flete, 2) }}</td>
                     <td class="text-end">
