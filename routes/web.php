@@ -99,6 +99,7 @@ Route::middleware('auth')->group(function () {
 
     // Localidades
     Route::resource('localidades', LocalidadController::class)->except(['show'])
+        ->parameters(['localidades' => 'localidad'])
         ->middleware('permission:localidades.index|localidades.create|localidades.edit|localidades.delete');
 
     // Forma de Pago

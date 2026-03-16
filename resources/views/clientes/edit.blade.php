@@ -38,6 +38,7 @@
                                         <label class="form-label">Tipo Documento *</label>
                                         <select name="tipodoc_id"
                                                 class="form-select @error('tipodoc_id') is-invalid @enderror" required>
+                                                <option value="">Seleccionar</option>
                                                 @foreach($tiposDoc as $td)
                                                 <option value="{{ $td->id }}" {{ old('tipodoc_id', $cliente->tipodoc_id)
                                                         == $td->id ? 'selected' : '' }}>{{ $td->nombre }} ({{
@@ -58,6 +59,7 @@
                                         <label class="form-label">Tipo IVA *</label>
                                         <select name="tipoiva_id"
                                                 class="form-select @error('tipoiva_id') is-invalid @enderror" required>
+                                                <option value="">Seleccionar</option>
                                                 @foreach($tiposIva as $iva)
                                                 <option value="{{ $iva->id }}" {{ old('tipoiva_id', $cliente->
                                                         tipoiva_id) == $iva->id ? 'selected' : '' }}>{{ $iva->nombre }}
@@ -89,7 +91,7 @@
                                         <select name="localidad_id"
                                                 class="form-select @error('localidad_id') is-invalid @enderror"
                                                 required>
-                                                <option value="">Seleccione...</option>
+                                                <option value="">Seleccionar</option>
                                                 @foreach($localidades as $loc)
                                                 <option value="{{ $loc->id }}" {{ old('localidad_id', $cliente->
                                                         localidad_id) == $loc->id ? 'selected' : '' }}>{{ $loc->nombre
@@ -115,6 +117,7 @@
                                         <select name="tipocuenta_id"
                                                 class="form-select @error('tipocuenta_id') is-invalid @enderror"
                                                 required>
+                                                <option value="">Seleccionar</option>
                                                 @foreach($tiposCuenta as $tc)
                                                 <option value="{{ $tc->id }}" {{ old('tipocuenta_id', $cliente->
                                                         tipocuenta_id) == $tc->id ? 'selected' : '' }}>{{ $tc->nombre }}
@@ -129,6 +132,7 @@
                                         <select name="agenciaorigen_id"
                                                 class="form-select @error('agenciaorigen_id') is-invalid @enderror"
                                                 required>
+                                                <option value="">Seleccionar</option>
                                                 @foreach($agencies as $ag)
                                                 <option value="{{ $ag->id }}" {{ old('agenciaorigen_id', $cliente->
                                                         agenciaorigen_id) == $ag->id ? 'selected' : '' }}>{{ $ag->nombre
@@ -143,6 +147,7 @@
                                         <select name="agenciadestino_id"
                                                 class="form-select @error('agenciadestino_id') is-invalid @enderror"
                                                 required>
+                                                <option value="">Seleccionar</option>
                                                 @foreach($agencies as $ag)
                                                 <option value="{{ $ag->id }}" {{ old('agenciadestino_id', $cliente->
                                                         agenciadestino_id) == $ag->id ? 'selected' : '' }}>{{

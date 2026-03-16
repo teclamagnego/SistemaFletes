@@ -63,14 +63,6 @@
                         </a>
                     </li>
                     @endcan
-                    @can('localidades.index')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('localidades.*') ? 'active' : '' }}"
-                            href="{{ route('localidades.index') }}">
-                            <i class="bi bi-geo-alt"></i> Localidades
-                        </a>
-                    </li>
-                    @endcan
                     @can('shipments.index')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('shipments.*') && !request()->routeIs('shipments.consolidation') ? 'active' : '' }}"
@@ -113,9 +105,9 @@
                         </a>
                     </li>
                     @endcan
-                    @canany(['users.index', 'roles.index', 'formas_pago.index', 'empresas.index', 'sucursales.index'])
+                    @canany(['users.index', 'roles.index', 'formas_pago.index', 'empresas.index', 'sucursales.index', 'localidades.index'])
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('formas_pago.*') || request()->routeIs('empresas.*') || request()->routeIs('sucursales.*') ? 'active' : '' }}"
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('formas_pago.*') || request()->routeIs('empresas.*') || request()->routeIs('sucursales.*') || request()->routeIs('localidades.*') ? 'active' : '' }}"
                             href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-gear"></i> Admin
                         </a>
@@ -127,6 +119,10 @@
                             @can('roles.index')
                             <li><a class="dropdown-item" href="{{ route('roles.index') }}"><i
                                         class="bi bi-shield-lock"></i> Roles</a></li>
+                            @endcan
+                            @can('localidades.index')
+                            <li><a class="dropdown-item" href="{{ route('localidades.index') }}"><i
+                                        class="bi bi-geo-alt"></i> Localidades</a></li>
                             @endcan
                             @can('formas_pago.index')
                             <li><a class="dropdown-item" href="{{ route('formas_pago.index') }}"><i
