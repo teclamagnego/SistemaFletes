@@ -17,10 +17,6 @@ class ClienteLookupsSeeder extends Seeder
         \App\Models\TipoDoc::firstOrCreate(['codigo' => 'CUIT'], ['nombre' => 'CUIT/CUIL']);
         \App\Models\TipoDoc::firstOrCreate(['codigo' => 'PAS'], ['nombre' => 'Pasaporte']);
 
-        // Localidades
-        \App\Models\Localidad::firstOrCreate(['nombre' => 'Santa Rosa']);
-        \App\Models\Localidad::firstOrCreate(['nombre' => 'General Pico']);
-        \App\Models\Localidad::firstOrCreate(['nombre' => 'Toay']);
 
         // Tipos de Cuenta
         \App\Models\TipoCuenta::firstOrCreate(['nombre' => 'Cuenta Corriente']);

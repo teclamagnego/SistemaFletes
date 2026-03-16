@@ -43,25 +43,22 @@ class DobleGGuiaSeeder extends Seeder
             INSERT INTO shipments (
                 id, tracking_number, status_id, sender_id, receiver_id, cliente_id, 
                 origin_agency_id, destination_agency_id, carrier_id, commission_agency_id, forma_pago_id, 
-                fecha, total_flete, notas, created_at, updated_at
+                fecha, direccion_entrega, total_flete, notas, created_at, updated_at
             )
             SELECT 
                 id, 
-                CONCAT('OLD-', numero, '-', id), 
-                5, -- Entregado
-                vendedor_id, -- Remitente
-                repartidor_id, -- Destinatario
+                numero, 
+                CASE WHEN activo = 0 THEN 6 ELSE activo END, -- 6: Cancelled if 0, otherwise same value as 'activo'
+                CASE WHEN origen_id = 0 THEN 1 ELSE origen_id END, -- sender_id
+                CASE WHEN destino_id = 0 THEN 1 ELSE destino_id END, -- receiver_id
                 cliente_id, -- Quien paga (Cuenta)
-                CASE WHEN origen_id = 0 THEN 1 ELSE origen_id END,
-                CASE WHEN destino_id = 0 THEN 1 ELSE destino_id END,
-                1, 
-                CASE WHEN origen_id = 0 THEN 1 ELSE origen_id END, 
-                CASE 
-                    WHEN cliente_id = repartidor_id THEN 4 -- Pago en Destino
-                    WHEN contado = 1 THEN 1 -- Contado
-                    ELSE 2 -- Cuenta Corriente
-                END,
+                CASE WHEN vendedor_id = 0 THEN 1 ELSE vendedor_id END, -- origin_agency_id
+                CASE WHEN repartidor_id = 0 THEN 1 ELSE repartidor_id END, -- destination_agency_id
+                1, -- carrier_id
+                CASE WHEN vendedor_id = 0 THEN 1 ELSE vendedor_id END, -- commission_agency_id
+                CASE WHEN contado = 1 THEN 1 ELSE 2 END, -- 1: Contado, 2: Cuenta Corriente
                 fecha,
+                lugardeentrega,
                 total,
                 observacion,
                 IFNULL(created_at, NOW()),
@@ -106,6 +103,12 @@ class DobleGGuiaSeeder extends Seeder
             return;
         $this->command->info("Cargando $path en $tempTableName...");
         $sql = File::get($realPath);
+
+        // Limpiar el SQL de comandos de transacción de phpMyAdmin que rompen el flujo de Laravel
+        $sql = preg_replace('/SET AUTOCOMMIT = 0;/i', '', $sql);
+        $sql = preg_replace('/START TRANSACTION;/i', '', $sql);
+        $sql = preg_replace('/COMMIT;/i', '', $sql);
+
         $sql = str_replace("`$originalTable`", "`$tempTableName`", $sql);
         $sql = "SET FOREIGN_KEY_CHECKS=0;\n" . $sql;
         Schema::dropIfExists($tempTableName);
