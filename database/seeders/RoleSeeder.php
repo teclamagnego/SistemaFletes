@@ -23,7 +23,7 @@ class RoleSeeder extends Seeder
             'carriers.index', 'carriers.create', 'carriers.edit', 'carriers.delete',
             'localidades.index', 'localidades.create', 'localidades.edit', 'localidades.delete',
             'formas_pago.index', 'formas_pago.create', 'formas_pago.edit', 'formas_pago.delete',
-            'shipments.index', 'shipments.create', 'shipments.view',
+            'shipments.index', 'shipments.create', 'shipments.edit', 'shipments.delete', 'shipments.view',
         ];
 
         foreach ($permissions as $permission) {
@@ -32,17 +32,17 @@ class RoleSeeder extends Seeder
 
         // Roles
         $admin = Role::firstOrCreate(['name' => 'admin']);
-        $admin->givePermissionTo(Permission::all());
+        $admin->syncPermissions(Permission::all());
 
         $operador = Role::firstOrCreate(['name' => 'operador']);
-        $operador->givePermissionTo([
+        $operador->syncPermissions([
             'clientes.index', 'clientes.create', 'clientes.edit',
             'rubros.index', 'rubros.create', 'rubros.edit',
             'proveedores.index', 'proveedores.create', 'proveedores.edit',
             'articulos.index', 'articulos.create', 'articulos.edit',
             'agencies.index', 'agencies.create', 'agencies.edit',
             'carriers.index', 'carriers.create', 'carriers.edit',
-            'shipments.index', 'shipments.create', 'shipments.view',
+            'shipments.index', 'shipments.create', 'shipments.edit', 'shipments.view',
         ]);
 
         $consulta = Role::firstOrCreate(['name' => 'consulta']);

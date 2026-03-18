@@ -23,7 +23,8 @@ class Shipment extends Model
         'direccion_entrega',
         'status_id',
         'total_flete',
-        'comision_monto',
+        'comision_origen',
+        'comision_destino',
         'factura_id',
         'agencia_f_origen_id',
         'agencia_f_destino_id',
@@ -88,5 +89,16 @@ class Shipment extends Model
     public function formaPago()
     {
         return $this->belongsTo(FormaPago::class , 'forma_pago_id');
+    }
+
+    public function getPayerAttribute()
+    {
+        if ($this->cliente_id === $this->sender_id) {
+            return 'sender';
+        }
+        if ($this->cliente_id === $this->receiver_id) {
+            return 'receiver';
+        }
+        return 'other';
     }
 }

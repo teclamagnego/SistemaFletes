@@ -173,22 +173,25 @@
                     FECHA: {{ \Carbon\Carbon::parse($shipment->fecha)->format('d/m/Y') }}
                 </td>
             </tr>
+            <tr>
+                <td colspan="2" style="text-align: left; padding-top: 5px; font-weight: bold; font-size: 12px;">
+                    PAGA: {{ $shipment->cliente?->nombre_fantasia ?? 'N/A' }} ({{ $shipment->formaPago?->nombre ?? 'N/A' }})
+                </td>
+            </tr>
         </table>
 
         {{-- Remitente y Destino --}}
         <table class="section-table">
             <tr>
                 <td class="section-box">
-                    <div class="section-title">REMITENTE {{ $shipment->payer === 'sender' ? '(Paga: ' .
-                        $shipment->formaPago->nombre . ')' : '' }}</div>
+                    <div class="section-title">REMITENTE {{ $shipment->payer === 'sender' ? '(PAGA EN ORIGEN)' : '' }}</div>
                     <div><strong>{{ $shipment->sender?->nombre_fantasia }}</strong></div>
                     <div>Dir: {{ $shipment->sender?->direccion }} ({{ $shipment->sender?->localidad?->nombre ?? 'N/A'
                         }})</div>
                     <div>Agencia: {{ $shipment->originAgency?->nombre }}</div>
                 </td>
                 <td class="section-box">
-                    <div class="section-title">DESTINATARIO {{ $shipment->payer === 'receiver' ? '(Paga: ' .
-                        $shipment->formaPago->nombre . ')' : '' }}</div>
+                    <div class="section-title">DESTINATARIO {{ $shipment->payer === 'receiver' ? '(PAGA EN DESTINO)' : '' }}</div>
                     <div><strong>{{ $shipment->receiver?->nombre_fantasia }}</strong></div>
                     <div>Dir: {{ $shipment->direccion_entrega ?? $shipment->receiver?->direccion }} ({{
                         $shipment->receiver?->localidad?->nombre ?? 'N/A' }})</div>

@@ -129,20 +129,18 @@ class AgencyController extends Controller
         $shipments = $query->orderBy('fecha')->get();
         $statuses = ShipmentStatus::all();
 
-        // Calcular comisiones para la vista
+        // Calcular comisiones para la vista usando los valores guardados en la base de datos
         foreach ($shipments as $s) {
             $com = 0;
             $roles = []; 
             if ($s->origin_agency_id == $agency->id && ($role === 'all' || $role === 'origin')) {
-                $c = $s->total_flete * ($s->originAgency->com_origen / 100);
-                foreach ($s->items as $item) { $c += $item->cantidad * ($item->articulo->com_origen ?? 0); }
+                $c = $s->comision_origen;
                 $com += $c;
                 $roles[] = 'Origen';
                 $s->comision_origen_calc = $c;
             }
             if ($s->destination_agency_id == $agency->id && ($role === 'all' || $role === 'destination')) {
-                $c = $s->total_flete * ($s->destinationAgency->com_destino / 100);
-                foreach ($s->items as $item) { $c += $item->cantidad * ($item->articulo->com_destino ?? 0); }
+                $c = $s->comision_destino;
                 $com += $c;
                 $roles[] = 'Destino';
                 $s->comision_destino_calc = $c;
@@ -166,14 +164,10 @@ class AgencyController extends Controller
         $totalCommission = 0;
         foreach ($shipments as $s) {
             if ($s->origin_agency_id == $agency->id && $s->agencia_f_origen_id == 0) {
-                $c = $s->total_flete * ($s->originAgency->com_origen / 100);
-                foreach ($s->items as $item) { $c += $item->cantidad * ($item->articulo->com_origen ?? 0); }
-                $totalCommission += $c;
+                $totalCommission += $s->comision_origen;
             }
             if ($s->destination_agency_id == $agency->id && $s->agencia_f_destino_id == 0) {
-                $c = $s->total_flete * ($s->destinationAgency->com_destino / 100);
-                foreach ($s->items as $item) { $c += $item->cantidad * ($item->articulo->com_destino ?? 0); }
-                $totalCommission += $c;
+                $totalCommission += $s->comision_destino;
             }
         }
 

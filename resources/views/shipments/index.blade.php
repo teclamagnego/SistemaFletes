@@ -75,6 +75,10 @@
                         <div class="btn-group">
                             <a href="{{ route('shipments.show', $s) }}" class="btn btn-sm btn-outline-primary"
                                 title="Ver"><i class="bi bi-eye"></i></a>
+                            @if(!$s->factura_id || $s->factura_id == 0)
+                            <a href="{{ route('shipments.edit', $s) }}" class="btn btn-sm btn-outline-warning"
+                                title="Editar"><i class="bi bi-pencil"></i></a>
+                            @endif
                             <a href="{{ route('shipments.print', $s) }}" target="_blank"
                                 class="btn btn-sm btn-outline-secondary" title="Imprimir PDF"><i
                                     class="bi bi-printer"></i></a>

@@ -10,6 +10,7 @@ use App\Models\Agency;
 use App\Models\Carrier;
 use App\Models\FormaPago;
 use App\Models\ShipmentStatus;
+use App\Models\Articulo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -98,12 +99,26 @@ class ShipmentController extends Controller
 
         return DB::transaction(function () use ($request, $singleCarrierId) {
             $totalFlete = 0;
-            foreach ($request->items as $item) {
-                $totalFlete += $item['total'];
+            $comisionArticulosOrigen = 0;
+            $comisionArticulosDestino = 0;
+
+            foreach ($request->items as $itemData) {
+                $totalFlete += $itemData['total'];
+                
+                if (isset($itemData['articulo_id'])) {
+                    $articulo = Articulo::find($itemData['articulo_id']);
+                    if ($articulo) {
+                        $comisionArticulosOrigen += ($articulo->com_origen / 100) * $itemData['total'];
+                        $comisionArticulosDestino += ($articulo->com_destino / 100) * $itemData['total'];
+                    }
+                }
             }
 
             $originAgency = Agency::findOrFail($request->origin_agency_id);
-            $commissionMonto = $totalFlete * ($originAgency->com_origen / 100);
+            $destinationAgency = Agency::findOrFail($request->destination_agency_id);
+            
+            $comisionOrigen = ($totalFlete * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
+            $comisionDestino = ($totalFlete * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
 
             $carrierId = $singleCarrierId ?? $request->carrier_id;
             $statusId = $singleCarrierId ?ShipmentStatus::IN_TRANSIT : ShipmentStatus::ADMITTED;
@@ -122,7 +137,8 @@ class ShipmentController extends Controller
                 'direccion_entrega' => $request->direccion_entrega,
                 'status_id' => $statusId,
                 'total_flete' => $totalFlete,
-                'comision_monto' => $commissionMonto,
+                'comision_origen' => $comisionOrigen,
+                'comision_destino' => $comisionDestino,
                 'notas' => $request->notas,
             ]);
 
@@ -165,6 +181,123 @@ class ShipmentController extends Controller
     {
         $shipment->load(['sender', 'receiver', 'cliente', 'originAgency', 'destinationAgency', 'carrier', 'items.articulo', 'logs.user']);
         return view('shipments.show', compact('shipment'));
+    }
+
+    public function edit(Shipment $shipment)
+    {
+        if ($shipment->factura_id && $shipment->factura_id != 0) {
+            return redirect()->route('shipments.index')->with('error', 'No se puede editar una guía que ya ha sido facturada.');
+        }
+
+        $shipment->load(['sender', 'receiver', 'items.articulo']);
+        $agencies = Agency::where('activa', true)->orderBy('nombre')->get();
+        $carriers = Carrier::where('activo', true)->get();
+        $formasPago = FormaPago::orderBy('nombre')->get();
+
+        return view('shipments.edit', compact('shipment', 'agencies', 'carriers', 'formasPago'));
+    }
+
+    public function update(Request $request, Shipment $shipment)
+    {
+        \Log::debug("Update triggered for shipment {$shipment->id}", $request->all());
+
+        if ($shipment->factura_id && $shipment->factura_id != 0) {
+            return redirect()->route('shipments.index')->with('error', 'No se puede editar una guía que ya ha sido facturada.');
+        }
+
+        $request->validate([
+            'sender_id' => 'required|exists:clientes,id',
+            'receiver_id' => 'required|exists:clientes,id',
+            'origin_agency_id' => 'required|exists:agencies,id',
+            'destination_agency_id' => 'required|exists:agencies,id',
+            'carrier_id' => 'required|exists:carriers,id',
+            'fecha' => 'nullable|date',
+            'direccion_entrega' => 'nullable|string|max:255',
+            'forma_pago_id' => 'required|exists:forma_pagos,id',
+            'payer' => 'required|in:sender,receiver',
+            'items' => 'required|array|min:1',
+            'items.*.descripcion' => 'required|string|max:255',
+            'items.*.cantidad' => 'required|integer|min:1',
+            'items.*.precio_unitario' => 'required|numeric|min:0',
+            'items.*.bonificacion' => 'nullable|numeric|min:0',
+            'items.*.total' => 'required|numeric|min:0',
+            'items.*.articulo_id' => 'nullable|exists:articulos,id',
+        ]);
+
+        return DB::transaction(function () use ($request, $shipment) {
+            $totalFlete = 0;
+            $comisionArticulosOrigen = 0;
+            $comisionArticulosDestino = 0;
+
+            foreach ($request->items as $itemData) {
+                $totalFlete += $itemData['total'];
+                
+                if (isset($itemData['articulo_id'])) {
+                    $articulo = Articulo::find($itemData['articulo_id']);
+                    if ($articulo) {
+                        $comisionArticulosOrigen += ($articulo->com_origen / 100) * $itemData['total'];
+                        $comisionArticulosDestino += ($articulo->com_destino / 100) * $itemData['total'];
+                    }
+                }
+            }
+
+            $originAgency = Agency::findOrFail($request->origin_agency_id);
+            $destinationAgency = Agency::findOrFail($request->destination_agency_id);
+            
+            $comisionOrigen = ($totalFlete * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
+            $comisionDestino = ($totalFlete * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
+
+            \Log::info("Updating shipment {$shipment->tracking_number}", [
+                'total_flete' => $totalFlete,
+                'com_art_origen' => $comisionArticulosOrigen,
+                'com_art_destino' => $comisionArticulosDestino,
+                'comision_origen' => $comisionOrigen,
+                'comision_destino' => $comisionDestino
+            ]);
+
+            $shipment->update([
+                'sender_id' => $request->sender_id,
+                'receiver_id' => $request->receiver_id,
+                'cliente_id' => $request->payer === 'sender' ? $request->sender_id : $request->receiver_id,
+                'origin_agency_id' => $request->origin_agency_id,
+                'destination_agency_id' => $request->destination_agency_id,
+                'carrier_id' => $request->carrier_id,
+                'forma_pago_id' => $request->forma_pago_id,
+                'fecha' => $request->fecha ?? now(),
+                'direccion_entrega' => $request->direccion_entrega,
+                'total_flete' => $totalFlete,
+                'comision_origen' => $comisionOrigen,
+                'comision_destino' => $comisionDestino,
+                'notas' => $request->notas,
+            ]);
+
+            \Log::info("Shipment updated in DB", ['id' => $shipment->id, 'origen' => $shipment->comision_origen, 'destino' => $shipment->comision_destino]);
+
+            // Reemplazar items: eliminar viejos y crear nuevos (más simple para formularios dinámicos)
+            $shipment->items()->delete();
+
+            foreach ($request->items as $itemData) {
+                $shipment->items()->create([
+                    'articulo_id' => $itemData['articulo_id'] ?? null,
+                    'descripcion' => $itemData['descripcion'],
+                    'cantidad' => $itemData['cantidad'],
+                    'precio_unitario' => $itemData['precio_unitario'],
+                    'bonificacion' => $itemData['bonificacion'] ?? 0,
+                    'total' => $itemData['total'],
+                    'iva' => $itemData['iva'] ?? 0,
+                ]);
+            }
+
+            ShipmentLog::create([
+                'shipment_id' => $shipment->id,
+                'user_id' => Auth::id(),
+                'status_from_id' => $shipment->status_id,
+                'status_to_id' => $shipment->status_id,
+                'notas' => 'Guía actualizada por el usuario.',
+            ]);
+
+            return redirect()->route('shipments.index')->with('success', "Guía {$shipment->tracking_number} actualizada correctamente.");
+        });
     }
 
     public function receive(Shipment $shipment)
@@ -277,6 +410,7 @@ class ShipmentController extends Controller
         $shipment->load([
             'sender.localidad',
             'receiver.localidad',
+            'cliente',
             'originAgency.localidad',
             'destinationAgency.localidad',
             'items.articulo',

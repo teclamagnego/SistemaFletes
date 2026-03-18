@@ -43,12 +43,17 @@ class DobleGGuiaSeeder extends Seeder
             INSERT INTO shipments (
                 id, tracking_number, status_id, sender_id, receiver_id, cliente_id, 
                 origin_agency_id, destination_agency_id, carrier_id, commission_agency_id, forma_pago_id, 
-                fecha, direccion_entrega, total_flete, notas, created_at, updated_at
+                fecha, direccion_entrega, total_flete, comision_origen, comision_destino, notas, created_at, updated_at
             )
             SELECT 
                 id, 
                 numero, 
-                CASE WHEN activo = 0 THEN 6 ELSE activo END, -- 6: Cancelled if 0, otherwise same value as 'activo'
+                CASE 
+                    WHEN activo = 0 THEN 6 -- Cancelled
+                    WHEN activo = 5 THEN 1 -- Admitted
+                    WHEN activo = 1 THEN 5 -- Delivered
+                    ELSE activo 
+                END, 
                 CASE WHEN origen_id = 0 THEN 1 ELSE origen_id END, -- sender_id
                 CASE WHEN destino_id = 0 THEN 1 ELSE destino_id END, -- receiver_id
                 cliente_id, -- Quien paga (Cuenta)
@@ -60,11 +65,13 @@ class DobleGGuiaSeeder extends Seeder
                 fecha,
                 lugardeentrega,
                 total,
+                com_venta,
+                com_reparto,
                 observacion,
                 IFNULL(created_at, NOW()),
                 IFNULL(updated_at, NOW())
             FROM temp_facturas
-            ORDER BY id ASC
+            ORDER BY fecha DESC, id DESC
             LIMIT $limit
         ");
 

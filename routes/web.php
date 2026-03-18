@@ -125,8 +125,8 @@ Route::middleware('auth')->group(function () {
     Route::get('shipments/{shipment}/print', [ShipmentController::class , 'print'])->name('shipments.print')
         ->middleware('permission:shipments.index');
 
-    Route::resource('shipments', ShipmentController::class)->except(['edit', 'update', 'destroy'])
-        ->middleware('permission:shipments.index|shipments.create|shipments.view');
+    Route::resource('shipments', ShipmentController::class)->except(['destroy'])
+        ->middleware('permission:shipments.index|shipments.create|shipments.view|shipments.edit');
 });
 
 Route::get('/test-pdf', function () {
