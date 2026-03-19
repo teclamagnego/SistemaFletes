@@ -267,10 +267,8 @@
             const price = parseFloat(row.querySelector('.item-precio').value) || 0;
             const bonif = parseFloat(row.querySelector('.item-bonif').value) || 0;
 
-            let total = qty * price;
-            if (bonif > 0) {
-                total = total - (total * (bonif / 100));
-            }
+            // Nueva formula: cantidad * precio_unitario * bonificacion / 100
+            let total = (qty * price * bonif) / 100;
 
             row.querySelector('.item-total').value = total.toFixed(2);
             calculateGrandTotal();
@@ -305,7 +303,7 @@
                 </td>
                 <td><input type="number" name="items[${rowCount}][cantidad]" class="form-control form-control-sm item-cantidad" value="1" required min="1"></td>
                 <td><input type="number" step="0.01" name="items[${rowCount}][precio_unitario]" class="form-control form-control-sm item-precio" value="0.00" required min="0"></td>
-                <td><input type="number" step="0.01" name="items[${rowCount}][bonificacion]" class="form-control form-control-sm item-bonif" value="0.00" min="0"></td>
+                <td><input type="number" step="0.01" name="items[${rowCount}][bonificacion]" class="form-control form-control-sm item-bonif" value="100.00" min="0"></td>
                 <td><input type="number" step="0.01" name="items[${rowCount}][total]" class="form-control form-control-sm item-total" value="0.00" readonly></td>
                 <td class="text-center"><button type="button" class="btn btn-sm btn-danger remove-item"><i class="bi bi-x"></i></button></td>
             `;
@@ -425,6 +423,7 @@
                                     a.addEventListener('click', function (e) {
                                         e.preventDefault();
                                         codigoInput.value = articulo.codigo;
+                                        // "para verlo por pantalla aparece el campo nombre"
                                         descInput.value = articulo.nombre;
                                         articuloIdInput.value = articulo.id;
                                         precioInput.value = articulo.precio;
@@ -464,6 +463,23 @@
 
         setupAutocomplete('sender_search', 'sender_id', 'sender_results');
         setupAutocomplete('receiver_search', 'receiver_id', 'receiver_results');
+
+        // Form submission cleanup
+        const shipmentForm = document.getElementById('shipmentForm');
+        shipmentForm.addEventListener('submit', function (e) {
+            const rows = document.querySelectorAll('.item-row');
+            if (rows.length > 0) {
+                const lastRow = rows[rows.length - 1];
+                const artId = lastRow.querySelector('.item-articulo-id').value;
+                const desc = lastRow.querySelector('.item-descripcion').value.trim();
+                const codigo = lastRow.querySelector('.item-codigo').value.trim();
+                
+                // Si no hay articulo seleccionado (id o descripcion o codigo), eliminarla
+                if (!artId && !desc && !codigo && rows.length > 1) {
+                    lastRow.remove();
+                }
+            }
+        });
 
         // Event delegation para el botón "Agregar Cliente" (generado dinámicamente con innerHTML)
         document.addEventListener('click', function (e) {

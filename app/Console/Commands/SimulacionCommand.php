@@ -140,12 +140,13 @@ class SimulacionCommand extends Command
                 $art = $articulos->random();
                 $qty = $faker->numberBetween(1, 10);
                 $precioUnitario = $faker->randomFloat(2, 50, 5000); // Precio random entre 50 y 5000
-                $bonif = $faker->boolean(20) ? $faker->randomFloat(2, 0, 15) : 0; // 20% de probabilidad de tener descuento de hasta 15%
-                $totalLinea = ($qty * $precioUnitario) * (1 - ($bonif / 100));
+                // Nueva lógica: bonif suele ser 100 (100% del precio), o un porcentaje pequeño si es comisión/seguro
+                $bonif = $faker->boolean(80) ? 100 : $faker->randomFloat(2, 0.1, 5); 
+                $totalLinea = ($qty * $precioUnitario * $bonif) / 100;
 
                 $itemsRequest[] = [
                     'articulo_id' => $art->id,
-                    'descripcion' => $art->nombre ?? $art->codigo ?? 'Artículo aleatorio', // Cambiado a 'nombre' o 'codigo' porque 'descripcion' quiza no exista. Veré que tiene articulo.
+                    'descripcion' => $art->nombre ?? $art->codigo ?? 'Artículo aleatorio',
                     'cantidad' => $qty,
                     'precio_unitario' => $precioUnitario,
                     'bonificacion' => $bonif,

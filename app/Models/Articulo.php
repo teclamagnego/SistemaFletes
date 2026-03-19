@@ -12,6 +12,7 @@ class Articulo extends Model
     protected $fillable = [
         'codigo',
         'nombre',
+        'nombre_mostrar',
         'descripcion',
         'precio',
         'com_origen',

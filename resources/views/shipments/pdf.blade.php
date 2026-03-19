@@ -135,6 +135,11 @@
             max-height: 50px;
             max-width: 180px;
         }
+
+        .special-desc {
+            font-size: 20px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -213,9 +218,25 @@
             </thead>
             <tbody>
                 @foreach($shipment->items as $item)
+                @php
+                    $articulo = $item->articulo;
+                    $codigo = strtoupper($articulo->codigo ?? '');
+                    $isSpecial = in_array($codigo, ['REE', 'BULTOX', 'SEGMER']);
+                    
+                    // Prioridad: nombre_mostrar del articulo, luego nombre del articulo, luego descripcion del item
+                    $displayName = $item->descripcion; // Default
+                    if ($articulo) {
+                        $displayName = $articulo->nombre_mostrar ?: ($articulo->nombre ?: $item->descripcion);
+                    }
+                    
+                    // Si es REE, concatenar precio unitario
+                    if ($codigo === 'REE') {
+                        $displayName .= ' ' . number_format($item->precio_unitario, 2);
+                    }
+                @endphp
                 <tr>
                     <td style="text-align: center;">{{ $item->cantidad }}</td>
-                    <td>{{ $item->descripcion }}</td>
+                    <td class="{{ $isSpecial ? 'special-desc' : '' }}">{{ $displayName }}</td>
                     <td style="text-align: right;">${{ number_format($item->precio_unitario, 2) }}</td>
                     <td style="text-align: center;">{{ $item->bonificacion }}%</td>
                     <td style="text-align: right;">${{ number_format($item->total, 2) }}</td>
