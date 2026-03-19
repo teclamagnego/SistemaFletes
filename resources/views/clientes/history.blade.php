@@ -90,10 +90,22 @@
                             @endif
 
                             @if($mov['tipo'] == 'Factura' && isset($mov['factura_id']))
-                            <a href="{{ route('facturas.print', $mov['factura_id']) }}" target="_blank"
-                                class="btn btn-link btn-sm p-0 ms-1" title="Imprimir Factura">
-                                <i class="bi bi-printer text-danger"></i>
-                            </a>
+                            <div class="btn-group ms-1">
+                                <a href="{{ route('facturas.print', $mov['factura_id']) }}" target="_blank"
+                                    class="btn btn-outline-danger btn-sm px-2" title="Imprimir Factura">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                                <form action="{{ route('facturas.destroy', $mov['factura_id']) }}" method="POST"
+                                    onsubmit="return confirm('¿Está seguro de eliminar esta factura? Las guías asociadas quedarán como pendientes de facturación.')"
+                                    class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm px-2"
+                                        title="Eliminar Factura">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                             @endif
 
                             @if($mov['tipo'] == 'Recibo' && isset($mov['recibo_id']))

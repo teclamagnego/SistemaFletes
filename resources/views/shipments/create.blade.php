@@ -14,8 +14,9 @@
         cursor: pointer;
     }
 
-    .list-group-item-action:hover {
-        background-color: #f8f9fa;
+    .list-group-item-action:hover, .list-group-item-action.active {
+        background-color: #e9ecef !important;
+        color: inherit !important;
     }
 
     .item-total-display {
@@ -134,9 +135,6 @@
                             <div
                                 class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0 fw-bold">Artículos / Bultos</h6>
-                                <button type="button" class="btn btn-sm btn-outline-primary" id="addItem">
-                                    <i class="bi bi-plus-lg me-1"></i>Añadir Línea
-                                </button>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
@@ -257,6 +255,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         const quickClientModalElement = document.getElementById('quickClientModal');
         const quickClientModal = new bootstrap.Modal(quickClientModalElement);
+        const shipmentForm = document.getElementById('shipmentForm');
 
         function calculateRowTotal(row) {
             const qty = parseFloat(row.querySelector('.item-cantidad').value) || 0;
@@ -280,7 +279,7 @@
             document.getElementById('total_envio_display').innerText = '$ ' + grandTotal.toFixed(2);
         }
 
-        document.getElementById('addItem').addEventListener('click', function () {
+        function addNewRow() {
             const tableBody = document.querySelector('#itemsTable tbody');
             const rowCount = tableBody.querySelectorAll('tr').length;
             const newRow = document.createElement('tr');
@@ -309,12 +308,28 @@
 
             setupItemAutocomplete(newRow);
             setupRowListeners(newRow);
-        });
+            
+            return newRow;
+        }
 
         document.querySelector('#itemsTable').addEventListener('click', function (e) {
             if (e.target.closest('.remove-item')) {
-                e.target.closest('tr').remove();
-                calculateGrandTotal();
+                const rows = document.querySelectorAll('.item-row');
+                if (rows.length > 1) {
+                    e.target.closest('tr').remove();
+                    calculateGrandTotal();
+                } else {
+                    // Si es la única fila, solo limpiarla
+                    const row = rows[0];
+                    row.querySelector('.item-codigo').value = '';
+                    row.querySelector('.item-descripcion').value = '';
+                    row.querySelector('.item-articulo-id').value = '';
+                    row.querySelector('.item-cantidad').value = 1;
+                    row.querySelector('.item-precio').value = '0.00';
+                    row.querySelector('.item-bonif').value = '0.00';
+                    row.querySelector('.item-total').value = '0.00';
+                    calculateGrandTotal();
+                }
             }
         });
 
@@ -323,10 +338,42 @@
             const hidden = document.getElementById(hiddenId);
             const results = document.getElementById(resultsId);
             let timeout = null;
+            let currentFocus = -1;
+
+            function addActive(x) {
+                if (!x) return false;
+                removeActive(x);
+                if (currentFocus >= x.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = (x.length - 1);
+                x[currentFocus].classList.add("active");
+            }
+
+            function removeActive(x) {
+                for (let i = 0; i < x.length; i++) {
+                    x[i].classList.remove("active");
+                }
+            }
+
+            input.addEventListener('keydown', function (e) {
+                let x = results.getElementsByClassName("list-group-item-action");
+                if (e.key === "ArrowDown") {
+                    currentFocus++;
+                    addActive(x);
+                } else if (e.key === "ArrowUp") {
+                    currentFocus--;
+                    addActive(x);
+                } else if (e.key === "Enter") {
+                    if (currentFocus > -1) {
+                        if (x[currentFocus]) x[currentFocus].click();
+                        e.preventDefault();
+                    }
+                }
+            });
 
             input.addEventListener('input', function () {
                 clearTimeout(timeout);
                 const q = this.value.trim();
+                currentFocus = -1;
                 if (q.length < 2) {
                     results.style.display = 'none';
                     return;
@@ -349,7 +396,7 @@
                                 results.style.display = 'block';
                                 return;
                             }
-                            data.forEach(client => {
+                            data.forEach((client, index) => {
                                 const a = document.createElement('a');
                                 a.href = '#'; a.className = 'list-group-item list-group-item-action py-2';
                                 a.innerHTML = `<strong>${client.nombre_fantasia}</strong> <br><small class="text-muted">Doc: ${client.documento_nro}</small>`;
@@ -397,9 +444,42 @@
 
             function handleSearch(input, results, field) {
                 let timeout = null;
+                let currentFocus = -1;
+
+                function addActive(x) {
+                    if (!x) return false;
+                    removeActive(x);
+                    if (currentFocus >= x.length) currentFocus = 0;
+                    if (currentFocus < 0) currentFocus = (x.length - 1);
+                    x[currentFocus].classList.add("active");
+                }
+
+                function removeActive(x) {
+                    for (let i = 0; i < x.length; i++) {
+                        x[i].classList.remove("active");
+                    }
+                }
+
+                input.addEventListener('keydown', function (e) {
+                    let x = results.getElementsByClassName("list-group-item-action");
+                    if (e.key === "ArrowDown") {
+                        currentFocus++;
+                        addActive(x);
+                    } else if (e.key === "ArrowUp") {
+                        currentFocus--;
+                        addActive(x);
+                    } else if (e.key === "Enter") {
+                        if (currentFocus > -1) {
+                            if (x[currentFocus]) x[currentFocus].click();
+                            e.preventDefault();
+                        }
+                    }
+                });
+
                 input.addEventListener('input', function () {
                     clearTimeout(timeout);
                     const q = this.value.trim();
+                    currentFocus = -1;
                     if (q.length < 1) {
                         results.style.display = 'none';
                         return;
@@ -427,6 +507,9 @@
                                         cantidadInput.value = 1;
                                         results.style.display = 'none';
                                         calculateRowTotal(row);
+                                        // Enfocar en cantidad después de seleccionar
+                                        cantidadInput.focus();
+                                        cantidadInput.select();
                                     });
                                     results.appendChild(a);
                                 });
@@ -446,9 +529,32 @@
         }
 
         function setupRowListeners(row) {
+            const qtyInput = row.querySelector('.item-cantidad');
+            const priceInput = row.querySelector('.item-precio');
+            const bonifInput = row.querySelector('.item-bonif');
+            const codigoInput = row.querySelector('.item-codigo');
+
             row.querySelectorAll('input').forEach(input => {
                 input.addEventListener('change', () => calculateRowTotal(row));
                 input.addEventListener('keyup', () => calculateRowTotal(row));
+            });
+
+            // Enter navigation
+            qtyInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    priceInput.focus();
+                    priceInput.select();
+                }
+            });
+
+            priceInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Aceptar la línea y añadir una nueva
+                    const nextRow = addNewRow();
+                    nextRow.querySelector('.item-codigo').focus();
+                }
             });
         }
 
@@ -460,6 +566,22 @@
 
         setupAutocomplete('sender_search', 'sender_id', 'sender_results');
         setupAutocomplete('receiver_search', 'receiver_id', 'receiver_results');
+
+        // Form submission cleanup
+        shipmentForm.addEventListener('submit', function (e) {
+            const rows = document.querySelectorAll('.item-row');
+            if (rows.length > 0) {
+                const lastRow = rows[rows.length - 1];
+                const desc = lastRow.querySelector('.item-descripcion').value.trim();
+                const artId = lastRow.querySelector('.item-articulo-id').value;
+                const codigo = lastRow.querySelector('.item-codigo').value.trim();
+                
+                // Si la última fila está vacía y hay más filas, eliminarla
+                if (!desc && !artId && !codigo && rows.length > 1) {
+                    lastRow.remove();
+                }
+            }
+        });
 
         // Event delegation para el botón "Agregar Cliente" (generado dinámicamente con innerHTML)
         document.addEventListener('click', function (e) {

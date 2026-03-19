@@ -53,10 +53,19 @@
                         </div>
                         <div class="col-md-6 ps-md-4">
                             <p><strong>Pagador:</strong>
-                                <span class="badge bg-primary">
-                                    {{ $shipment->cliente?->nombre_fantasia ?? $shipment->sender?->nombre_fantasia ??
-                                    'N/A' }}
-                                </span>
+                                @php
+                                    $pagadorId = $shipment->cliente_id ?? $shipment->sender_id;
+                                    $pagadorNombre = $shipment->cliente?->nombre_fantasia ?? $shipment->sender?->nombre_fantasia ?? 'N/A';
+                                @endphp
+                                @if($pagadorId)
+                                    <a href="{{ route('clientes.history', $pagadorId) }}" class="text-decoration-none">
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-clock-history me-1"></i> {{ $pagadorNombre }}
+                                        </span>
+                                    </a>
+                                @else
+                                    <span class="badge bg-primary">{{ $pagadorNombre }}</span>
+                                @endif
                             </p>
                             <p><strong>Forma Pago:</strong> {{ $shipment->formaPago?->nombre ?? '-' }}</p>
                             <p><strong>Fecha:</strong> {{ $shipment->fecha }}</p>

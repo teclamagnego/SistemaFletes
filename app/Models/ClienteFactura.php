@@ -11,15 +11,22 @@ class ClienteFactura extends Model
 
     protected $fillable = [
         'cliente_id',
+        'forma_pago_id',
         'nro_factura',
         'fecha',
         'total',
+        'falta_imputar',
         'observacion',
     ];
 
     public function cliente()
     {
         return $this->belongsTo(Cliente::class);
+    }
+
+    public function formaPago()
+    {
+        return $this->belongsTo(FormaPago::class);
     }
 
     public function shipments()

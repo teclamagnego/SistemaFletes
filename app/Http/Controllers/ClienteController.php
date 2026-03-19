@@ -129,12 +129,21 @@ class ClienteController extends Controller
             $shipments = Shipment::whereIn('id', $request->shipment_ids)->get();
             $total = $shipments->sum('total_flete');
             $cantidad = $shipments->count();
+            
+            // Tomamos la forma de pago de la primera guía (asumimos consistencia)
+            $forma_pago_id = $shipments->first()->forma_pago_id;
+            
+            // Si es Cuenta Corriente (ID 2), falta imputar el total. Si es Contado (ID 1) o cualquier otro, es 0.
+            $idCuentaCorriente = 2; 
+            $falta_imputar = ($forma_pago_id == $idCuentaCorriente) ? $total : 0;
 
             $factura = ClienteFactura::create([
                 'cliente_id' => $cliente->id,
+                'forma_pago_id' => $forma_pago_id,
                 'nro_factura' => $request->nro_factura,
                 'fecha' => $request->fecha,
                 'total' => $total,
+                'falta_imputar' => $falta_imputar,
                 'observacion' => "Se factura(n) $cantidad guia(s). Mirar planilla adjunta de guias incluidas.",
             ]);
 
@@ -150,10 +159,16 @@ class ClienteController extends Controller
         $to = $request->input('to', now()->endOfMonth()->format('Y-m-d'));
         $only_shipments = $request->boolean('only_shipments');
 
-        $idCuentaCorriente = FormaPago::where('nombre', 'LIKE', '%Cuenta Corriente%')->first()?->id ?? 2;
+        $idContado = 1; // ID para forma de pago 'Contado'
+        $idCuentaCorriente = 2; // Cuenta Corriente
 
         // 1. Calcular Saldo Anterior (antes de $from)
-        $prev_facturas = ClienteFactura::where('cliente_id', $cliente->id)->where('fecha', '<', $from)->sum('total');
+        // Facturas antes de $from que NO son contado (o que son CC)
+        $prev_facturas = ClienteFactura::where('cliente_id', $cliente->id)
+            ->where('fecha', '<', $from)
+            ->where('forma_pago_id', '!=', $idContado)
+            ->sum('total');
+
         $prev_recibos = $cliente->recibos()->where('fecha', '<', $from)->sum('monto');
         
         $saldoAnterior = $prev_facturas - $prev_recibos;
@@ -164,13 +179,15 @@ class ClienteController extends Controller
 
         $movimientos = collect();
         foreach ($facturas as $f) {
+            $esContado = ($f->forma_pago_id == $idContado);
+            
             $movimientos->push([
                 'fecha' => $f->fecha,
                 'tipo' => 'Factura',
                 'referencia' => $f->nro_factura ?? 'Factura #' . $f->id,
-                'detalle' => "Factura de guias",
+                'detalle' => "Factura de guias" . ($esContado ? " (Contado)" : ""),
                 'debe' => $f->total,
-                'haber' => 0,
+                'haber' => $esContado ? $f->total : 0,
                 'factura_id' => $f->id,
                 'link' => null
             ]);

@@ -51,7 +51,7 @@ class DobleGGuiaSeeder extends Seeder
                 CASE 
                     WHEN activo = 0 THEN 6 -- Cancelled
                     WHEN activo = 5 THEN 1 -- Admitted
-                    WHEN activo = 1 THEN 5 -- Delivered
+                    WHEN activo = 4 THEN 5 -- Delivered
                     ELSE activo 
                 END, 
                 CASE WHEN origen_id = 0 THEN 1 ELSE origen_id END, -- sender_id
