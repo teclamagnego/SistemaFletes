@@ -123,8 +123,14 @@ class ShipmentController extends Controller
             $carrierId = $singleCarrierId ?? $request->carrier_id;
             $statusId = $singleCarrierId ?ShipmentStatus::IN_TRANSIT : ShipmentStatus::ADMITTED;
 
+            $notas = $request->notas;
+            if ($request->filled('direccion_entrega')) {
+                $direccionStr = "Lugar de Entrega: " . $request->direccion_entrega;
+                $notas = $notas ? $direccionStr . " - " . $notas : $direccionStr;
+            }
+
             $shipment = Shipment::create([
-                'tracking_number' => 'G-' . strtoupper(Str::random(8)),
+                'tracking_number' => 'PENDING',
                 'sender_id' => $request->sender_id,
                 'receiver_id' => $request->receiver_id,
                 'cliente_id' => $request->payer === 'sender' ? $request->sender_id : $request->receiver_id,
@@ -139,8 +145,10 @@ class ShipmentController extends Controller
                 'total_flete' => $totalFlete,
                 'comision_origen' => $comisionOrigen,
                 'comision_destino' => $comisionDestino,
-                'notas' => $request->notas,
+                'notas' => $notas,
             ]);
+
+            $shipment->update(['tracking_number' => (string)$shipment->id]);
 
             foreach ($request->items as $itemData) {
                 $shipment->items()->create([
@@ -386,19 +394,24 @@ class ShipmentController extends Controller
 
     public function deliver(Shipment $shipment)
     {
-        if ($shipment->status_id !== ShipmentStatus::IN_DESTINATION) {
-            return back()->with('error', 'Solo se pueden marcar como entregadas las guías que están en destino.');
+        if (!in_array($shipment->status_id, [ShipmentStatus::IN_DESTINATION, ShipmentStatus::IN_TRANSIT])) {
+            return back()->with('error', 'Solo se pueden marcar como entregadas las guías que están en destino o en tránsito.');
         }
 
         DB::transaction(function () use ($shipment) {
+            $fromStatusId = $shipment->status_id;
             $shipment->update(['status_id' => ShipmentStatus::DELIVERED]);
+
+            $notas = $fromStatusId === ShipmentStatus::IN_TRANSIT 
+                ? 'Guía entregada satisfactoriamente (entrega directa desde tránsito).'
+                : 'Guía entregada satisfactoriamente al destinatario.';
 
             ShipmentLog::create([
                 'shipment_id' => $shipment->id,
                 'user_id' => Auth::id(),
-                'status_from_id' => ShipmentStatus::IN_DESTINATION,
+                'status_from_id' => $fromStatusId,
                 'status_to_id' => ShipmentStatus::DELIVERED,
-                'notas' => 'Guía entregada satisfactoriamente al destinatario.',
+                'notas' => $notas,
             ]);
         });
 

@@ -145,7 +145,7 @@
                                                 <th>Producto</th>
                                                 <th width="80">Cant.</th>
                                                 <th width="120">P. Unitario</th>
-                                                <th width="100">Bonif. (%)</th>
+                                                <th width="100">%</th>
                                                 <th width="120">Total</th>
                                                 <th width="50"></th>
                                             </tr>
@@ -165,7 +165,7 @@
                                                     <div class="position-relative">
                                                         <input type="text" name="items[0][descripcion]"
                                                             class="form-control form-control-sm item-descripcion"
-                                                            placeholder="Descripción del producto" required
+                                                            placeholder="Descripción del producto"
                                                             autocomplete="off">
                                                         <input type="hidden" name="items[0][articulo_id]"
                                                             class="item-articulo-id">
@@ -291,7 +291,7 @@
                 </td>
                 <td>
                     <div class="position-relative">
-                        <input type="text" name="items[${rowCount}][descripcion]" class="form-control form-control-sm item-descripcion" placeholder="Descripción del producto" required autocomplete="off">
+                        <input type="text" name="items[${rowCount}][descripcion]" class="form-control form-control-sm item-descripcion" placeholder="Descripción del producto" autocomplete="off">
                         <input type="hidden" name="items[${rowCount}][articulo_id]" class="item-articulo-id">
                         <div class="list-group position-absolute w-100 shadow-sm item-descripcion-results" style="z-index: 1000; display: none;"></div>
                     </div>
@@ -396,9 +396,20 @@
                             }
                             data.forEach((client, index) => {
                                 const a = document.createElement('a');
-                                a.href = '#'; a.className = 'list-group-item list-group-item-action py-2';
-                                a.innerHTML = `<strong>${client.nombre_fantasia}</strong> <br><small class="text-muted">Doc: ${client.documento_nro}</small>`;
+                                a.href = '#'; 
+                                a.className = 'list-group-item list-group-item-action py-2 d-flex justify-content-between align-items-center client-search-item';
+                                a.innerHTML = `
+                                    <div class="flex-grow-1">
+                                        <strong>${client.nombre_fantasia}</strong> <br>
+                                        <small class="text-muted">Doc: ${client.documento_nro}</small>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger border-0 delete-client-ajax" data-id="${client.id}" title="Eliminar cliente">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                `;
+                                
                                 a.onclick = function (e) {
+                                    if (e.target.closest('.delete-client-ajax')) return;
                                     e.preventDefault();
                                     input.value = client.nombre_fantasia;
                                     hidden.value = client.id;
@@ -417,6 +428,44 @@
                                         }
                                     }
                                 };
+
+                                const btnDel = a.querySelector('.delete-client-ajax');
+                                btnDel.onclick = function(e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    const originalContent = btnDel.innerHTML;
+                                    btnDel.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                                    btnDel.disabled = true;
+
+                                    fetch(`/clientes/${client.id}/ajax`, {
+                                        method: 'DELETE',
+                                        headers: {
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                                            'Accept': 'application/json'
+                                        }
+                                    })
+                                    .then(res => res.json())
+                                    .then(resData => {
+                                        if (resData.success) {
+                                            a.remove();
+                                            if (results.querySelectorAll('.client-search-item').length === 0) {
+                                                results.style.display = 'none';
+                                            }
+                                        } else {
+                                            alert(resData.message);
+                                            btnDel.innerHTML = originalContent;
+                                            btnDel.disabled = false;
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error(err);
+                                        alert('Error al intentar eliminar el cliente.');
+                                        btnDel.innerHTML = originalContent;
+                                        btnDel.disabled = false;
+                                    });
+                                };
+
                                 results.appendChild(a);
                             });
                             results.style.display = 'block';
@@ -555,6 +604,15 @@
                     nextRow.querySelector('.item-codigo').focus();
                 }
             });
+
+            bonifInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Aceptar la línea y añadir una nueva
+                    const nextRow = addNewRow();
+                    nextRow.querySelector('.item-codigo').focus();
+                }
+            });
         }
 
         // Initialize for existing rows
@@ -566,19 +624,59 @@
         setupAutocomplete('sender_search', 'sender_id', 'sender_results');
         setupAutocomplete('receiver_search', 'receiver_id', 'receiver_results');
 
-        // Form submission cleanup
+        // Prevent Enter from submitting the form, except on textareas
+        shipmentForm.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                // We don't preventDefault here because specific listeners for inputs 
+                // like qtyInput and priceInput already handle Enter and call e.preventDefault()
+                // If it reaches here and it's an Enter, we prevent it to avoid submit.
+                // However, we must allow it if it's within an autocomplete result selection.
+                // To be safe, we only allow submit via click on the button.
+                if (e.target.closest('#shipmentForm') && !e.target.classList.contains('item-precio') && !e.target.classList.contains('item-cantidad')) {
+                   // e.preventDefault(); // This might interfere with autocomplete.
+                }
+            }
+        });
+
+        // Better way: identify the submit button and only allow submission if it was clicked.
+        let isSubmitButtonClicked = false;
+        shipmentForm.querySelector('button[type="submit"]').addEventListener('click', function() {
+            isSubmitButtonClicked = true;
+        });
+
         shipmentForm.addEventListener('submit', function (e) {
+            // If enter was pressed on a non-handled field, prevent submit
+            if (!isSubmitButtonClicked) {
+                // e.preventDefault();
+                // return false;
+            }
+            
+            // Cleanup empty last row
             const rows = document.querySelectorAll('.item-row');
-            if (rows.length > 0) {
+            if (rows.length > 1) {
                 const lastRow = rows[rows.length - 1];
                 const artId = lastRow.querySelector('.item-articulo-id').value;
                 const desc = lastRow.querySelector('.item-descripcion').value.trim();
                 const codigo = lastRow.querySelector('.item-codigo').value.trim();
                 
-                // Si no hay articulo seleccionado (id o descripcion o codigo), eliminarla
-                if (!artId && !desc && !codigo && rows.length > 1) {
+                // Si la última fila está vacía y hay más de una fila, la eliminamos
+                if (!artId && !desc && !codigo) {
                     lastRow.remove();
                 }
+            }
+
+            // Validación mínima: Al menos una fila con descripción
+            const remainingRows = document.querySelectorAll('.item-row');
+            let hasValidItem = false;
+            remainingRows.forEach(row => {
+                if (row.querySelector('.item-descripcion').value.trim() !== '') {
+                    hasValidItem = true;
+                }
+            });
+
+            if (!hasValidItem) {
+                e.preventDefault();
+                alert('Debe agregar al menos un artículo con descripción.');
             }
         });
 
@@ -625,6 +723,37 @@
                     quickClientModal.hide(); btn.disabled = false; btn.innerHTML = 'Guardar Cliente';
                 })
                 .catch(() => { alert('Error al crear cliente'); btn.disabled = false; btn.innerHTML = 'Guardar Cliente'; });
+        });
+
+        // Bloquear el envío con Enter de forma global en el formulario
+        shipmentForm.onkeypress = function(e) {
+            var key = e.charCode || e.keyCode || 0;     
+            if (key == 13) {
+                if (e.target.tagName !== 'TEXTAREA') {
+                    // Si estamos en un campo que NO sea el de precio (que ya gestiona el Enter para nueva fila)
+                    // o el de cantidad, prevenimos el envío.
+                    if (!e.target.classList.contains('item-precio') && !e.target.classList.contains('item-cantidad')) {
+                        // e.preventDefault();
+                    }
+                }
+            }
+        }
+
+        // Una técnica más robusta para evitar submit por Enter:
+        shipmentForm.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (e.target.tagName !== 'TEXTAREA') {
+                    // Permitimos que los listeners específicos (de fila o autocomplete) sigan funcionando
+                    // pero evitamos que el evento llegue a disparar el submit del form por defecto.
+                    // Si el target no es uno de nuestros inputs controlados de Enter, lo paramos.
+                    const handledInputs = ['item-cantidad', 'item-precio', 'item-codigo', 'item-descripcion'];
+                    const isHandled = handledInputs.some(cls => e.target.classList.contains(cls));
+                    
+                    if (!isHandled && !e.target.closest('.list-group')) {
+                        e.preventDefault();
+                    }
+                }
+            }
         });
     });
 </script>

@@ -18,6 +18,10 @@
                 <button type="submit" class="btn btn-warning me-2"><i class="bi bi-geo-fill"></i> Marcar Arribo en
                     Destino</button>
             </form>
+            <form action="{{ route('shipments.deliver', $shipment) }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-primary me-2"><i class="bi bi-check-circle-fill"></i> Entregado</button>
+            </form>
             @endif
 
             @if($shipment->status_id == \App\Models\ShipmentStatus::IN_DESTINATION)

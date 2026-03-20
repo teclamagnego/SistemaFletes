@@ -21,8 +21,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             FormasPagoSeeder::class ,
             RoleSeeder::class ,
-            ClienteLookupsSeeder::class
-
+            ClienteLookupsSeeder::class ,
+            TransportistaSeeder::class ,
+            EmpresaSucursalSeeder::class ,
         ]);
     }
 }

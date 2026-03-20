@@ -304,4 +304,22 @@ class ClienteController extends Controller
         $cliente->delete();
         return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente.');
     }
+
+    public function destroyAjax(Cliente $cliente)
+    {
+        $hasShipments = Shipment::where('sender_id', $cliente->id)
+            ->orWhere('receiver_id', $cliente->id)
+            ->orWhere('cliente_id', $cliente->id)
+            ->exists();
+
+        if ($hasShipments) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'No se puede eliminar un cliente con guías asociadas.'
+            ], 422);
+        }
+
+        $cliente->delete();
+        return response()->json(['success' => true]);
+    }
 }

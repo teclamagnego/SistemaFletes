@@ -136,9 +136,9 @@
             max-width: 180px;
         }
 
-        .special-desc {
-            font-size: 20px;
-            font-weight: bold;
+        table.items-table td.special-desc {
+            font-size: 26px !important;
+            font-weight: bold !important;
         }
     </style>
 </head>
@@ -212,7 +212,7 @@
                     <th style="width: 8%;">Cant.</th>
                     <th>Descripción</th>
                     <th style="width: 12%;">P. Unit.</th>
-                    <th style="width: 10%;">Bonif.</th>
+                    <th style="width: 10%;">%</th>
                     <th style="width: 15%;">Total</th>
                 </tr>
             </thead>
@@ -221,13 +221,10 @@
                 @php
                     $articulo = $item->articulo;
                     $codigo = strtoupper($articulo->codigo ?? '');
-                    $isSpecial = in_array($codigo, ['REE', 'BULTOX', 'SEGMER']);
+                    $isSpecial = in_array($codigo, ['REE', 'BULTOX']) || str_contains(strtoupper($item->descripcion), 'REE');
                     
-                    // Prioridad: nombre_mostrar del articulo, luego nombre del articulo, luego descripcion del item
-                    $displayName = $item->descripcion; // Default
-                    if ($articulo) {
-                        $displayName = $articulo->nombre_mostrar ?: ($articulo->nombre ?: $item->descripcion);
-                    }
+                    // Mostrar siempre campo descripción guardado en shipment_items
+                    $displayName = $item->descripcion;
                     
                     // Si es REE, concatenar precio unitario
                     if ($codigo === 'REE') {

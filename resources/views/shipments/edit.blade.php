@@ -145,7 +145,7 @@
                                                 <th>Producto</th>
                                                 <th width="80">Cant.</th>
                                                 <th width="120">P. Unitario</th>
-                                                <th width="100">Bonif. (%)</th>
+                                                <th width="100">%</th>
                                                 <th width="120">Total</th>
                                                 <th width="50"></th>
                                             </tr>

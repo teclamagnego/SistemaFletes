@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::get('facturas/{factura}/print', [ClienteFacturaController::class , 'print'])->name('facturas.print')->middleware('permission:clientes.index');
     Route::resource('facturas', ClienteFacturaController::class)->only(['index', 'show', 'destroy'])->middleware('permission:clientes.index');
 
+    Route::delete('clientes/{cliente}/ajax', [ClienteController::class , 'destroyAjax'])->name('clientes.destroyAjax')->middleware('permission:clientes.delete');
     Route::resource('clientes', ClienteController::class)->except(['show'])
         ->middleware('permission:clientes.index|clientes.create|clientes.edit|clientes.delete');
 
