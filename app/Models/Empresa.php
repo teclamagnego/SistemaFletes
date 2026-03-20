@@ -18,7 +18,10 @@ class Empresa extends Model
         'tipoiva_id',
         'activo',
         'logo',
-        'esagenteretencioniva'
+        'esagenteretencioniva',
+        'qz_certificate',
+        'qz_private_key',
+        'qz_printer',
     ];
 
     protected $casts = [

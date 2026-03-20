@@ -31,14 +31,25 @@ class EmpresaController extends Controller
             'activo' => 'boolean',
             'esagenteretencioniva' => 'boolean',
             'logo' => 'nullable|image|max:2048',
+            'qz_certificate_file' => 'nullable|file|max:1024',
+            'qz_private_key_file' => 'nullable|file|max:1024',
+            'qz_printer' => 'nullable|string|max:191',
         ]);
 
-        $data = $request->except('logo');
+        $data = $request->except(['logo', 'qz_certificate_file', 'qz_private_key_file']);
         $data['activo'] = $request->has('activo') ? 1 : 0;
         $data['esagenteretencioniva'] = $request->has('esagenteretencioniva') ? 1 : 0;
 
         if ($request->hasFile('logo')) {
             $data['logo'] = $request->file('logo')->store('logos', 'public');
+        }
+
+        if ($request->hasFile('qz_certificate_file')) {
+            $data['qz_certificate'] = file_get_contents($request->file('qz_certificate_file')->path());
+        }
+
+        if ($request->hasFile('qz_private_key_file')) {
+            $data['qz_private_key'] = file_get_contents($request->file('qz_private_key_file')->path());
         }
 
         Empresa::create($data);
@@ -62,9 +73,12 @@ class EmpresaController extends Controller
             'activo' => 'boolean',
             'esagenteretencioniva' => 'boolean',
             'logo' => 'nullable|image|max:2048',
+            'qz_certificate_file' => 'nullable|file|max:1024',
+            'qz_private_key_file' => 'nullable|file|max:1024',
+            'qz_printer' => 'nullable|string|max:191',
         ]);
 
-        $data = $request->except('logo');
+        $data = $request->except(['logo', 'qz_certificate_file', 'qz_private_key_file']);
         $data['activo'] = $request->has('activo') ? 1 : 0;
         $data['esagenteretencioniva'] = $request->has('esagenteretencioniva') ? 1 : 0;
 
@@ -73,6 +87,14 @@ class EmpresaController extends Controller
                 Storage::disk('public')->delete($empresa->logo);
             }
             $data['logo'] = $request->file('logo')->store('logos', 'public');
+        }
+
+        if ($request->hasFile('qz_certificate_file')) {
+            $data['qz_certificate'] = file_get_contents($request->file('qz_certificate_file')->path());
+        }
+
+        if ($request->hasFile('qz_private_key_file')) {
+            $data['qz_private_key'] = file_get_contents($request->file('qz_private_key_file')->path());
         }
 
         $empresa->update($data);

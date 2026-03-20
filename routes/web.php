@@ -127,8 +127,28 @@ Route::middleware('auth')->group(function () {
     Route::get('shipments/{shipment}/print', [ShipmentController::class , 'print'])->name('shipments.print')
         ->middleware('permission:shipments.index');
 
+    Route::get('shipments/{shipment}/print-base64', [ShipmentController::class , 'printBase64'])->name('shipments.printBase64')
+        ->middleware('permission:shipments.index');
+
     Route::resource('shipments', ShipmentController::class)->except(['destroy'])
         ->middleware('permission:shipments.index|shipments.create|shipments.view|shipments.edit');
+
+    // QZ-Tray: certificado y llave privada dinámicos desde la empresa
+    Route::get('/qz/digital-certificate.txt', function() {
+        $empresa = \App\Models\Empresa::first();
+        abort_unless($empresa && $empresa->qz_certificate, 404);
+        return response($empresa->qz_certificate, 200, ['Content-Type' => 'text/plain']);
+    })->name('qz.certificate');
+
+    Route::get('/qz/private-key.pem', function() {
+        $empresa = \App\Models\Empresa::first();
+        abort_unless($empresa && $empresa->qz_private_key, 404);
+        return response($empresa->qz_private_key, 200, ['Content-Type' => 'text/plain']);
+    })->name('qz.privateKey');
+
+    Route::post('/qz/sign', [ShipmentController::class, 'signRequest'])->name('qz.sign');
+
+
 });
 
 Route::get('/test-pdf', function () {

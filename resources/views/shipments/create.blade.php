@@ -22,6 +22,11 @@
     .item-total-display {
         font-weight: bold;
     }
+
+    /* QZ-Tray Print Status Modal */
+    #printStatusModal .modal-header.bg-success { border-radius: 0.3rem 0.3rem 0 0; }
+    #printStatusModal .modal-header.bg-danger  { border-radius: 0.3rem 0.3rem 0 0; }
+    .qz-status-icon { font-size: 3rem; }
 </style>
 @endpush
 
@@ -211,7 +216,9 @@
 
                         <div class="d-flex justify-content-end gap-2 border-top pt-4">
                             <a href="{{ route('shipments.index') }}" class="btn btn-light px-4">Cancelar</a>
-                            <button type="submit" class="btn btn-primary px-4">Crear Guía</button>
+                            <button type="submit" id="btnCrearGuia" class="btn btn-primary px-4">
+                                <i class="bi bi-printer me-1"></i>Crear e Imprimir Guía
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -250,9 +257,209 @@
     </div>
 </div>
 
+<!-- Modal de estado de impresión QZ-Tray -->
+<div class="modal fade" id="printStatusModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white" id="printModalHeader">
+                <h5 class="modal-title" id="printModalTitle">
+                    <span class="spinner-border spinner-border-sm me-2" id="printSpinner"></span>
+                    Guardando guía...
+                </h5>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div id="printStatusContent">
+                    <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem;"></div>
+                    <p class="fs-5 mb-1" id="printStatusText">Creando guía en el sistema...</p>
+                    <p class="text-muted small" id="printStatusSub">Por favor espere</p>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center" id="printModalFooter" style="display:none !important;">
+                <a id="btnGoToList" href="{{ route('shipments.index') }}" class="btn btn-primary">
+                    <i class="bi bi-list-ul me-1"></i>Ver listado de guías
+                </a>
+                <button id="btnRetryPrint" class="btn btn-outline-secondary" style="display:none;">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Reintentar impresión
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
+{{-- QZ-Tray library --}}
+<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js"></script>
+<script>
+    // ============================================================
+    // QZ-Tray: Impresión directa al guardar la guía
+    // ============================================================
+    let createdShipmentPrintBase64Url = null;
+    let createdTrackingNumber = null;
+    let printStatusModal = null;
+
+    function updatePrintModal(phase, errorDetail) {
+        const header   = document.getElementById('printModalHeader');
+        const title    = document.getElementById('printModalTitle');
+        const text     = document.getElementById('printStatusText');
+        const sub      = document.getElementById('printStatusSub');
+        const footer   = document.getElementById('printModalFooter');
+        const btnRetry = document.getElementById('btnRetryPrint');
+
+        // Reset classes
+        header.className = 'modal-header';
+
+        if (phase === 'saving') {
+            header.classList.add('bg-primary', 'text-white');
+            title.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando guía...';
+            text.textContent = 'Creando guía en el sistema...';
+            sub.textContent = 'Por favor espere';
+            footer.style.setProperty('display', 'none', 'important');
+            btnRetry.style.display = 'none';
+        } else if (phase === 'connecting') {
+            header.classList.add('bg-primary', 'text-white');
+            title.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Conectando con QZ-Tray...';
+            text.textContent = 'Conectando con el servicio de impresión local (puerto 8181)...';
+            sub.textContent = 'Asegúrese de que QZ-Tray esté instalado y ejecutándose';
+            footer.style.setProperty('display', 'none', 'important');
+        } else if (phase === 'printing') {
+            header.classList.add('bg-primary', 'text-white');
+            title.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando a impresora...';
+            text.textContent = 'Enviando guía ' + (createdTrackingNumber || '') + ' a la impresora...';
+            sub.textContent = 'Los documentos están siendo enviados a la impresora por defecto';
+            footer.style.setProperty('display', 'none', 'important');
+        } else if (phase === 'success') {
+            header.classList.add('bg-success', 'text-white');
+            title.innerHTML = '<i class="bi bi-check-circle me-2"></i>¡Guía impresa correctamente!';
+            text.textContent = 'Guía ' + (createdTrackingNumber || '') + ' creada e impresa exitosamente.';
+            sub.textContent = 'La impresión fue enviada a la impresora por defecto.';
+            footer.style.removeProperty('display');
+            btnRetry.style.display = 'none';
+        } else if (phase === 'qz_error') {
+            header.classList.add('bg-warning', 'text-dark');
+            title.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>No se pudo imprimir automáticamente';
+            text.textContent = 'La guía ' + (createdTrackingNumber || '') + ' fue creada correctamente.';
+            // Mostrar el detalle real del error si existe
+            if (errorDetail) {
+                sub.innerHTML = '<span class="text-danger"><strong>Error:</strong> ' + errorDetail + '</span><br><small class="text-muted">Habilite "Allow unsigned requests" en QZ-Tray &rsaquo; Preferencias</small>';
+            } else {
+                sub.textContent = 'QZ-Tray no está disponible o no permite impresión no firmada.';
+            }
+            footer.style.removeProperty('display');
+            btnRetry.style.display = 'inline-flex';
+        } else if (phase === 'error') {
+            header.classList.add('bg-danger', 'text-white');
+            title.innerHTML = '<i class="bi bi-x-circle me-2"></i>Error';
+            text.textContent = 'Ocurrió un error al procesar la solicitud.';
+            sub.textContent = errorDetail || '';
+            footer.style.removeProperty('display');
+            btnRetry.style.display = 'none';
+        }
+    }
+
+    // Configuración de impresora desde la Empresa
+    const configuredPrinter = "{{ $empresa->qz_printer ?? '' }}";
+
+    async function printWithQzTray(pdfBase64) {
+        updatePrintModal('connecting');
+
+        // Certificado de firma dinámico
+        qz.security.setCertificatePromise(function(resolve, reject) {
+            fetch('/qz/digital-certificate.txt')
+                .then(r => r.ok ? r.text() : reject('No se encontró certificado'))
+                .then(resolve)
+                .catch(reject);
+        });
+
+        qz.security.setSignatureAlgorithm('SHA512');
+        qz.security.setSignaturePromise(function(toSign) {
+            return function(resolve, reject) {
+                // Firmar en el servidor (más robusto y no requiere HTTPS para SubtleCrypto)
+                fetch('{{ route("qz.sign") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({ toSign: toSign })
+                })
+                .then(r => {
+                    if (!r.ok) throw new Error('Error en el servidor al firmar');
+                    return r.text();
+                })
+                .then(resolve)
+                .catch(reject);
+            };
+        });
+
+        try {
+            if (!qz.websocket.isActive()) {
+                await qz.websocket.connect({ retries: 2, delay: 1 });
+            }
+
+            updatePrintModal('printing');
+
+            let printer;
+            if (configuredPrinter) {
+                // Intentamos buscar la impresora configurada
+                try {
+                    printer = await qz.printers.find(configuredPrinter);
+                } catch(e) {
+                    console.warn('No se encontró la impresora configurada, intentando por defecto');
+                }
+            }
+
+            if (!printer) {
+                printer = await qz.printers.getDefault();
+            }
+
+            if (!printer) {
+                throw new Error('No se encontró ninguna impresora utilizable.');
+            }
+
+            console.log('[QZ-Tray] Imprimiendo en:', printer);
+
+            const config = qz.configs.create(printer);
+            await qz.print(config, [{ type: 'pixel', format: 'pdf', flavor: 'base64', data: pdfBase64 }]);
+            updatePrintModal('success');
+
+            // Redirigir automáticamente al listado después de 2 segundos de éxito
+            setTimeout(() => {
+                window.location.href = "{{ route('shipments.index') }}";
+            }, 2000);
+
+        } catch (err) {
+
+            console.error('[QZ-Tray] Error:', err);
+            updatePrintModal('qz_error', err.message || err.toString());
+        }
+    }
+
+
+
+    document.getElementById('btnRetryPrint').addEventListener('click', async function() {
+        if (!createdShipmentPrintBase64Url) return;
+
+        this.disabled = true;
+        updatePrintModal('connecting');
+
+        try {
+            const resp = await fetch(createdShipmentPrintBase64Url, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                await printWithQzTray(data.pdf_base64);
+            }
+        } catch(e) {
+            updatePrintModal('qz_error');
+        }
+
+        this.disabled = false;
+    });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        printStatusModal = new bootstrap.Modal(document.getElementById('printStatusModal'));
         const quickClientModalElement = document.getElementById('quickClientModal');
         const quickClientModal = new bootstrap.Modal(quickClientModalElement);
         const shipmentForm = document.getElementById('shipmentForm');
@@ -638,45 +845,102 @@
             }
         });
 
-        // Better way: identify the submit button and only allow submission if it was clicked.
-        let isSubmitButtonClicked = false;
-        shipmentForm.querySelector('button[type="submit"]').addEventListener('click', function() {
-            isSubmitButtonClicked = true;
-        });
+        // -------------------------------------------------------
+        // Submit AJAX + QZ-Tray print
+        // -------------------------------------------------------
+        shipmentForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-        shipmentForm.addEventListener('submit', function (e) {
-            // If enter was pressed on a non-handled field, prevent submit
-            if (!isSubmitButtonClicked) {
-                // e.preventDefault();
-                // return false;
-            }
-            
             // Cleanup empty last row
             const rows = document.querySelectorAll('.item-row');
             if (rows.length > 1) {
                 const lastRow = rows[rows.length - 1];
-                const artId = lastRow.querySelector('.item-articulo-id').value;
-                const desc = lastRow.querySelector('.item-descripcion').value.trim();
+                const artId  = lastRow.querySelector('.item-articulo-id').value;
+                const desc   = lastRow.querySelector('.item-descripcion').value.trim();
                 const codigo = lastRow.querySelector('.item-codigo').value.trim();
-                
-                // Si la última fila está vacía y hay más de una fila, la eliminamos
-                if (!artId && !desc && !codigo) {
-                    lastRow.remove();
-                }
+                if (!artId && !desc && !codigo) lastRow.remove();
             }
 
             // Validación mínima: Al menos una fila con descripción
             const remainingRows = document.querySelectorAll('.item-row');
             let hasValidItem = false;
             remainingRows.forEach(row => {
-                if (row.querySelector('.item-descripcion').value.trim() !== '') {
-                    hasValidItem = true;
-                }
+                if (row.querySelector('.item-descripcion').value.trim() !== '') hasValidItem = true;
             });
-
             if (!hasValidItem) {
-                e.preventDefault();
                 alert('Debe agregar al menos un artículo con descripción.');
+                return;
+            }
+
+            // Deshabilitar botón y mostrar modal
+            const btnSubmit = document.getElementById('btnCrearGuia');
+            btnSubmit.disabled = true;
+            updatePrintModal('saving');
+            printStatusModal.show();
+
+            // Recopilar datos del form
+            const formData = new FormData(shipmentForm);
+
+            try {
+                // 1. Guardar la guía via AJAX
+                const saveResp = await fetch(shipmentForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData,
+                });
+
+                // Manejo de errores de validación (422)
+                if (saveResp.status === 422) {
+                    const errData = await saveResp.json();
+                    printStatusModal.hide();
+                    btnSubmit.disabled = false;
+                    const errMessages = Object.values(errData.errors || {}).flat().join('\n');
+                    alert('Error de validación:\n' + (errMessages || 'Revise los campos del formulario.'));
+                    return;
+                }
+
+                if (!saveResp.ok) {
+                    printStatusModal.hide();
+                    btnSubmit.disabled = false;
+                    alert('Error del servidor al guardar la guía. Intente nuevamente.');
+                    return;
+                }
+
+                const saveData = await saveResp.json();
+
+                if (!saveData.success) {
+                    updatePrintModal('error');
+                    btnSubmit.disabled = false;
+                    console.error('Error al guardar:', saveData);
+                    return;
+                }
+
+                createdTrackingNumber       = saveData.tracking_number;
+                createdShipmentPrintBase64Url = saveData.print_base64_url;
+
+                // 2. Obtener PDF en Base64
+                updatePrintModal('connecting');
+                const pdfResp = await fetch(saveData.print_base64_url, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const pdfData = await pdfResp.json();
+
+                if (!pdfData.success) {
+                    updatePrintModal('qz_error');
+                    return;
+                }
+
+                // 3. Imprimir con QZ-Tray
+                await printWithQzTray(pdfData.pdf_base64);
+
+            } catch (err) {
+                console.error('Error en el proceso de creación/impresión:', err);
+                updatePrintModal('error');
+                btnSubmit.disabled = false;
             }
         });
 

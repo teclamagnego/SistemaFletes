@@ -11,6 +11,7 @@ use App\Models\Carrier;
 use App\Models\FormaPago;
 use App\Models\ShipmentStatus;
 use App\Models\Articulo;
+use App\Models\Empresa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -70,7 +71,8 @@ class ShipmentController extends Controller
         $agencies = Agency::where('activa', true)->orderBy('nombre')->get();
         $carriers = Carrier::where('activo', true)->get();
         $formasPago = FormaPago::orderBy('nombre')->get();
-        return view('shipments.create', compact('agencies', 'carriers', 'formasPago'));
+        $empresa = Empresa::first(); // Asumimos la primera como principal para configuración
+        return view('shipments.create', compact('agencies', 'carriers', 'formasPago', 'empresa'));
     }
 
     public function store(Request $request)
@@ -179,6 +181,18 @@ class ShipmentController extends Controller
             $receiver = Cliente::find($request->receiver_id);
             if ($receiver && (!$receiver->agenciadestino_id || $receiver->agenciadestino_id == 0)) {
                 $receiver->update(['agenciadestino_id' => $request->destination_agency_id]);
+            }
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'shipment_id' => $shipment->id,
+                    'tracking_number' => $shipment->tracking_number,
+                    'print_url' => route('shipments.print', $shipment->id),
+                    'print_base64_url' => route('shipments.printBase64', $shipment->id),
+                    'redirect_url' => route('shipments.index'),
+                    'message' => "Guía {$shipment->tracking_number} creada correctamente.",
+                ]);
             }
 
             return redirect()->route('shipments.index')->with('success', "Guía {$shipment->tracking_number} creada correctamente.");
@@ -444,5 +458,57 @@ class ShipmentController extends Controller
         $pdf = Pdf::loadView('shipments.pdf', compact('shipment', 'empresa', 'sucursal', 'logoBase64'));
 
         return $pdf->stream("Guia_{$shipment->tracking_number}.pdf");
+    }
+
+    public function printBase64(Shipment $shipment)
+    {
+        $shipment->load([
+            'sender.localidad',
+            'receiver.localidad',
+            'cliente',
+            'originAgency.localidad',
+            'destinationAgency.localidad',
+            'items.articulo',
+            'formaPago'
+        ]);
+
+        $empresa = \App\Models\Empresa::first();
+        $sucursal = \App\Models\Sucursal::first();
+
+        $logoBase64 = null;
+        if ($empresa && $empresa->logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($empresa->logo)) {
+            $path = storage_path('app/public/' . $empresa->logo);
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+
+        $pdf = Pdf::loadView('shipments.pdf', compact('shipment', 'empresa', 'sucursal', 'logoBase64'));
+        $pdfContent = $pdf->output();
+
+        return response()->json([
+            'success' => true,
+            'pdf_base64' => base64_encode($pdfContent),
+            'filename' => "Guia_{$shipment->tracking_number}.pdf",
+        ]);
+    }
+
+    public function signRequest(Request $request)
+    {
+        $toSign = $request->input('toSign');
+        $empresa = Empresa::first();
+
+        if (!$empresa || !$empresa->qz_private_key) {
+            return response('No hay llave privada configurada', 500);
+        }
+
+        $privateKey = $empresa->qz_private_key;
+        $signature = "";
+
+        if (openssl_sign($toSign, $signature, $privateKey, "sha512")) {
+            return base64_encode($signature);
+        }
+
+        return response('Error al firmar con OpenSSL', 500);
     }
 }
