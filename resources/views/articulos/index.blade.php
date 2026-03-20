@@ -15,8 +15,6 @@
                     <th>Precio</th>
                     <th>Com. Origen</th>
                     <th>Com. Destino</th>
-                    <th>Rubros</th>
-                    <th>Proveedores</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -28,10 +26,6 @@
                     <td>${{ number_format($a->precio, 2) }}</td>
                     <td>{{ $a->com_origen }}%</td>
                     <td>{{ $a->com_destino }}%</td>
-                    <td>@foreach($a->rubros as $r)<span class="badge bg-info text-dark">{{ $r->nombre }}</span>
-                        @endforeach</td>
-                    <td>@foreach($a->proveedores as $p)<span class="badge bg-success">{{ $p->nombre }}</span>
-                        @endforeach</td>
                     <td>
                         @can('articulos.edit')<a href="{{ route('articulos.edit', $a) }}"
                             class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>@endcan

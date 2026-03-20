@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
 
     // Forma de Pago
     Route::resource('formas_pago', FormaPagoController::class)->except(['show'])
+        ->parameters(['formas_pago' => 'forma_pago'])
         ->middleware('permission:formas_pago.index|formas_pago.create|formas_pago.edit|formas_pago.delete');
 
     // Envíos (Guías)

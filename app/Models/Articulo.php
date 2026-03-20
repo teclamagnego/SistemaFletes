@@ -25,16 +25,4 @@ class Articulo extends Model
         'com_destino' => 'decimal:2',
     ];
 
-    public function rubros()
-    {
-        return $this->belongsToMany(Rubro::class , 'articulo_rubro')
-            ->withTimestamps();
-    }
-
-    public function proveedores()
-    {
-        return $this->belongsToMany(Proveedor::class , 'articulo_proveedor')
-            ->withPivot('precio_compra')
-            ->withTimestamps();
-    }
 }

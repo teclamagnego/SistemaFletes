@@ -3,15 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Articulo;
-use App\Models\Rubro;
-use App\Models\Proveedor;
 use Illuminate\Http\Request;
 
 class ArticuloController extends Controller
 {
     public function index()
     {
-        $articulos = Articulo::with(['rubros', 'proveedores'])->paginate(15);
+        $articulos = Articulo::paginate(15);
         return view('articulos.index', compact('articulos'));
     }
 
@@ -29,9 +27,7 @@ class ArticuloController extends Controller
 
     public function create()
     {
-        $rubros = Rubro::all();
-        $proveedores = Proveedor::all();
-        return view('articulos.create', compact('rubros', 'proveedores'));
+        return view('articulos.create');
     }
 
     public function store(Request $request)
@@ -43,34 +39,16 @@ class ArticuloController extends Controller
             'precio' => 'required|numeric|min:0',
             'com_origen' => 'required|numeric|min:0|max:100',
             'com_destino' => 'required|numeric|min:0|max:100',
-            'rubros' => 'nullable|array',
-            'proveedores' => 'nullable|array',
         ]);
 
         $articulo = Articulo::create($request->only(['codigo', 'nombre', 'nombre_mostrar', 'descripcion', 'precio', 'com_origen', 'com_destino']));
-
-        if ($request->filled('rubros')) {
-            $articulo->rubros()->sync($request->rubros);
-        }
-
-        if ($request->filled('proveedores')) {
-            $pivotData = [];
-            foreach ($request->proveedores as $proveedorId) {
-                $precioCompra = $request->input("precio_compra.{$proveedorId}", null);
-                $pivotData[$proveedorId] = ['precio_compra' => $precioCompra];
-            }
-            $articulo->proveedores()->sync($pivotData);
-        }
 
         return redirect()->route('articulos.index')->with('success', 'Artículo creado correctamente.');
     }
 
     public function edit(Articulo $articulo)
     {
-        $rubros = Rubro::all();
-        $proveedores = Proveedor::all();
-        $articulo->load(['rubros', 'proveedores']);
-        return view('articulos.edit', compact('articulo', 'rubros', 'proveedores'));
+        return view('articulos.edit', compact('articulo'));
     }
 
     public function update(Request $request, Articulo $articulo)
@@ -82,22 +60,9 @@ class ArticuloController extends Controller
             'precio' => 'required|numeric|min:0',
             'com_origen' => 'required|numeric|min:0|max:100',
             'com_destino' => 'required|numeric|min:0|max:100',
-            'rubros' => 'nullable|array',
-            'proveedores' => 'nullable|array',
         ]);
 
         $articulo->update($request->only(['codigo', 'nombre', 'nombre_mostrar', 'descripcion', 'precio', 'com_origen', 'com_destino']));
-
-        $articulo->rubros()->sync($request->rubros ?? []);
-
-        $pivotData = [];
-        if ($request->filled('proveedores')) {
-            foreach ($request->proveedores as $proveedorId) {
-                $precioCompra = $request->input("precio_compra.{$proveedorId}", null);
-                $pivotData[$proveedorId] = ['precio_compra' => $precioCompra];
-            }
-        }
-        $articulo->proveedores()->sync($pivotData);
 
         return redirect()->route('articulos.index')->with('success', 'Artículo actualizado correctamente.');
     }

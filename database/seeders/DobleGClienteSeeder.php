@@ -11,7 +11,7 @@ class DobleGClienteSeeder extends Seeder
 {
     public function run(): void
     {
-        $path = 'documentacion/dobleg_clientes.sql';
+        $path = 'documentacion/sql/dobleg_clientes.sql';
         $tempTable = 'temp_clientes';
 
         if (!Schema::hasTable($tempTable)) {

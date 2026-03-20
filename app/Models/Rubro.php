@@ -13,9 +13,4 @@ class Rubro extends Model
         'nombre',
         'descripcion',
     ];
-
-    public function articulos()
-    {
-        return $this->belongsToMany(Articulo::class , 'articulo_rubro');
-    }
 }

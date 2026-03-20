@@ -22,10 +22,4 @@ class Proveedor extends Model
         'provincia',
     ];
 
-    public function articulos()
-    {
-        return $this->belongsToMany(Articulo::class , 'articulo_proveedor')
-            ->withPivot('precio_compra')
-            ->withTimestamps();
-    }
 }

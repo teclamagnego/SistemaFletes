@@ -11,7 +11,7 @@ class LocalidadSeeder extends Seeder
 {
     public function run(): void
     {
-        $path = 'documentacion/dobleg_localidades.sql';
+        $path = 'documentacion/sql/dobleg_localidades.sql';
         $tempTable = 'temp_localidades';
 
         $this->command->info("Cargando localidades en tabla temporal...");
@@ -37,12 +37,12 @@ class LocalidadSeeder extends Seeder
         }
 
         $sql = File::get($realPath);
-        
+
         // Limpiar el SQL de comandos de transacción de phpMyAdmin que rompen el flujo de Laravel
         $sql = preg_replace('/SET AUTOCOMMIT = 0;/i', '', $sql);
         $sql = preg_replace('/START TRANSACTION;/i', '', $sql);
         $sql = preg_replace('/COMMIT;/i', '', $sql);
-        
+
         $sql = str_replace("`$originalTable`", "`$tempTableName`", $sql);
         $sql = "SET FOREIGN_KEY_CHECKS=0;\n" . $sql;
 

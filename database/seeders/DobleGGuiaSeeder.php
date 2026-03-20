@@ -26,10 +26,10 @@ class DobleGGuiaSeeder extends Seeder
 
         // 0. Importación Staging (Solo si no existen)
         if (!Schema::hasTable('temp_facturas')) {
-            $this->importSqlAsStaging('documentacion/dobleg_cliente_facturas.sql', 'temp_facturas', 'cliente_facturas');
+            $this->importSqlAsStaging('documentacion/sql/dobleg_cliente_facturas.sql', 'temp_facturas', 'cliente_facturas');
         }
         if (!Schema::hasTable('temp_items')) {
-            $this->importSqlAsStaging('documentacion/dobleg_cliente_item_facturas.sql', 'temp_items', 'cliente_item_facturas');
+            $this->importSqlAsStaging('documentacion/sql/dobleg_cliente_item_facturas.sql', 'temp_items', 'cliente_item_facturas');
         }
 
         // LIMPIAR PRODUCCION ANTES DE RE-INSERTAR PROBA

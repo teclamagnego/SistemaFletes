@@ -20,7 +20,7 @@ class ArticuloSeeder extends Seeder
         Articulo::truncate();
         Schema::enableForeignKeyConstraints();
 
-        $path = base_path('documentacion/dobleg_articulos.sql');
+        $path = base_path('documentacion/sql/dobleg_articulos.sql');
 
         if (!File::exists($path)) {
             $this->command->error("No se encontró el archivo SQL en: {$path}");

@@ -29,25 +29,25 @@ class FormaPagoController extends Controller
         return redirect()->route('formas_pago.index')->with('success', 'Forma de pago creada correctamente.');
     }
 
-    public function edit(FormaPago $formaPago)
+    public function edit(FormaPago $forma_pago)
     {
-        return view('formas_pago.edit', compact('formaPago'));
+        return view('formas_pago.edit', ['formaPago' => $forma_pago]);
     }
 
-    public function update(Request $request, FormaPago $formaPago)
+    public function update(Request $request, FormaPago $forma_pago)
     {
         $request->validate([
             'nombre' => 'required|string|max:255',
         ]);
 
-        $formaPago->update($request->all());
+        $forma_pago->update($request->all());
 
         return redirect()->route('formas_pago.index')->with('success', 'Forma de pago actualizada correctamente.');
     }
 
-    public function destroy(FormaPago $formaPago)
+    public function destroy(FormaPago $forma_pago)
     {
-        $formaPago->delete();
+        $forma_pago->delete();
         return redirect()->route('formas_pago.index')->with('success', 'Forma de pago eliminada correctamente.');
     }
 }
