@@ -68,6 +68,7 @@
                                 <input type="checkbox" class="form-check-input" id="selectAll">
                             </th>
                             <th>Fecha</th>
+                            <th>F. Entrega</th>
                             <th>Guía</th>
                             <th>Estado</th>
                             <th>Participación</th>
@@ -102,6 +103,16 @@
                             </td>
                             <td>{{ \Carbon\Carbon::parse($s->fecha)->format('d/m/Y') }}</td>
                             <td>
+                                @php
+                                    $deliveryLog = $s->logs->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED)->first();
+                                @endphp
+                                @if($deliveryLog)
+                                    {{ \Carbon\Carbon::parse($deliveryLog->created_at)->format('d/m/Y') }}
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </td>
+                            <td>
                                 <a href="{{ route('shipments.show', $s) }}" target="_blank"
                                     class="text-decoration-none fw-bold">
                                     {{ $s->tracking_number }}
@@ -127,14 +138,14 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">No se encontraron guías para este
+                            <td colspan="9" class="text-center py-4 text-muted">No se encontraron guías para este
                                 periodo.</td>
                         </tr>
                         @endforelse
                     </tbody>
                     <tfoot>
                         <tr class="table-light">
-                            <td colspan="7" class="text-end fw-bold">TOTAL COMISIÓN SELECCIONADA:</td>
+                            <td colspan="8" class="text-end fw-bold">TOTAL COMISIÓN SELECCIONADA:</td>
                             <td class="text-end fw-bold text-primary" id="totalDisplay">$ 0.00</td>
                         </tr>
                     </tfoot>

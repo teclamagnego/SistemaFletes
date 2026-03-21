@@ -29,7 +29,7 @@
     <table>
         <thead>
             <tr>
-                <th>Fecha</th>
+                <th>F. Entrega</th>
                 <th>Guía Nº</th>
                 <th>Remitente</th>
                 <th>Destinatario</th>
@@ -57,7 +57,12 @@
                     $totalCalculado += $comision;
                 @endphp
                 <tr>
-                    <td>{{ \Carbon\Carbon::parse($s->fecha)->format('d/m/Y') }}</td>
+                    <td>
+                        @php
+                            $deliveryLog = $s->logs->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED)->first();
+                        @endphp
+                        {{ $deliveryLog ? \Carbon\Carbon::parse($deliveryLog->created_at)->format('d/m/Y') : \Carbon\Carbon::parse($s->fecha)->format('d/m/Y') }}
+                    </td>
                     <td>{{ $s->tracking_number }}</td>
                     <td>{{ $s->sender?->nombre_fantasia }}</td>
                     <td>{{ $s->receiver?->nombre_fantasia }}</td>

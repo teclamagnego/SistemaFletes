@@ -117,24 +117,26 @@ class DobleGGuiaSeeder extends Seeder
               AND i.descripcion NOT LIKE 'GUIA%'
         ");
 
-        // 3. Generación de Facturas Automáticas (Solo Contado)
-        $this->command->info("Generando facturas automáticas para guías de contado...");
+        // 3. Generación de Facturas Automáticas
+        $this->command->info("Generando facturas automáticas (Contado y CC hasta 28/02/2026)...");
         DB::statement("
             INSERT INTO cliente_facturas (
                 cliente_id, forma_pago_id, fecha, total, falta_imputar, observacion, nro_factura, created_at, updated_at
             )
             SELECT 
-                cliente_id, 
-                forma_pago_id, 
-                fecha, 
-                total_flete, 
-                0, 
-                CONCAT('Facturación automática migración guía #', id),
-                CONCAT('TEMP_MIG_', id),
-                created_at, 
-                updated_at
-            FROM shipments
-            WHERE forma_pago_id = 1
+                s.cliente_id, 
+                s.forma_pago_id, 
+                s.fecha, 
+                s.total_flete, 
+                CASE WHEN s.forma_pago_id = 2 THEN s.total_flete ELSE 0 END, 
+                CONCAT('Facturación automática migración guía #', s.id),
+                CONCAT('TEMP_MIG_', s.id),
+                s.created_at, 
+                s.updated_at
+            FROM shipments s
+            LEFT JOIN temp_facturas t ON t.id = s.id
+            WHERE s.forma_pago_id != 2
+               OR (s.forma_pago_id = 2 AND t.activo = 4 AND DATE(t.updated_at) <= '2026-02-28')
         ");
 
         $this->command->info("Vinculando facturas a guías...");
@@ -148,6 +150,29 @@ class DobleGGuiaSeeder extends Seeder
             UPDATE cliente_facturas 
             SET nro_factura = NULL 
             WHERE nro_factura LIKE 'TEMP_MIG_%'
+        ");
+
+        // 4. Shipment Logs para guías entregadas
+        $this->command->info("Generando logs para guías entregadas...");
+        DB::statement("
+            INSERT INTO shipment_logs (
+                shipment_id, user_id, status_from_id, status_to_id, notas, created_at, updated_at
+            )
+            SELECT 
+                t.id, 
+                1, 
+                1, 
+                5, 
+                'Guía entregada (migración)', 
+                IFNULL(t.updated_at, NOW()), 
+                IFNULL(t.updated_at, NOW())
+            FROM (
+                SELECT id, updated_at, activo 
+                FROM temp_facturas 
+                ORDER BY fecha DESC, id DESC 
+                LIMIT $limit OFFSET $offset
+            ) t
+            WHERE t.activo = 4
         ");
 
         Schema::enableForeignKeyConstraints();

@@ -31,7 +31,9 @@
                         @endphp
                         <tr>
                             <td class="ps-4">
-                                <span class="fw-bold">{{ $cliente->nombre_fantasia }}</span>
+                                <a href="{{ route('clientes.history', $cliente->id) }}" class="fw-bold text-decoration-none text-primary">
+                                    {{ $cliente->nombre_fantasia }}
+                                </a>
                             </td>
                             <td class="text-muted small">{{ $cliente->razon_social }}</td>
                             <td class="text-end">$ {{ number_format($totalFacturado, 2) }}</td>

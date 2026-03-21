@@ -97,7 +97,11 @@ class ClienteController extends Controller
         $to = $request->input('to', now()->endOfMonth()->format('Y-m-d'));
         $status_factura = $request->input('status_factura', 'all');
 
-        $query = $cliente->shipmentsPaid()->whereBetween('fecha', [$from, $to]);
+        $query = $cliente->shipmentsPaid()->whereHas('logs', function($q) use ($from, $to) {
+            $q->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED)
+              ->whereDate('created_at', '>=', $from)
+              ->whereDate('created_at', '<=', $to);
+        });
 
         if ($status_factura === 'billed') {
             $query->where('factura_id', '>', 0);
@@ -105,7 +109,10 @@ class ClienteController extends Controller
             $query->where('factura_id', 0);
         }
 
-        $shipments = $query->with('formaPago')->orderBy('fecha')->get();
+        $shipments = $query->with(['formaPago', 'logs'])->get()->sortBy(function($shipment) {
+            $deliveryLog = $shipment->logs->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED)->first();
+            return $deliveryLog ? $deliveryLog->created_at : $shipment->fecha;
+        })->values();
 
         if ($request->has('export')) {
             if ($request->export === 'excel') {

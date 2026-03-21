@@ -97,12 +97,16 @@ class AgencyController extends Controller
         $status_factura = $request->input('status_factura', 'all');
         $status_id = $request->input('status_id', ShipmentStatus::DELIVERED);
 
-        $query = \App\Models\Shipment::with(['items.articulo', 'originAgency', 'destinationAgency', 'formaPago'])
+        $query = \App\Models\Shipment::with(['items.articulo', 'originAgency', 'destinationAgency', 'formaPago', 'logs'])
             ->where('factura_id', '>', 0)
             ->whereHas('factura', function($q) {
                 $q->where('falta_imputar', 0);
             })
-            ->whereBetween('fecha', [$from, $to]);
+            ->whereHas('logs', function($q) use ($from, $to) {
+                $q->where('status_to_id', ShipmentStatus::DELIVERED)
+                  ->whereDate('created_at', '>=', $from)
+                  ->whereDate('created_at', '<=', $to);
+            });
 
         if ($status_id !== 'all') {
             $query->where('status_id', $status_id);
@@ -135,7 +139,10 @@ class AgencyController extends Controller
             }
         }
 
-        $shipments = $query->orderBy('fecha')->get();
+        $shipments = $query->get()->sortBy(function($shipment) {
+            $deliveryLog = $shipment->logs->where('status_to_id', ShipmentStatus::DELIVERED)->first();
+            return $deliveryLog ? $deliveryLog->created_at : $shipment->fecha;
+        })->values();
         $statuses = ShipmentStatus::all();
 
         // Calcular comisiones para la vista usando los valores guardados en la base de datos
@@ -274,9 +281,11 @@ class AgencyController extends Controller
     {
         $shipments = Shipment::where('agencia_f_origen_id', $factura->id)
             ->orWhere('agencia_f_destino_id', $factura->id)
-            ->with(['originAgency', 'destinationAgency', 'sender', 'receiver'])
-            ->orderBy('fecha', 'asc')
-            ->get();
+            ->with(['originAgency', 'destinationAgency', 'sender', 'receiver', 'logs'])
+            ->get()->sortBy(function($shipment) {
+                $deliveryLog = $shipment->logs->where('status_to_id', ShipmentStatus::DELIVERED)->first();
+                return $deliveryLog ? $deliveryLog->created_at : $shipment->fecha;
+            })->values();
 
         if ($shipments->isEmpty()) {
             return redirect()->back()->with('error', 'No se encontraron registros vinculados a esta liquidación.');
