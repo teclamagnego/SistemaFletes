@@ -37,7 +37,7 @@
                 <th>Nombre Fantasía</th>
                 <th>Documento</th>
                 <th>Localidad</th>
-                <th>IVA / Cuenta</th>
+                <th>Dirección</th>
                 <th>Origen / Destino</th>
                 <th>Acciones</th>
             </tr>
@@ -54,10 +54,7 @@
                     <small class="text-muted">{{ $c->tipoDoc->codigo ?? 'N/A' }}:</small> {{ $c->documento_nro }}
                 </td>
                 <td>{{ $c->localidad->nombre ?? 'N/A' }}</td>
-                <td>
-                    <span class="badge bg-info text-dark">{{ $c->tipoIva->nombre ?? 'N/A' }}</span><br>
-                    <small>{{ $c->tipoCuenta->nombre ?? 'N/A' }}</small>
-                </td>
+                <td>{{ $c->direccion ?? '—' }}</td>
                 <td>
                     <small>De:</small> {{ $c->agenciaOrigen->nombre ?? 'N/A' }}<br>
                     <small>A:</small> {{ $c->agenciaDestino->nombre ?? 'N/A' }}

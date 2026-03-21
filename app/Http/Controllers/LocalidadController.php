@@ -13,6 +13,32 @@ class LocalidadController extends Controller
         return view('localidades.index', compact('localidades'));
     }
 
+    public function search(Request $request)
+    {
+        $q = $request->query('q');
+        $localidades = Localidad::where('nombre', 'LIKE', "%$q%")
+            ->orderBy('nombre')
+            ->limit(10)
+            ->get();
+        return response()->json($localidades);
+    }
+
+    public function destroyAjax(Localidad $localidad)
+    {
+        try {
+            \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+            $localidad->delete();
+            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar la localidad: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     public function create()
     {
         return view('localidades.create');
@@ -48,11 +74,14 @@ class LocalidadController extends Controller
     public function destroy(Localidad $localidad)
     {
         try {
+            \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
             $localidad->delete();
+            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
             return redirect()->route('localidades.index')->with('success', 'Localidad eliminada correctamente.');
         }
         catch (\Exception $e) {
-            return redirect()->route('localidades.index')->with('error', 'No se puede eliminar la localidad porque está siendo utilizada.');
+            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+            return redirect()->route('localidades.index')->with('error', 'Error al eliminar la localidad: ' . $e->getMessage());
         }
     }
 }

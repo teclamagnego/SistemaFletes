@@ -21,7 +21,8 @@ class ClienteController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Cliente::with(['tipoDoc', 'localidad', 'tipoCuenta', 'tipoIva', 'agenciaOrigen', 'agenciaDestino']);
+        $query = Cliente::query()->with(['tipoDoc', 'localidad', 'tipoCuenta', 'tipoIva', 'agenciaOrigen', 'agenciaDestino'])
+            ->where('activo', 1);
 
         if ($request->filled('nombre')) {
             $terms = explode(' ', $request->nombre);
@@ -45,11 +46,19 @@ class ClienteController extends Controller
     public function search(Request $request)
     {
         $q = $request->query('q');
-        $clientes = Cliente::where('nombre_fantasia', 'LIKE', "%$q%")
-            ->orWhere('razon_social', 'LIKE', "%$q%")
-            ->orWhere('documento_nro', 'LIKE', "%$q%")
-            ->limit(10)
-            ->get();
+
+        $query = Cliente::where(function($query) use ($q) {
+            $query->where('nombre_fantasia', 'LIKE', "%$q%")
+                  ->orWhere('razon_social', 'LIKE', "%$q%")
+                  ->orWhere('documento_nro', 'LIKE', "%$q%");
+        });
+
+        if ($request->has('activo')) {
+            $query->where('activo', $request->query('activo'));
+        }
+
+        $clientes = $query->limit(10)->get();
+
         return response()->json($clientes);
     }
 
@@ -257,7 +266,7 @@ class ClienteController extends Controller
         $localidades = Localidad::all();
         $tiposCuenta = TipoCuenta::all();
         $tiposIva = TipoIva::all();
-        $agencies = Agency::all();
+        $agencies = Agency::where('activa', 1)->orderBy('nombre')->get();
 
         return view('clientes.create', compact('tiposDoc', 'localidades', 'tiposCuenta', 'tiposIva', 'agencies'));
     }
@@ -287,7 +296,7 @@ class ClienteController extends Controller
         $localidades = Localidad::all();
         $tiposCuenta = TipoCuenta::all();
         $tiposIva = TipoIva::all();
-        $agencies = Agency::all();
+        $agencies = Agency::where('activa', 1)->orderBy('nombre')->get();
 
         return view('clientes.edit', compact('cliente', 'tiposDoc', 'localidades', 'tiposCuenta', 'tiposIva', 'agencies'));
     }

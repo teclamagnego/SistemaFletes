@@ -339,7 +339,7 @@
                 }
 
                 timeout = setTimeout(() => {
-                    const url = `{{ route('clientes.search') }}?q=${encodeURIComponent(q)}`;
+                    const url = `{{ route('clientes.search') }}?q=${encodeURIComponent(q)}&activo=1`;
                     fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                         .then(res => res.json())
                         .then(data => {

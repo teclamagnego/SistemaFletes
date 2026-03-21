@@ -597,7 +597,7 @@
                 }
 
                 timeout = setTimeout(() => {
-                    const url = `{{ route('clientes.search') }}?q=${encodeURIComponent(q)}`;
+                    const url = `{{ route('clientes.search') }}?q=${encodeURIComponent(q)}&activo=1`;
                     fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                         .then(res => res.json())
                         .then(data => {
@@ -876,6 +876,15 @@
         // Submit AJAX + QZ-Tray print
         // -------------------------------------------------------
         async function saveShipment(shouldPrint = true) {
+            const originAgencyId = document.getElementById('origin_agency_id').value;
+            const destinationAgencyId = document.getElementById('destination_agency_id').value;
+            
+            if (originAgencyId && destinationAgencyId && originAgencyId === destinationAgencyId) {
+                if (!confirm('ATENCIÓN: La Agencia Origen y la Agencia Destino seleccionadas son la misma.\n\n¿Desea crear la guía de todas formas?')) {
+                    return;
+                }
+            }
+
             // Cleanup empty last row
             const rows = document.querySelectorAll('.item-row');
             if (rows.length > 1) {

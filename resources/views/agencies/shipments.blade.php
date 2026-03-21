@@ -151,9 +151,9 @@
                                 'Delivered' => 'success',
                                 'Cancelled' => 'danger',
                                 ];
-                                $color = $statusColors[$s->status] ?? 'secondary';
+                                $color = $s->status ? ($statusColors[$s->status->name] ?? 'secondary') : 'secondary';
                                 @endphp
-                                <span class="badge bg-{{ $color }}">{{ $s->status }}</span>
+                                <span class="badge bg-{{ $color }}">{{ $s->status ? $s->status->name : 'Desconocido' }}</span>
                             </td>
                             <td>
                                 <a href="{{ route('shipments.show', $s) }}" class="btn btn-sm btn-outline-secondary"

@@ -20,7 +20,7 @@ class AgencyController extends Controller
 {
     public function index()
     {
-        $agencies = Agency::with('localidad')->paginate(15);
+        $agencies = Agency::query()->with('localidad')->where('activa', 1)->paginate(15);
         return view('agencies.index', compact('agencies'));
     }
 
@@ -72,7 +72,7 @@ class AgencyController extends Controller
     {
         $tab = $request->get('tab', 'all'); // 'origin', 'destination', 'all'
 
-        $query = \App\Models\Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency', 'formaPago'])
+        $query = \App\Models\Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency', 'formaPago', 'status'])
             ->when($tab === 'origin', fn($q) => $q->where('origin_agency_id', $agency->id))
             ->when($tab === 'destination', fn($q) => $q->where('destination_agency_id', $agency->id))
             ->when($tab === 'all', fn($q) => $q->where(function ($q) use ($agency) {

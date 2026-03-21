@@ -38,7 +38,7 @@
                                                 class="form-select @error('tipodoc_id') is-invalid @enderror" required>
                                                 <option value="">Seleccionar</option>
                                                 @foreach($tiposDoc as $td)
-                                                <option value="{{ $td->id }}" {{ old('tipodoc_id')==$td->id ? 'selected'
+                                                <option value="{{ $td->id }}" {{ old('tipodoc_id', (str_contains($td->nombre, 'CUIT') ? $td->id : null))==$td->id ? 'selected'
                                                         : '' }}>{{ $td->nombre }} ({{ $td->codigo }})</option>
                                                 @endforeach
                                         </select>
@@ -48,7 +48,7 @@
                                         <label class="form-label">Documento Nro *</label>
                                         <input type="text" name="documento_nro"
                                                 class="form-control @error('documento_nro') is-invalid @enderror"
-                                                value="{{ old('documento_nro') }}" required>
+                                                value="{{ old('documento_nro', '0') }}" required>
                                         @error('documento_nro')<div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                 </div>
@@ -58,7 +58,7 @@
                                                 class="form-select @error('tipoiva_id') is-invalid @enderror" required>
                                                 <option value="">Seleccionar</option>
                                                 @foreach($tiposIva as $iva)
-                                                <option value="{{ $iva->id }}" {{ old('tipoiva_id')==$iva->id ?
+                                                <option value="{{ $iva->id }}" {{ old('tipoiva_id', ($iva->nombre == 'Consumidor Final' ? $iva->id : null))==$iva->id ?
                                                         'selected' : '' }}>{{ $iva->nombre }}</option>
                                                 @endforeach
                                         </select>
@@ -84,17 +84,14 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                         <label class="form-label">Localidad *</label>
-                                        <select name="localidad_id"
-                                                class="form-select @error('localidad_id') is-invalid @enderror"
-                                                required>
-                                                <option value="">Seleccionar</option>
-                                                @foreach($localidades as $loc)
-                                                <option value="{{ $loc->id }}" {{ old('localidad_id')==$loc->id ?
-                                                        'selected' : '' }}>{{ $loc->nombre }}</option>
-                                                @endforeach
-                                        </select>
-                                        @error('localidad_id')<div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <div class="position-relative">
+                                                <input type="text" id="localidad_search" class="form-control @error('localidad_id') is-invalid @enderror"
+                                                        placeholder="Buscar localidad..." autocomplete="off" value="{{ old('localidad_id') ? \App\Models\Localidad::find(old('localidad_id'))->nombre ?? '' : '' }}">
+                                                <input type="hidden" name="localidad_id" id="localidad_id" value="{{ old('localidad_id') }}">
+                                                <div id="localidad_results" class="list-group position-absolute w-100 shadow-sm"
+                                                        style="z-index: 1000; display: none;"></div>
+                                        </div>
+                                        @error('localidad_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                         </div>
                         <div class="mb-3">
@@ -114,7 +111,7 @@
                                                 required>
                                                 <option value="">Seleccionar</option>
                                                 @foreach($tiposCuenta as $tc)
-                                                <option value="{{ $tc->id }}" {{ old('tipocuenta_id')==$tc->id ?
+                                                <option value="{{ $tc->id }}" {{ old('tipocuenta_id', ($tc->nombre == 'Cuenta Corriente' ? $tc->id : null))==$tc->id ?
                                                         'selected' : '' }}>{{ $tc->nombre }}</option>
                                                 @endforeach
                                         </select>
@@ -168,4 +165,163 @@
                 </form>
         </div>
 </div>
+
+@push('styles')
+<style>
+    .list-group.position-absolute { z-index: 2000 !important; max-height: 250px; overflow-y: auto; }
+    .list-group-item-action { cursor: pointer; }
+    .list-group-item-action:hover, .list-group-item-action.active { background-color: #e9ecef !important; color: inherit !important; }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('localidad_search');
+    const hidden = document.getElementById('localidad_id');
+    const results = document.getElementById('localidad_results');
+    let timeout = null;
+    let currentFocus = -1;
+
+    function addActive(x) {
+        if (!x) return false;
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (x.length - 1);
+        x[currentFocus].classList.add("active");
+    }
+
+    function removeActive(x) {
+        for (let i = 0; i < x.length; i++) {
+            x[i].classList.remove("active");
+        }
+    }
+
+    input.addEventListener('keydown', function (e) {
+        let x = results.getElementsByClassName("list-group-item-action");
+        if (e.key === "ArrowDown") {
+            currentFocus++;
+            addActive(x);
+        } else if (e.key === "ArrowUp") {
+            currentFocus--;
+            addActive(x);
+        } else if (e.key === "Enter") {
+            if (currentFocus > -1) {
+                if (x[currentFocus]) x[currentFocus].click();
+                e.preventDefault();
+            }
+        }
+    });
+
+    input.addEventListener('input', function () {
+        clearTimeout(timeout);
+        const q = this.value.trim();
+        currentFocus = -1;
+        if (q.length < 2) {
+            results.style.display = 'none';
+            return;
+        }
+
+        timeout = setTimeout(() => {
+            const url = `{{ route('localidades.search') }}?q=${encodeURIComponent(q)}`;
+            fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(res => res.json())
+                .then(data => {
+                    results.innerHTML = '';
+                    if (data.length === 0) {
+                        results.innerHTML = `<div class="list-group-item text-muted">No se encontraron localidades</div>`;
+                        results.style.display = 'block';
+                        return;
+                    }
+                    data.forEach((loc, index) => {
+                        const a = document.createElement('a');
+                        a.href = '#'; 
+                        a.className = 'list-group-item list-group-item-action py-2 d-flex justify-content-between align-items-center client-search-item';
+                        a.innerHTML = `
+                            <div class="flex-grow-1">
+                                <strong>${loc.nombre}</strong>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger border-0 delete-localidad-ajax" data-id="${loc.id}" title="Eliminar localidad">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        `;
+                        
+                        a.onclick = function (e) {
+                            if (e.target.closest('.delete-localidad-ajax')) return;
+                            e.preventDefault();
+                            input.value = loc.nombre;
+                            hidden.value = loc.id;
+                            results.style.display = 'none';
+                            // remove invalid class if set
+                            input.classList.remove('is-invalid');
+                        };
+
+                        const btnDel = a.querySelector('.delete-localidad-ajax');
+                        btnDel.onclick = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            function performDelete() {
+                                const originalContent = btnDel.innerHTML;
+                                btnDel.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                                btnDel.disabled = true;
+
+                                let delUrl = `/localidades/${loc.id}/ajax`;
+
+                                fetch(delUrl, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                                        'Accept': 'application/json'
+                                    }
+                                })
+                                .then(res => res.json())
+                                .then(resData => {
+                                    if (resData.success) {
+                                        a.remove();
+                                        if (results.querySelectorAll('.client-search-item').length === 0) {
+                                            results.style.display = 'none';
+                                        }
+                                    } else {
+                                        alert(resData.message || 'No se puede eliminar la localidad.');
+                                        btnDel.innerHTML = originalContent;
+                                        btnDel.disabled = false;
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    alert('Error al intentar eliminar la localidad.');
+                                    btnDel.innerHTML = originalContent;
+                                    btnDel.disabled = false;
+                                });
+                            }
+
+                            if (confirm('¿Está seguro de eliminar esta localidad?')) {
+                                performDelete();
+                            }
+                        };
+
+                        results.appendChild(a);
+                    });
+                    results.style.display = 'block';
+                });
+        }, 300);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (e.target !== input && e.target !== results && !results.contains(e.target)) {
+            results.style.display = 'none';
+        }
+    });
+
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!hidden.value) {
+            e.preventDefault();
+            input.classList.add('is-invalid');
+            alert('Por favor, busque y seleccione una Localidad de la lista.');
+        }
+    });
+});
+</script>
+@endpush
 @endsection

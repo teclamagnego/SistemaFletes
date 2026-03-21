@@ -26,14 +26,15 @@ class DobleGClienteSeeder extends Seeder
 
         $this->command->info("Migrando a tabla definitiva...");
         DB::statement("
-            INSERT INTO clientes (id, nombre_fantasia, razon_social, direccion, telefono, email, documento_nro, tipodoc_id, tipoiva_id, localidad_id, tipocuenta_id, agenciaorigen_id, agenciadestino_id, created_at, updated_at)
-            SELECT id, nombre, nombre, direccion, IFNULL(telefono, ''), IFNULL(mail, ''), IFNULL(numeroDoc, '0'), 1, 1, IFNULL(localidad_id, 1), 1, IFNULL(vendedor_id, 1), IFNULL(repartidor_id, 1), IFNULL(created_at, NOW()), IFNULL(updated_at, NOW())
+            INSERT INTO clientes (id, nombre_fantasia, razon_social, direccion, telefono, email, documento_nro, tipodoc_id, tipoiva_id, localidad_id, tipocuenta_id, agenciaorigen_id, agenciadestino_id, activo, created_at, updated_at)
+            SELECT id, nombre, nombre, direccion, IFNULL(telefono, ''), IFNULL(mail, ''), IFNULL(numeroDoc, '0'), 1, 1, IFNULL(localidad_id, 1), 1, IFNULL(vendedor_id, 1), IFNULL(repartidor_id, 1), IFNULL(activo, 1), IFNULL(created_at, NOW()), IFNULL(updated_at, NOW())
             FROM $tempTable
             ON DUPLICATE KEY UPDATE 
                 nombre_fantasia = VALUES(nombre_fantasia), 
                 razon_social = VALUES(razon_social),
                 direccion = VALUES(direccion),
                 documento_nro = VALUES(documento_nro),
+                activo = VALUES(activo),
                 updated_at = NOW()
         ");
 

@@ -22,7 +22,8 @@ class Cliente extends Model
         'tipoiva_id',
         'agenciaorigen_id',
         'agenciadestino_id',
-        'observacion'
+        'observacion',
+        'activo'
     ];
 
     public function tipoDoc()
