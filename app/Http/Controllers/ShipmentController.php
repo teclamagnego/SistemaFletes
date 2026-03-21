@@ -531,17 +531,18 @@ class ShipmentController extends Controller
     {
         $request->validate([
             'status_id' => 'required|exists:shipment_statuses,id',
+            'notas' => 'nullable|string',
         ]);
 
-        $oldStatus = $shipment->status?->name;
+        $oldStatusId = $shipment->status_id;
         $shipment->update(['status_id' => $request->status_id]);
-        $newStatus = $shipment->status?->name;
 
         ShipmentLog::create([
             'shipment_id' => $shipment->id,
             'user_id' => Auth::id(),
-            'action' => 'Cambio de estado (desde listado)',
-            'description' => "Cambio de estado de $oldStatus a $newStatus",
+            'status_from_id' => $oldStatusId,
+            'status_to_id' => $request->status_id,
+            'notas' => $request->notas ?? 'Cambio de estado desde listado centralizado',
         ]);
 
         return response()->json(['success' => true]);

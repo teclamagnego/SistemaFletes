@@ -85,7 +85,11 @@ Route::middleware('auth')->group(function () {
     Route::post('shipments/consolidation', [ShipmentController::class, 'doConsolidation'])->name('shipments.doConsolidation')->middleware('permission:shipments.index');
     Route::get('shipments/{shipment}/print', [ShipmentController::class, 'print'])->name('shipments.print')->middleware('permission:shipments.index');
     Route::get('shipments/{shipment}/print-base64', [ShipmentController::class, 'printBase64'])->name('shipments.printBase64')->middleware('permission:shipments.index');
-    Route::post('shipments/{shipment}/status', [ShipmentController::class, 'updateStatus'])->name('shipments.updateStatus')->middleware('permission:shipments.edit');
+    Route::match(['post', 'patch'], 'shipments/{shipment}/status', [ShipmentController::class, 'updateStatus'])->name('shipments.updateStatus')->middleware('permission:shipments.edit');
+    Route::post('shipments/{shipment}/arrive', [ShipmentController::class, 'arrive'])->name('shipments.arrive')->middleware('permission:shipments.edit');
+    Route::post('shipments/{shipment}/deliver', [ShipmentController::class, 'deliver'])->name('shipments.deliver')->middleware('permission:shipments.edit');
+    Route::post('shipments/{shipment}/receive', [ShipmentController::class, 'receive'])->name('shipments.receive')->middleware('permission:shipments.edit');
+    Route::post('shipments/dispatch', [ShipmentController::class, 'dispatch'])->name('shipments.dispatch')->middleware('permission:shipments.edit');
     Route::post('qz/sign', [ShipmentController::class, 'signRequest'])->name('qz.sign');
     Route::resource('shipments', ShipmentController::class)->middleware('permission:shipments.index');
 
