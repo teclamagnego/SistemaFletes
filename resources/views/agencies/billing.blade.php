@@ -5,7 +5,10 @@
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
         <div>
             <h5 class="mb-0 fw-bold">Liquidación de Comisiones: {{ $agency->nombre }}</h5>
-            <small class="text-muted">Seleccione las guías entregadas para facturar su comisión</small>
+            <small class="text-muted d-block mt-1">
+                <i class="bi bi-info-circle me-1"></i> Seleccione las guías para facturar su comisión. 
+                <strong>Nota:</strong> Solo se incluyen guías <strong>entregadas</strong>, <strong>facturadas</strong> y <strong>pagadas</strong>.
+            </small>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('agencies.history', $agency) }}" class="btn btn-secondary btn-sm">
@@ -68,8 +71,8 @@
                             <th>Guía</th>
                             <th>Estado</th>
                             <th>Participación</th>
+                            <th>Pagador</th>
                             <th>F. Pago</th>
-                            <th class="text-end">Total Guía</th>
                             <th class="text-end">Comisión</th>
                         </tr>
                     </thead>
@@ -113,8 +116,8 @@
                                 <span class="badge bg-secondary-subtle text-secondary border small">{{ $r }}</span>
                                 @endforeach
                             </td>
+                            <td><small>{{ $s->cliente?->nombre_fantasia }}</small></td>
                             <td><small>{{ $s->formaPago?->nombre }}</small></td>
-                            <td class="text-end text-muted small">$ {{ number_format($s->total_flete, 2) }}</td>
                             <td class="text-end fw-bold text-success">
                                 $ {{ number_format($s->comision_total_agencia, 2) }}
                                 @if(!$canBill)
@@ -124,14 +127,14 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">No se encontraron guías para este
+                            <td colspan="8" class="text-center py-4 text-muted">No se encontraron guías para este
                                 periodo.</td>
                         </tr>
                         @endforelse
                     </tbody>
                     <tfoot>
                         <tr class="table-light">
-                            <td colspan="6" class="text-end fw-bold">TOTAL COMISIÓN SELECCIONADA:</td>
+                            <td colspan="7" class="text-end fw-bold">TOTAL COMISIÓN SELECCIONADA:</td>
                             <td class="text-end fw-bold text-primary" id="totalDisplay">$ 0.00</td>
                         </tr>
                     </tfoot>

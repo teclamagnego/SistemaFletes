@@ -213,6 +213,10 @@
                                 <label for="notas" class="form-label fw-semibold">Notas / Observaciones</label>
                                 <textarea name="notas" id="notas" rows="3" class="form-control">{{ $shipment->notas }}</textarea>
                             </div>
+                            <div class="mb-3">
+                                <label for="ref_remito" class="form-label fw-bold">Referencia Remito</label>
+                                <input type="text" name="ref_remito" id="ref_remito" class="form-control" value="{{ old('ref_remito', $shipment->ref_remito) }}" placeholder="Ej: R-001234">
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 border-top pt-4">

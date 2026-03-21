@@ -212,10 +212,17 @@
                                 <label for="notas" class="form-label fw-semibold">Notas / Observaciones</label>
                                 <textarea name="notas" id="notas" rows="3" class="form-control"></textarea>
                             </div>
+                            <div class="mb-3">
+                                <label for="ref_remito" class="form-label fw-bold">Referencia Remito</label>
+                                <input type="text" name="ref_remito" id="ref_remito" class="form-control" placeholder="Ej: R-001234">
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 border-top pt-4">
                             <a href="{{ route('shipments.index') }}" class="btn btn-light px-4">Cancelar</a>
+                            <button type="button" id="btnCrearSinImprimir" class="btn btn-outline-primary px-4">
+                                <i class="bi bi-save me-1"></i>Crear sin Imprimir
+                            </button>
                             <button type="submit" id="btnCrearGuia" class="btn btn-primary px-4">
                                 <i class="bi bi-printer me-1"></i>Crear e Imprimir Guía
                             </button>
@@ -462,6 +469,11 @@
         printStatusModal = new bootstrap.Modal(document.getElementById('printStatusModal'));
         const quickClientModalElement = document.getElementById('quickClientModal');
         const quickClientModal = new bootstrap.Modal(quickClientModalElement);
+
+        quickClientModalElement.addEventListener('shown.bs.modal', function () {
+            document.getElementById('qc_direccion').focus();
+        });
+
         const shipmentForm = document.getElementById('shipmentForm');
 
         function calculateRowTotal(row) {
@@ -608,7 +620,7 @@
                                 a.innerHTML = `
                                     <div class="flex-grow-1">
                                         <strong>${client.nombre_fantasia}</strong> <br>
-                                        <small class="text-muted">Doc: ${client.documento_nro}</small>
+                                        <small class="text-muted">Dir: ${client.direccion || ''}</small>
                                     </div>
                                     <button type="button" class="btn btn-sm btn-outline-danger border-0 delete-client-ajax" data-id="${client.id}" title="Eliminar cliente">
                                         <i class="bi bi-x-lg"></i>
@@ -641,36 +653,51 @@
                                     e.preventDefault();
                                     e.stopPropagation();
                                     
-                                    const originalContent = btnDel.innerHTML;
-                                    btnDel.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-                                    btnDel.disabled = true;
+                                    function performDelete(force = false) {
+                                        const originalContent = btnDel.innerHTML;
+                                        btnDel.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                                        btnDel.disabled = true;
 
-                                    fetch(`/clientes/${client.id}/ajax`, {
-                                        method: 'DELETE',
-                                        headers: {
-                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
-                                            'Accept': 'application/json'
-                                        }
-                                    })
-                                    .then(res => res.json())
-                                    .then(resData => {
-                                        if (resData.success) {
-                                            a.remove();
-                                            if (results.querySelectorAll('.client-search-item').length === 0) {
-                                                results.style.display = 'none';
+                                        let url = `/clientes/${client.id}/ajax`;
+                                        if (force) url += '?force=1';
+
+                                        fetch(url, {
+                                            method: 'DELETE',
+                                            headers: {
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                                                'Accept': 'application/json'
                                             }
-                                        } else {
-                                            alert(resData.message);
+                                        })
+                                        .then(res => res.json())
+                                        .then(resData => {
+                                            if (resData.success) {
+                                                a.remove();
+                                                if (results.querySelectorAll('.client-search-item').length === 0) {
+                                                    results.style.display = 'none';
+                                                }
+                                            } else if (resData.has_shipments) {
+                                                btnDel.innerHTML = originalContent;
+                                                btnDel.disabled = false;
+                                                if (confirm(`${resData.message}\n\n¿Desea eliminarlo de todas formas?`)) {
+                                                    performDelete(true);
+                                                }
+                                            } else {
+                                                alert(resData.message);
+                                                btnDel.innerHTML = originalContent;
+                                                btnDel.disabled = false;
+                                            }
+                                        })
+                                        .catch(err => {
+                                            console.error(err);
+                                            alert('Error al intentar eliminar el cliente.');
                                             btnDel.innerHTML = originalContent;
                                             btnDel.disabled = false;
-                                        }
-                                    })
-                                    .catch(err => {
-                                        console.error(err);
-                                        alert('Error al intentar eliminar el cliente.');
-                                        btnDel.innerHTML = originalContent;
-                                        btnDel.disabled = false;
-                                    });
+                                        });
+                                    }
+
+                                    if (confirm('¿Está seguro de eliminar este cliente?')) {
+                                        performDelete();
+                                    }
                                 };
 
                                 results.appendChild(a);
@@ -848,9 +875,7 @@
         // -------------------------------------------------------
         // Submit AJAX + QZ-Tray print
         // -------------------------------------------------------
-        shipmentForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
-
+        async function saveShipment(shouldPrint = true) {
             // Cleanup empty last row
             const rows = document.querySelectorAll('.item-row');
             if (rows.length > 1) {
@@ -872,9 +897,12 @@
                 return;
             }
 
-            // Deshabilitar botón y mostrar modal
+            // Deshabilitar botones y mostrar modal
             const btnSubmit = document.getElementById('btnCrearGuia');
+            const btnNoPrint = document.getElementById('btnCrearSinImprimir');
             btnSubmit.disabled = true;
+            btnNoPrint.disabled = true;
+
             updatePrintModal('saving');
             printStatusModal.show();
 
@@ -893,11 +921,11 @@
                     body: formData,
                 });
 
-                // Manejo de errores de validación (422)
                 if (saveResp.status === 422) {
                     const errData = await saveResp.json();
                     printStatusModal.hide();
                     btnSubmit.disabled = false;
+                    btnNoPrint.disabled = false;
                     const errMessages = Object.values(errData.errors || {}).flat().join('\n');
                     alert('Error de validación:\n' + (errMessages || 'Revise los campos del formulario.'));
                     return;
@@ -906,6 +934,7 @@
                 if (!saveResp.ok) {
                     printStatusModal.hide();
                     btnSubmit.disabled = false;
+                    btnNoPrint.disabled = false;
                     alert('Error del servidor al guardar la guía. Intente nuevamente.');
                     return;
                 }
@@ -915,33 +944,52 @@
                 if (!saveData.success) {
                     updatePrintModal('error');
                     btnSubmit.disabled = false;
+                    btnNoPrint.disabled = false;
                     console.error('Error al guardar:', saveData);
                     return;
                 }
 
-                createdTrackingNumber       = saveData.tracking_number;
+                createdTrackingNumber         = saveData.tracking_number;
                 createdShipmentPrintBase64Url = saveData.print_base64_url;
 
-                // 2. Obtener PDF en Base64
-                updatePrintModal('connecting');
-                const pdfResp = await fetch(saveData.print_base64_url, {
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                const pdfData = await pdfResp.json();
+                if (shouldPrint) {
+                    // 2. Obtener PDF en Base64
+                    updatePrintModal('connecting');
+                    const pdfResp = await fetch(saveData.print_base64_url, {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const pdfData = await pdfResp.json();
 
-                if (!pdfData.success) {
-                    updatePrintModal('qz_error');
-                    return;
+                    if (!pdfData.success) {
+                        updatePrintModal('qz_error');
+                        return;
+                    }
+
+                    // 3. Imprimir con QZ-Tray
+                    await printWithQzTray(pdfData.pdf_base64);
+                } else {
+                    // Éxito sin imprimir: Redirigir inmediatamente
+                    updatePrintModal('success');
+                    setTimeout(() => {
+                        window.location.href = "{{ route('shipments.index') }}";
+                    }, 500);
                 }
-
-                // 3. Imprimir con QZ-Tray
-                await printWithQzTray(pdfData.pdf_base64);
 
             } catch (err) {
                 console.error('Error en el proceso de creación/impresión:', err);
                 updatePrintModal('error');
                 btnSubmit.disabled = false;
+                btnNoPrint.disabled = false;
             }
+        }
+
+        shipmentForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            saveShipment(true);
+        });
+
+        document.getElementById('btnCrearSinImprimir').addEventListener('click', function(e) {
+            saveShipment(false);
         });
 
         // Event delegation para el botón "Agregar Cliente" (generado dinámicamente con innerHTML)

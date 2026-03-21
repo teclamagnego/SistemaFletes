@@ -29,6 +29,7 @@ class Shipment extends Model
         'agencia_f_origen_id',
         'agencia_f_destino_id',
         'notas',
+        'ref_remito',
     ];
 
     public function status()

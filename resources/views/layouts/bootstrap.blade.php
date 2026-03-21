@@ -49,12 +49,6 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     @auth
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                            href="{{ route('dashboard') }}">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
                     @can('agencies.index')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('agencies.*') ? 'active' : '' }}"
@@ -67,7 +61,7 @@
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('shipments.*') && !request()->routeIs('shipments.consolidation') ? 'active' : '' }}"
                             href="{{ route('shipments.index') }}">
-                            <i class="bi bi-file-earmark-text"></i> Envíos
+                            <i class="bi bi-file-earmark-text"></i> Guías
                         </a>
                     </li>
                     @endcan
@@ -89,52 +83,64 @@
                         </a>
                     </li>
                     @endcan
-                    @can('articulos.index')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('articulos.*') ? 'active' : '' }}"
-                            href="{{ route('articulos.index') }}">
-                            <i class="bi bi-box-seam"></i> Artículos
-                        </a>
-                    </li>
-                    @endcan
-                    @can('carriers.index')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('carriers.*') ? 'active' : '' }}"
-                            href="{{ route('carriers.index') }}">
-                            <i class="bi bi-truck"></i> Transportistas
-                        </a>
-                    </li>
-                    @endcan
-                    @canany(['users.index', 'roles.index', 'formas_pago.index', 'empresas.index', 'sucursales.index', 'localidades.index'])
+                    @can('clientes.index')
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('formas_pago.*') || request()->routeIs('empresas.*') || request()->routeIs('sucursales.*') || request()->routeIs('localidades.*') ? 'active' : '' }}"
-                            href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-gear"></i> Admin
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('informes.*') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-file-earmark-bar-graph"></i> Informes
                         </a>
                         <ul class="dropdown-menu">
-                            @can('users.index')
-                            <li><a class="dropdown-item" href="{{ route('users.index') }}"><i
-                                        class="bi bi-person-gear"></i> Usuarios</a></li>
+                            <li><a class="dropdown-item" href="{{ route('informes.saldos_clientes') }}"><i class="bi bi-person-lines-fill"></i> Saldos de Clientes</a></li>
+                            <li><a class="dropdown-item" href="{{ route('informes.saldos_agencias') }}"><i class="bi bi-shop"></i> Saldos de Agencias</a></li>
+                        </ul>
+                    </li>
+                    @endcan
+                    @canany(['users.index', 'roles.index', 'formas_pago.index', 'empresas.index', 'sucursales.index', 'localidades.index', 'articulos.index', 'carriers.index'])
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('formas_pago.*') || request()->routeIs('empresas.*') || request()->routeIs('sucursales.*') || request()->routeIs('localidades.*') || request()->routeIs('articulos.*') || request()->routeIs('carriers.*') ? 'active' : '' }}"
+                            href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear"></i> Configuraciones
+                        </a>
+                        <ul class="dropdown-menu">
+                            @can('articulos.index')
+                            <li><a class="dropdown-item {{ request()->routeIs('articulos.*') ? 'active' : '' }}"
+                                    href="{{ route('articulos.index') }}"><i class="bi bi-box-seam"></i> Artículos</a>
+                            </li>
                             @endcan
-                            @can('roles.index')
-                            <li><a class="dropdown-item" href="{{ route('roles.index') }}"><i
-                                        class="bi bi-shield-lock"></i> Roles</a></li>
-                            @endcan
-                            @can('localidades.index')
-                            <li><a class="dropdown-item" href="{{ route('localidades.index') }}"><i
-                                        class="bi bi-geo-alt"></i> Localidades</a></li>
-                            @endcan
-                            @can('formas_pago.index')
-                            <li><a class="dropdown-item" href="{{ route('formas_pago.index') }}"><i
-                                        class="bi bi-credit-card"></i> Formas de Pago</a></li>
+                            @can('carriers.index')
+                            <li><a class="dropdown-item {{ request()->routeIs('carriers.*') ? 'active' : '' }}"
+                                    href="{{ route('carriers.index') }}"><i class="bi bi-truck"></i> Transportistas</a>
+                            </li>
                             @endcan
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="{{ route('empresas.index') }}"><i
-                                        class="bi bi-buildings"></i> Empresas</a></li>
-                            <li><a class="dropdown-item" href="{{ route('sucursales.index') }}"><i
-                                        class="bi bi-shop"></i> Sucursales</a></li>
+                            @can('users.index')
+                            <li><a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}"
+                                    href="{{ route('users.index') }}"><i class="bi bi-person-gear"></i> Usuarios</a></li>
+                            @endcan
+                            @can('roles.index')
+                            <li><a class="dropdown-item {{ request()->routeIs('roles.*') ? 'active' : '' }}"
+                                    href="{{ route('roles.index') }}"><i class="bi bi-shield-lock"></i> Roles</a></li>
+                            @endcan
+                            @can('localidades.index')
+                            <li><a class="dropdown-item {{ request()->routeIs('localidades.*') ? 'active' : '' }}"
+                                    href="{{ route('localidades.index') }}"><i class="bi bi-geo-alt"></i> Localidades</a>
+                            </li>
+                            @endcan
+                            @can('formas_pago.index')
+                            <li><a class="dropdown-item {{ request()->routeIs('formas_pago.*') ? 'active' : '' }}"
+                                    href="{{ route('formas_pago.index') }}"><i class="bi bi-credit-card"></i> Formas de
+                                    Pago</a></li>
+                            @endcan
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item {{ request()->routeIs('empresas.*') ? 'active' : '' }}"
+                                    href="{{ route('empresas.index') }}"><i class="bi bi-buildings"></i> Empresas</a>
+                            </li>
+                            <li><a class="dropdown-item {{ request()->routeIs('sucursales.*') ? 'active' : '' }}"
+                                    href="{{ route('sucursales.index') }}"><i class="bi bi-shop"></i> Sucursales</a></li>
+
                         </ul>
                     </li>
                     @endcanany

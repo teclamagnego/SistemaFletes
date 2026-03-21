@@ -11,6 +11,7 @@ use App\Http\Controllers\AgencyController;
 use App\Http\Controllers\AgenciaReciboController;
 use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ShipmentController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LocalidadController;
 use App\Http\Controllers\FormaPagoController;
@@ -19,14 +20,14 @@ use App\Http\Controllers\EmpresaController;
 use App\Models\ClienteFactura;
 use App\Http\Controllers\ClienteFacturaController;
 use App\Http\Controllers\SucursalController;
+use App\Http\Controllers\InformeController;
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard-bootstrap');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     // Profile (Breeze)
@@ -44,7 +45,7 @@ Route::middleware('auth')->group(function () {
 
     // Empresas y Sucursales
     Route::resource('empresas', EmpresaController::class)->except(['show'])
-        ->middleware('permission:users.index'); // We can use users.index or whatever makes sense for admin
+        ->middleware('permission:users.index');
     Route::resource('sucursales', SucursalController::class)->except(['show'])
         ->middleware('permission:users.index');
 
@@ -58,102 +59,57 @@ Route::middleware('auth')->group(function () {
 
     Route::get('facturas/{factura}/print', [ClienteFacturaController::class , 'print'])->name('facturas.print')->middleware('permission:clientes.index');
     Route::resource('facturas', ClienteFacturaController::class)->only(['index', 'show', 'destroy'])->middleware('permission:clientes.index');
+    Route::delete('clientes/{cliente}/ajax', [ClienteController::class, 'destroyAjax'])->name('clientes.destroyAjax')->middleware('permission:clientes.delete');
+    Route::resource('clientes', ClienteController::class)->middleware('permission:clientes.index|clientes.create|clientes.edit|clientes.delete');
 
-    Route::delete('clientes/{cliente}/ajax', [ClienteController::class , 'destroyAjax'])->name('clientes.destroyAjax')->middleware('permission:clientes.delete');
-    Route::resource('clientes', ClienteController::class)->except(['show'])
-        ->middleware('permission:clientes.index|clientes.create|clientes.edit|clientes.delete');
-
-    // Recibos de Clientes
-    Route::get('cliente_recibos/{recibo}/print', [ClienteReciboController::class , 'print'])->name('cliente_recibos.print')->middleware('permission:clientes.index');
-    Route::resource('cliente_recibos', ClienteReciboController::class)->except(['show'])
-        ->middleware('permission:clientes.index');
-
-    // Rubros
-    Route::resource('rubros', RubroController::class)->except(['show'])
-        ->middleware('permission:rubros.index|rubros.create|rubros.edit|rubros.delete');
-
-    // Proveedores
-    Route::resource('proveedores', ProveedorController::class)->except(['show'])
-        ->middleware('permission:proveedores.index|proveedores.create|proveedores.edit|proveedores.delete');
+    // Rubros y Proveedores
+    Route::resource('rubros', RubroController::class)->except(['show'])->middleware('permission:configuracion.index');
+    Route::resource('proveedores', ProveedorController::class)->except(['show'])->middleware('permission:configuracion.index');
 
     // Artículos
-    Route::get('articulos/search', [ArticuloController::class , 'search'])->name('articulos.search')->middleware('permission:articulos.index');
-    Route::resource('articulos', ArticuloController::class)->except(['show'])
-        ->middleware('permission:articulos.index|articulos.create|articulos.edit|articulos.delete');
+    Route::get('articulos/search', [ArticuloController::class, 'search'])->name('articulos.search')->middleware('permission:articulos.index');
+    Route::resource('articulos', ArticuloController::class)->except(['show'])->middleware('permission:articulos.index');
 
     // Agencias
-    Route::get('agencies/{agency}/shipments', [AgencyController::class , 'shipments'])->name('agencies.shipments')
-        ->middleware('permission:agencies.index');
+    Route::get('agencies/{agency}/shipments', [AgencyController::class, 'shipments'])->name('agencies.shipments')->middleware('permission:agencies.index');
     Route::get('agencies/{agency}/billing', [AgencyController::class , 'billing'])->name('agencies.billing')->middleware('permission:agencies.index');
     Route::post('agencies/{agency}/generate-invoice', [AgencyController::class , 'generateInvoice'])->name('agencies.generateInvoice')->middleware('permission:agencies.index');
+    Route::get('agencies/facturas/{factura}/imprimir-detalle', [AgencyController::class, 'printDetail'])->name('agencies.facturas.printDetail')->middleware('permission:agencies.index');
     Route::get('agencies/{agency}/history', [AgencyController::class , 'history'])->name('agencies.history')->middleware('permission:agencies.index');
+    Route::resource('agencies', AgencyController::class)->middleware('permission:agencies.index');
 
-    Route::resource('agencia_recibos', AgenciaReciboController::class)->except(['show', 'edit', 'update'])
-        ->middleware('permission:agencies.index');
+    Route::resource('agencia_recibos', AgenciaReciboController::class)->except(['show', 'edit', 'update'])->middleware('permission:agencies.index');
 
-    Route::resource('agencies', AgencyController::class)->except(['show'])
-        ->middleware('permission:agencies.index|agencies.create|agencies.edit|agencies.delete');
-
-    // Transportistas
-    Route::resource('carriers', CarrierController::class)->except(['show'])
-        ->middleware('permission:carriers.index|carriers.create|carriers.edit|carriers.delete');
-
-    // Localidades
-    Route::resource('localidades', LocalidadController::class)->except(['show'])
-        ->parameters(['localidades' => 'localidad'])
-        ->middleware('permission:localidades.index|localidades.create|localidades.edit|localidades.delete');
-
-    // Forma de Pago
-    Route::resource('formas_pago', FormaPagoController::class)->except(['show'])
-        ->parameters(['formas_pago' => 'forma_pago'])
-        ->middleware('permission:formas_pago.index|formas_pago.create|formas_pago.edit|formas_pago.delete');
-
-    // Envíos (Guías)
-    Route::get('shipments/consolidation', [ShipmentController::class , 'consolidation'])->name('shipments.consolidation')
-        ->middleware('permission:shipments.index');
-
-    Route::post('shipments/{shipment}/receive', [ShipmentController::class , 'receive'])->name('shipments.receive')
-        ->middleware('permission:shipments.create');
-
-    Route::post('shipments/dispatch', [ShipmentController::class , 'dispatch'])->name('shipments.dispatch')
-        ->middleware('permission:shipments.create');
-
-    Route::post('shipments/{shipment}/arrive', [ShipmentController::class , 'arrive'])->name('shipments.arrive')
-        ->middleware('permission:shipments.create');
-
-    Route::post('shipments/{shipment}/deliver', [ShipmentController::class , 'deliver'])->name('shipments.deliver')
-        ->middleware('permission:shipments.create');
-
-    Route::get('shipments/{shipment}/print', [ShipmentController::class , 'print'])->name('shipments.print')
-        ->middleware('permission:shipments.index');
-
-    Route::get('shipments/{shipment}/print-base64', [ShipmentController::class , 'printBase64'])->name('shipments.printBase64')
-        ->middleware('permission:shipments.index');
-
-    Route::resource('shipments', ShipmentController::class)->except(['destroy'])
-        ->middleware('permission:shipments.index|shipments.create|shipments.view|shipments.edit');
-
-    // QZ-Tray: certificado y llave privada dinámicos desde la empresa
-    Route::get('/qz/digital-certificate.txt', function() {
-        $empresa = \App\Models\Empresa::first();
-        abort_unless($empresa && $empresa->qz_certificate, 404);
-        return response($empresa->qz_certificate, 200, ['Content-Type' => 'text/plain']);
-    })->name('qz.certificate');
-
-    Route::get('/qz/private-key.pem', function() {
-        $empresa = \App\Models\Empresa::first();
-        abort_unless($empresa && $empresa->qz_private_key, 404);
-        return response($empresa->qz_private_key, 200, ['Content-Type' => 'text/plain']);
-    })->name('qz.privateKey');
-
-    Route::post('/qz/sign', [ShipmentController::class, 'signRequest'])->name('qz.sign');
+    // Guías (Shipments)
+    Route::get('shipments/consolidation', [ShipmentController::class, 'consolidation'])->name('shipments.consolidation')->middleware('permission:shipments.index');
+    Route::post('shipments/consolidation', [ShipmentController::class, 'doConsolidation'])->name('shipments.doConsolidation')->middleware('permission:shipments.index');
+    Route::get('shipments/{shipment}/print', [ShipmentController::class, 'print'])->name('shipments.print')->middleware('permission:shipments.index');
+    Route::get('shipments/{shipment}/print-base64', [ShipmentController::class, 'printBase64'])->name('shipments.printBase64')->middleware('permission:shipments.index');
+    Route::post('shipments/{shipment}/status', [ShipmentController::class, 'updateStatus'])->name('shipments.updateStatus')->middleware('permission:shipments.edit');
+    Route::post('qz/sign', [ShipmentController::class, 'signRequest'])->name('qz.sign');
+    Route::resource('shipments', ShipmentController::class)->middleware('permission:shipments.index');
 
 
-});
+    // Localidades y Transportistas
+    Route::resource('localidades', LocalidadController::class)->except(['show'])->middleware('permission:localidades.index');
+    Route::resource('carriers', CarrierController::class)->except(['show'])->middleware('permission:carriers.index');
 
-Route::get('/test-pdf', function () {
-    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML('<h1>Test PDF</h1>');
-    return $pdf->stream();
+    // Formas de Pago
+    Route::resource('formas_pago', FormaPagoController::class)->except(['show'])->middleware('permission:formas_pago.index');
+
+    // Recibos de Clientes
+    Route::get('cliente_recibos/{recibo}/print', [ClienteReciboController::class, 'print'])->name('cliente_recibos.print')->middleware('permission:clientes.index');
+    Route::resource('cliente_recibos', ClienteReciboController::class)->except(['show', 'edit', 'update'])
+        ->middleware('permission:clientes.index');
+
+    // Informes
+    Route::get('informes/saldos_clientes', [InformeController::class, 'saldosClientes'])->name('informes.saldos_clientes');
+    Route::get('informes/saldos_agencias', [InformeController::class, 'saldosAgencias'])->name('informes.saldos_agencias');
+
+    Route::get('/test-pdf', function () {
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML('<h1>Test PDF</h1>');
+        return $pdf->stream();
+    });
 });
 
 require __DIR__ . '/auth.php';

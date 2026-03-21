@@ -57,6 +57,7 @@
                             </th>
                             <th>Fecha</th>
                             <th>Guía</th>
+                            <th>Ref Remito</th>
                             <th>F. Pago</th>
                             <th>Estado</th>
                             <th class="text-end">Monto</th>
@@ -82,6 +83,7 @@
                                     {{ $s->tracking_number }}
                                 </a>
                             </td>
+                            <td>{{ $s->ref_remito }}</td>
                             <td><small>{{ $s->formaPago?->nombre }}</small></td>
                             <td>
                                 @if($s->factura_id > 0)

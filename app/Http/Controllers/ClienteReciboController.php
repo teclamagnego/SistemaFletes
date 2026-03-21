@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\ClienteRecibo;
 use App\Models\Cliente;
+use App\Models\ClienteFactura;
 use App\Models\FormaPago;
 use App\Models\Empresa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ClienteReciboController extends Controller
@@ -28,14 +30,12 @@ class ClienteReciboController extends Controller
     public function create(Request $request)
     {
         $clientes = Cliente::orderBy('nombre_fantasia')->get();
-        $formasPago = FormaPago::orderBy('nombre')->get();
+        $formasPago = FormaPago::where('id', '!=', 2)->orderBy('nombre')->get();
         $selected_cliente_id = $request->get('cliente_id');
 
         $saldo = 0;
         if ($selected_cliente_id) {
-            $totalFacturas = \App\Models\ClienteFactura::where('cliente_id', $selected_cliente_id)->sum('total');
-            $totalRecibos = \App\Models\ClienteRecibo::where('cliente_id', $selected_cliente_id)->sum('monto');
-            $saldo = $totalFacturas - $totalRecibos;
+            $saldo = \App\Models\ClienteFactura::where('cliente_id', $selected_cliente_id)->sum('falta_imputar');
         }
 
         return view('cliente_recibos.create', compact('clientes', 'formasPago', 'selected_cliente_id', 'saldo'));
@@ -52,9 +52,35 @@ class ClienteReciboController extends Controller
             'observaciones' => 'nullable|string',
         ]);
 
-        ClienteRecibo::create($request->all());
+        DB::transaction(function () use ($request) {
+            // 1. Crear el recibo
+            $recibo = ClienteRecibo::create($request->all());
 
-        return redirect()->route('clientes.history', $request->cliente_id)->with('success', 'Recibo creado correctamente.');
+            // 2. Imputar facturas (FIFO: de más vieja a más nueva)
+            $montoARepartir = $request->monto;
+
+            $facturasPendientes = ClienteFactura::where('cliente_id', $request->cliente_id)
+                ->where('falta_imputar', '>', 0)
+                ->orderBy('fecha', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            foreach ($facturasPendientes as $factura) {
+                if ($montoARepartir <= 0) break;
+
+                if ($montoARepartir >= $factura->falta_imputar) {
+                    // Cubre toda la factura
+                    $montoARepartir -= $factura->falta_imputar;
+                    $factura->update(['falta_imputar' => 0]);
+                } else {
+                    // Cubre solo una parte
+                    $factura->update(['falta_imputar' => $factura->falta_imputar - $montoARepartir]);
+                    $montoARepartir = 0;
+                }
+            }
+        });
+
+        return redirect()->route('clientes.history', $request->cliente_id)->with('success', 'Recibo creado e imputado correctamente.');
     }
 
     public function edit(ClienteRecibo $clienteRecibo)

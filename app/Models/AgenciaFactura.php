@@ -14,6 +14,7 @@ class AgenciaFactura extends Model
         'nro_factura',
         'fecha',
         'total',
+        'falta_imputar',
         'observacion',
     ];
 

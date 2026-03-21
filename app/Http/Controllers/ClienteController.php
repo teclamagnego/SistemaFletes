@@ -24,7 +24,12 @@ class ClienteController extends Controller
         $query = Cliente::with(['tipoDoc', 'localidad', 'tipoCuenta', 'tipoIva', 'agenciaOrigen', 'agenciaDestino']);
 
         if ($request->filled('nombre')) {
-            $query->where('nombre_fantasia', 'LIKE', '%' . $request->nombre . '%');
+            $terms = explode(' ', $request->nombre);
+            foreach ($terms as $term) {
+                if (trim($term) !== '') {
+                    $query->where('nombre_fantasia', 'LIKE', '%' . $term . '%');
+                }
+            }
         }
 
         if ($request->filled('localidad_id')) {
@@ -305,18 +310,30 @@ class ClienteController extends Controller
         return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente.');
     }
 
-    public function destroyAjax(Cliente $cliente)
+    public function destroyAjax(Request $request, Cliente $cliente)
     {
-        $hasShipments = Shipment::where('sender_id', $cliente->id)
+        $shipments = Shipment::where('sender_id', $cliente->id)
             ->orWhere('receiver_id', $cliente->id)
-            ->orWhere('cliente_id', $cliente->id)
-            ->exists();
+            ->orWhere('cliente_id', $cliente->id);
 
-        if ($hasShipments) {
+        $count = $shipments->count();
+
+        if ($count > 0 && !$request->has('force')) {
+            $lastDate = $shipments->max('fecha');
             return response()->json([
-                'success' => false, 
-                'message' => 'No se puede eliminar un cliente con guías asociadas.'
-            ], 422);
+                'success' => false,
+                'has_shipments' => true,
+                'count' => $count,
+                'last_date' => \Carbon\Carbon::parse($lastDate)->format('d/m/Y'),
+                'message' => "El cliente tiene {$count} guías asociadas (última: " . \Carbon\Carbon::parse($lastDate)->format('d/m/Y') . ")."
+            ]);
+        }
+
+        if ($request->has('force')) {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+            $cliente->delete();
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            return response()->json(['success' => true]);
         }
 
         $cliente->delete();

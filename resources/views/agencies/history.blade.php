@@ -32,12 +32,9 @@
                     <label class="form-label small fw-bold">Hasta</label>
                     <input type="date" name="to" class="form-control" value="{{ $to }}">
                 </div>
-                <div class="col-md-4 d-flex gap-2">
+                <div class="col-md-4 d-flex">
                     <button type="submit" class="btn btn-primary flex-fill">
                         <i class="bi bi-filter"></i> Filtrar
-                    </button>
-                    <button type="button" onclick="window.print()" class="btn btn-outline-secondary">
-                        <i class="bi bi-printer"></i>
                     </button>
                 </div>
             </form>
@@ -80,7 +77,16 @@
                                 </span>
                             </td>
                             <td class="fw-bold">{{ $mov['referencia'] }}</td>
-                            <td><small class="text-muted">{{ $mov['detalle'] ?? '-' }}</small></td>
+                             <td>
+                                <small class="text-muted">{{ $mov['detalle'] ?? '-' }}</small>
+                                @if($mov['tipo'] == 'Factura Comisión')
+                                    <a href="{{ route('agencies.facturas.printDetail', $mov['id']) }}" 
+                                       class="btn btn-sm btn-link text-primary p-0 ms-2" 
+                                       title="Imprimir Detalle de esta liquidación" target="_blank">
+                                        <i class="bi bi-printer-fill"></i> Imprimir Detalle
+                                    </a>
+                                @endif
+                            </td>
                             <td class="text-end text-danger">
                                 {{ $mov['debe'] > 0 ? '$ ' . number_format($mov['debe'], 2) : '-' }}
                             </td>

@@ -41,4 +41,9 @@ class Agency extends Model
     {
         return $this->hasMany(\App\Models\Shipment::class , 'destination_agency_id');
     }
+
+    public function facturas()
+    {
+        return $this->hasMany(AgenciaFactura::class);
+    }
 }

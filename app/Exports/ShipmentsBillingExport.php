@@ -25,6 +25,7 @@ class ShipmentsBillingExport implements FromCollection, WithHeadings, WithMappin
         return [
             'Fecha',
             'Guía #',
+            'Ref Remito',
             'Remitente',
             'Destinatario',
             'Forma de Pago',
@@ -38,6 +39,7 @@ class ShipmentsBillingExport implements FromCollection, WithHeadings, WithMappin
         return [
             $shipment->fecha,
             $shipment->tracking_number,
+            $shipment->ref_remito,
             $shipment->sender?->nombre_fantasia,
             $shipment->receiver?->nombre_fantasia,
             $shipment->formaPago?->nombre,

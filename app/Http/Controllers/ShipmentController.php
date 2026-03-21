@@ -12,6 +12,7 @@ use App\Models\FormaPago;
 use App\Models\ShipmentStatus;
 use App\Models\Articulo;
 use App\Models\Empresa;
+use App\Models\ClienteFactura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -162,6 +163,20 @@ class ShipmentController extends Controller
                     'total' => $itemData['total'],
                     'iva' => $itemData['iva'] ?? 0,
                 ]);
+            }
+
+            // Facturación Automática (Si no es Cuenta Corriente ID 2)
+            if ($request->forma_pago_id != 2) {
+                $factura = ClienteFactura::create([
+                    'cliente_id' => $shipment->cliente_id,
+                    'forma_pago_id' => $shipment->forma_pago_id,
+                    'nro_factura' => null, // Opcional: auto-generar si es necesario
+                    'fecha' => $shipment->fecha,
+                    'total' => $shipment->total_flete,
+                    'falta_imputar' => 0, // No es CC, asumimos pagado/contado
+                    'observacion' => "Facturación automática al crear guía #{$shipment->id}",
+                ]);
+                $shipment->update(['factura_id' => $factura->id]);
             }
 
             ShipmentLog::create([
@@ -510,5 +525,36 @@ class ShipmentController extends Controller
         }
 
         return response('Error al firmar con OpenSSL', 500);
+    }
+
+    public function updateStatus(Request $request, Shipment $shipment)
+    {
+        $request->validate([
+            'status_id' => 'required|exists:shipment_statuses,id',
+        ]);
+
+        $oldStatus = $shipment->status?->name;
+        $shipment->update(['status_id' => $request->status_id]);
+        $newStatus = $shipment->status?->name;
+
+        ShipmentLog::create([
+            'shipment_id' => $shipment->id,
+            'user_id' => Auth::id(),
+            'action' => 'Cambio de estado (desde listado)',
+            'description' => "Cambio de estado de $oldStatus a $newStatus",
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function destroy(Shipment $shipment)
+    {
+        if ($shipment->factura_id) {
+            return back()->with('error', 'No se puede eliminar una guía que ya ha sido facturada.');
+        }
+
+        $shipment->delete();
+
+        return redirect()->route('shipments.index')->with('success', 'Guía eliminada correctamente.');
     }
 }

@@ -6,10 +6,15 @@ use App\Models\Agency;
 use App\Models\Localidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Models\FormaPago;
 use App\Models\AgenciaFactura;
 use App\Models\AgenciaRecibo;
 use App\Models\ShipmentStatus;
+use App\Models\Shipment;
+use App\Models\Empresa;
+use App\Models\Sucursal;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AgencyController extends Controller
 {
@@ -93,6 +98,10 @@ class AgencyController extends Controller
         $status_id = $request->input('status_id', ShipmentStatus::DELIVERED);
 
         $query = \App\Models\Shipment::with(['items.articulo', 'originAgency', 'destinationAgency', 'formaPago'])
+            ->where('factura_id', '>', 0)
+            ->whereHas('factura', function($q) {
+                $q->where('falta_imputar', 0);
+            })
             ->whereBetween('fecha', [$from, $to]);
 
         if ($status_id !== 'all') {
@@ -180,9 +189,11 @@ class AgencyController extends Controller
                 'agency_id' => $agency->id,
                 'fecha' => now(),
                 'total' => $totalCommission,
-                'observacion' => 'Comisiones por ' . count($shipments) . ' guías. Mirar detalle adjunto.',
-                'nro_factura' => 'COM-' . strtoupper(substr($agency->nombre, 0, 3)) . '-' . date('ymdHis')
+                'falta_imputar' => $totalCommission,
+                'observacion' => 'Comisiones por ' . count($shipments) . ' guías.',
+                'nro_factura' => '...' // Temporal
             ]);
+            $factura->update(['nro_factura' => $factura->id]);
 
             foreach ($shipments as $s) {
                 $update = [];
@@ -257,6 +268,23 @@ class AgencyController extends Controller
             'movimientos' => $movimientos,
             'saldoAnterior' => $saldoAnterior
         ];
+    }
+
+    public function printDetail(AgenciaFactura $factura)
+    {
+        $shipments = Shipment::where('agencia_f_origen_id', $factura->id)
+            ->orWhere('agencia_f_destino_id', $factura->id)
+            ->with(['originAgency', 'destinationAgency', 'sender', 'receiver'])
+            ->orderBy('fecha', 'asc')
+            ->get();
+
+        if ($shipments->isEmpty()) {
+            return redirect()->back()->with('error', 'No se encontraron registros vinculados a esta liquidación.');
+        }
+
+        $pdf = Pdf::loadView('agencies.billing-pdf', compact('shipments', 'factura'));
+
+        return $pdf->stream("Detalle_Liquidacion_{$factura->nro_factura}.pdf");
     }
 
     public function destroy(Agency $agency)

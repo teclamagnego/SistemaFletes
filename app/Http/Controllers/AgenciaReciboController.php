@@ -18,7 +18,7 @@ class AgenciaReciboController extends Controller
     public function create(Request $request)
     {
         $agencies = Agency::orderBy('nombre')->get();
-        $formasPago = FormaPago::orderBy('nombre')->get();
+        $formasPago = FormaPago::where('id', '!=', 2)->orderBy('nombre')->get();
         $selected_agency_id = $request->get('agency_id');
 
         $saldo = 0;
@@ -42,9 +42,27 @@ class AgenciaReciboController extends Controller
             'observaciones' => 'nullable|string',
         ]);
 
-        AgenciaRecibo::create($request->all());
+        \DB::transaction(function () use ($request) {
+            $recibo = AgenciaRecibo::create($request->all());
 
-        return redirect()->route('agencies.history', $request->agency_id)->with('success', 'Pago registrado correctamente.');
+            // Imputación de facturas
+            $montoRestante = $request->monto;
+            $facturasPendientes = \App\Models\AgenciaFactura::where('agency_id', $request->agency_id)
+                ->where('falta_imputar', '>', 0)
+                ->orderBy('fecha', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            foreach ($facturasPendientes as $factura) {
+                if ($montoRestante <= 0) break;
+
+                $pago = min($montoRestante, $factura->falta_imputar);
+                $factura->decrement('falta_imputar', $pago);
+                $montoRestante -= $pago;
+            }
+        });
+
+        return redirect()->route('agencies.history', $request->agency_id)->with('success', 'Pago registrado correctamente e imputado a facturas pendientes.');
     }
 
     public function destroy(AgenciaRecibo $agenciaRecibo)

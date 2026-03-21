@@ -15,6 +15,73 @@ $statusColors = [
 @endphp
 
 <div class="row g-3 mb-4">
+    <!-- Mes Anterior (Izquierda) -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100 bg-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small fw-bold mb-1">Mes Anterior (Tránsito/Entregado)</h6>
+                        <h2 class="fw-bold mb-0 text-dark">{{ $lastMonthEnvoys }}</h2>
+                    </div>
+                    <div class="bg-secondary bg-opacity-10 p-3 rounded-circle">
+                        <i class="bi bi-calendar-event text-secondary fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Mes Actual (Derecha) -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100 bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-white-50 small fw-bold mb-1">Mes Actual (Tránsito/Entregado)</h6>
+                        <h2 class="fw-bold mb-0">{{ $currentMonthEnvoys }}</h2>
+                    </div>
+                    <div class="bg-white bg-opacity-20 p-3 rounded-circle">
+                        <i class="bi bi-calendar-check fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Año Pasado (Izquierda) -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100 bg-dark text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-white-50 small fw-bold mb-1">Total Envíos Año Pasado</h6>
+                        <h3 class="fw-bold mb-0">{{ $lastYearEnvoys }}</h3>
+                    </div>
+                    <i class="bi bi-graph-up-arrow opacity-25 fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Este Año (Derecha) -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100 bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-white-50 small fw-bold mb-1">Total Envíos Este Año</h6>
+                        <h3 class="fw-bold mb-0">{{ $currentYearEnvoys }}</h3>
+                    </div>
+                    <i class="bi bi-activity opacity-50 fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h5 class="mb-3 fw-bold mt-5"><i class="bi bi-funnel"></i> Estado Actual de Todas las Guías</h5>
+<div class="row g-3 mb-4">
     @foreach($statuses as $status)
     <div class="col-md-4 col-lg-2">
         <div class="card shadow-sm border-0 h-100 bg-{{ $statusColors[$status->name] ?? 'secondary' }} text-white">
@@ -34,29 +101,6 @@ $statusColors = [
         </div>
     </div>
     @endforeach
-</div>
-
-<div class="row">
-    <div class="col-md-12 mb-3">
-        <div class="card text-white bg-dark shadow-sm border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title mb-0">Total General de Envíos</h5>
-                        <h2 class="fw-bold mb-0 display-4">{{ \App\Models\Shipment::count() }}</h2>
-                    </div>
-                    <i class="bi bi-truck" style="font-size: 4rem; opacity: 0.2;"></i>
-                </div>
-                <hr class="mt-3 mb-3 opacity-25">
-                <div class="d-flex gap-3">
-                    <a href="{{ route('shipments.index') }}" class="btn btn-outline-light btn-sm px-4">Ver todos los
-                        envíos</a>
-                    <a href="{{ route('shipments.create') }}" class="btn btn-light btn-sm px-4 text-dark fw-bold"><i
-                            class="bi bi-plus-lg me-1"></i>Nuevo Envío</a>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <div class="card border-0 shadow-sm mt-3">

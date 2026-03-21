@@ -67,8 +67,15 @@
                     <td>{{ $s->receiver?->nombre_fantasia ?? 'N/A' }}</td>
                     <td>{{ $s->originAgency?->nombre ?? 'N/A' }}</td>
                     <td>
-                        <span class="badge bg-{{ $s->status->color ?? 'secondary' }}">{{ $s->status->name ?? 'N/A'
-                            }}</span>
+                        <select class="form-select form-select-sm status-select" 
+                                data-shipment-id="{{ $s->id }}" 
+                                style="width: auto; background-color: transparent; border-color: #dee2e6;">
+                            @foreach($statuses as $status)
+                                <option value="{{ $status->id }}" {{ $s->status_id == $status->id ? 'selected' : '' }}>
+                                    {{ $status->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </td>
                     <td>${{ number_format($s->total_flete, 2) }}</td>
                     <td class="text-end">
@@ -79,10 +86,19 @@
                             <a href="{{ route('shipments.edit', $s) }}" class="btn btn-sm btn-outline-warning"
                                 title="Editar"><i class="bi bi-pencil"></i></a>
                             @endif
-                            <a href="{{ route('shipments.print', $s) }}" target="_blank"
-                                class="btn btn-sm btn-outline-secondary" title="Imprimir PDF"><i
-                                    class="bi bi-printer"></i></a>
-                        </div>
+                                <a href="{{ route('shipments.print', $s) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-secondary" title="Imprimir PDF"><i
+                                        class="bi bi-printer"></i></a>
+                                @if(!$s->factura_id)
+                                <form action="{{ route('shipments.destroy', $s) }}" method="POST"
+                                    onsubmit="return confirm('¿Está seguro de eliminar esta guía? Esta acción no se puede deshacer.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar"><i
+                                            class="bi bi-trash"></i></button>
+                                </form>
+                                @endif
+                            </div>
                     </td>
                 </tr>
                 @endforeach
@@ -91,4 +107,53 @@
     </div>
 </div>
 <div class="mt-3">{{ $shipments->links() }}</div>
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const statusSelects = document.querySelectorAll('.status-select');
+        
+        statusSelects.forEach(select => {
+            select.addEventListener('change', function () {
+                const shipmentId = this.dataset.shipmentId;
+                const statusId = this.value;
+                const originalValue = this.querySelector('option[selected]')?.value;
+
+                // Feedback visual: deshabilitar mientras procesa
+                this.disabled = true;
+                this.style.borderColor = '#0d6efd'; // azul primario
+
+                fetch(`/shipments/${shipmentId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ status_id: statusId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Éxito: marcamos en verde brevemente y rehabilitamos
+                        this.style.borderColor = '#198754'; // verde
+                        setTimeout(() => {
+                            this.style.borderColor = '#dee2e6';
+                            this.disabled = false;
+                        }, 1000);
+                    } else {
+                        throw new Error('Error al actualizar');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('No se pudo actualizar el estado.');
+                    this.value = originalValue; // revertir
+                    this.style.borderColor = '#dc3545'; // rojo
+                    this.disabled = false;
+                });
+            });
+        });
+    });
+</script>
+@endpush
 @endsection
