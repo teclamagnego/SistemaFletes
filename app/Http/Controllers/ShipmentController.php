@@ -527,6 +527,15 @@ class ShipmentController extends Controller
         return response('Error al firmar con OpenSSL', 500);
     }
 
+    public function getCertificate()
+    {
+        $empresa = Empresa::first();
+        if (!$empresa || !$empresa->qz_certificate) {
+            return response('No hay certificado configurado', 404);
+        }
+        return response($empresa->qz_certificate)->header('Content-Type', 'text/plain');
+    }
+
     public function updateStatus(Request $request, Shipment $shipment)
     {
         $request->validate([
