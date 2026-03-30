@@ -40,7 +40,7 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
             $this->command->info("Omitiendo truncado de tablas (SEED_START > 1 o SEED_TRUNCATE=false)");
         }
 
-        $marchCondition = "activo = 4 AND updated_at >= '2026-03-01 00:00:00' AND updated_at <= '2026-03-31 23:59:59'";
+        $marchCondition = " updated_at >= '2026-03-01 00:00:00' AND updated_at <= '2026-03-31 23:59:59'";
 
         // 1. Migración de Guías
         $this->command->info("Insertando guías de Marzo 2026 en production...");

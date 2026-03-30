@@ -13,15 +13,25 @@
                 <input type="text" name="tracking_number" class="form-control" placeholder="Guía #"
                     value="{{ request('tracking_number') }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <input type="text" name="cliente" class="form-control" placeholder="Cliente (Rem/Dest)"
                     value="{{ request('cliente') }}">
             </div>
-            <div class="col-md-3">
-                <select name="agency_id" class="form-select">
-                    <option value="">Todas las Agencias</option>
+            <div class="col-md-2">
+                <select name="origin_agency_filter_id" class="form-select">
+                    <option value="">Agencia Origen</option>
                     @foreach($agencies as $agency)
-                    <option value="{{ $agency->id }}" {{ request('agency_id')==$agency->id ? 'selected' : '' }}>
+                    <option value="{{ $agency->id }}" {{ request('origin_agency_filter_id')==$agency->id ? 'selected' : '' }}>
+                        {{ $agency->nombre }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="destination_agency_filter_id" class="form-select">
+                    <option value="">Agencia Destino</option>
+                    @foreach($agencies as $agency)
+                    <option value="{{ $agency->id }}" {{ request('destination_agency_filter_id')==$agency->id ? 'selected' : '' }}>
                         {{ $agency->nombre }}
                     </option>
                     @endforeach
@@ -36,10 +46,17 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-1">
+            <div class="col-md-2">
+                <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
+            </div>
+            <div class="col-md-4 d-flex gap-1">
                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i></button>
                 <a href="{{ route('shipments.index') }}" class="btn btn-outline-secondary w-100"><i
                         class="bi bi-x-circle"></i></a>
+                <button type="button" class="btn btn-info w-100" onclick="printFilteredShipments()"><i class="bi bi-printer"></i> Imprimir</button>
             </div>
         </form>
     </div>
@@ -51,9 +68,12 @@
             <thead>
                 <tr>
                     <th>Guía #</th>
+                    <th>Fecha</th>
+                    <th>Fecha Entregado</th>
                     <th>Remitente</th>
                     <th>Destinatario</th>
                     <th>Agencia Origen</th>
+                    <th>Agencia Destino</th>
                     <th>Estado</th>
                     <th>Total</th>
                     <th class="text-end">Acciones</th>
@@ -63,9 +83,12 @@
                 @foreach($shipments as $s)
                 <tr>
                     <td><strong>{{ $s->tracking_number }}</strong></td>
+                    <td>{{ $s->created_at->format('d/m/Y') }}</td>
+                    <td>{{ $s->delivery_date ? \Carbon\Carbon::parse($s->delivery_date)->format('d/m/Y') : 'N/A' }}</td>
                     <td>{{ $s->sender?->nombre_fantasia ?? 'N/A' }}</td>
                     <td>{{ $s->receiver?->nombre_fantasia ?? 'N/A' }}</td>
                     <td>{{ $s->originAgency?->nombre ?? 'N/A' }}</td>
+                    <td>{{ $s->destinationAgency?->nombre ?? 'N/A' }}</td>
                     <td>
                         <select class="form-select form-select-sm status-select" 
                                 data-shipment-id="{{ $s->id }}" 
@@ -153,6 +176,12 @@
                 });
             });
         });
+
+        window.printFilteredShipments = function() {
+            const form = document.querySelector('.card-body > form');
+            const params = new URLSearchParams(new FormData(form)).toString();
+            window.open(`{{ route('shipments.print_filtered') }}?${params}`, '_blank');
+        };
     });
 </script>
 @endpush

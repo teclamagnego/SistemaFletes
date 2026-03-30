@@ -493,7 +493,8 @@
             document.querySelectorAll('.item-total').forEach(input => {
                 grandTotal += parseFloat(input.value) || 0;
             });
-            document.getElementById('total_envio_display').innerText = '$ ' + grandTotal.toFixed(2);
+            const formattedGrandTotal = grandTotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('total_envio_display').innerText = '$ ' + formattedGrandTotal;
         }
 
         function addNewRow() {

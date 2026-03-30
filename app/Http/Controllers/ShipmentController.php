@@ -46,13 +46,14 @@ class ShipmentController extends Controller
                 });
         }
 
-        // Filtro por agencia (origen o destino)
-        if ($request->filled('agency_id')) {
-            $agencyId = $request->agency_id;
-            $query->where(function ($q) use ($agencyId) {
-                $q->where('origin_agency_id', $agencyId)
-                    ->orWhere('destination_agency_id', $agencyId);
-            });
+        // Filtro por agencia de origen
+        if ($request->filled('origin_agency_filter_id')) {
+            $query->where('origin_agency_id', $request->origin_agency_filter_id);
+        }
+
+        // Filtro por agencia de destino
+        if ($request->filled('destination_agency_filter_id')) {
+            $query->where('destination_agency_id', $request->destination_agency_filter_id);
         }
 
         // Filtro por estado
@@ -60,11 +61,20 @@ class ShipmentController extends Controller
             $query->where('status_id', $request->status_id);
         }
 
+        // Filtro por rango de fechas
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
         $shipments = $query->latest()->paginate(15)->withQueryString();
         $agencies = Agency::orderBy('nombre')->get();
         $statuses = ShipmentStatus::all();
 
-        return view('shipments.index', compact('shipments', 'agencies', 'statuses'));
+        return view('shipments.index', compact('shipments', 'agencies', 'statuses', 'request'));
     }
 
     public function create()
@@ -473,6 +483,70 @@ class ShipmentController extends Controller
         $pdf = Pdf::loadView('shipments.pdf', compact('shipment', 'empresa', 'sucursal', 'logoBase64'));
 
         return $pdf->stream("Guia_{$shipment->tracking_number}.pdf");
+    }
+
+    public function printFiltered(Request $request)
+    {
+        $query = Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency']);
+
+        // Apply filters (same logic as index method)
+        if ($request->filled('tracking_number')) {
+            $query->where('tracking_number', 'LIKE', "%{$request->tracking_number}%");
+        }
+
+        if ($request->filled('cliente')) {
+            $clienteSearch = $request->cliente;
+            $query->where(function ($q) use ($clienteSearch) {
+                $q->whereHas('sender', function ($sq) use ($clienteSearch) {
+                        $sq->where('nombre_fantasia', 'LIKE', "%{$clienteSearch}%")
+                            ->orWhere('razon_social', 'LIKE', "%{$clienteSearch}%");
+                    }
+                    )->orWhereHas('receiver', function ($sq) use ($clienteSearch) {
+                        $sq->where('nombre_fantasia', 'LIKE', "%{$clienteSearch}%")
+                            ->orWhere('razon_social', 'LIKE', "%{$clienteSearch}%");
+                    }
+                    );
+                });
+        }
+
+        if ($request->filled('origin_agency_filter_id')) {
+            $query->where('origin_agency_id', $request->origin_agency_filter_id);
+        }
+
+        if ($request->filled('destination_agency_filter_id')) {
+            $query->where('destination_agency_id', $request->destination_agency_filter_id);
+        }
+
+        if ($request->filled('status_id')) {
+            $query->where('status_id', $request->status_id);
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $shipments = $query->latest()->get(); // Get all filtered shipments, no pagination for print
+
+        $empresa = \App\Models\Empresa::first();
+        $sucursal = \App\Models\Sucursal::first();
+
+        $logoBase64 = null;
+        if ($empresa && $empresa->logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($empresa->logo)) {
+            $path = storage_path('app/public/' . $empresa->logo);
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+
+        $filters = $request->all();
+
+        $pdf = Pdf::loadView('shipments.print_filtered_pdf', compact('shipments', 'empresa', 'sucursal', 'logoBase64', 'filters'));
+
+        return $pdf->stream("Guias_Filtradas.pdf");
     }
 
     public function printBase64(Shipment $shipment)
