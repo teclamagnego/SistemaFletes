@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             FormasPagoSeeder::class ,
+            FacturaCodigosSeeder::class,
             RoleSeeder::class ,
             ClienteLookupsSeeder::class ,
             TransportistaSeeder::class ,
