@@ -144,7 +144,7 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
         $this->command->info("Generando logs para guías entregadas en Marzo...");
         DB::statement("
             INSERT INTO shipment_logs (
-                shipment_id, user_id, status_from_id, status_to_id, notas, created_at, updated_at
+                shipment_id, user_id, status_from_id, status_to_id, notas, created_at, updated_at,ref_remito
             )
             SELECT 
                 t.id, 
@@ -155,7 +155,7 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
                 IFNULL(t.updated_at, NOW()), 
                 IFNULL(t.updated_at, NOW())
             FROM (
-                SELECT id, updated_at, activo 
+                SELECT id, updated_at, activo,ref_remito 
                 FROM temp_facturas 
                 WHERE $marchCondition
                 ORDER BY fecha DESC, id DESC 
