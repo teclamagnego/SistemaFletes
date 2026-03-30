@@ -123,21 +123,30 @@
                 </table>
             </div>
 
-            <div class="mt-4 d-flex justify-content-end gap-3 align-items-center bg-light p-3 rounded border">
-                <div>
-                    <span class="fw-bold me-2">Fecha Factura:</span>
-                    <input type="date" name="fecha" class="form-control form-control-sm d-inline-block"
-                        style="width: auto;" value="{{ date('Y-m-d') }}" required>
-                </div>
-                <div>
-                    <span class="fw-bold me-2">Nro Factura (opcional):</span>
-                    <input type="text" name="nro_factura" class="form-control form-control-sm d-inline-block"
-                        style="width: 150px;" placeholder="Ej: 0001-00001234">
-                </div>
-                <button type="submit" class="btn btn-success" id="btnGenerate" disabled>
-                    <i class="bi bi-plus-circle"></i> Generar Factura
-                </button>
-            </div>
+             <div class="mt-4 d-flex justify-content-end gap-3 align-items-center bg-light p-3 rounded border">
+                 <div>
+                     <span class="fw-bold me-2">Fecha Factura:</span>
+                     <input type="date" name="fecha" class="form-control form-control-sm d-inline-block"
+                         style="width: auto;" value="{{ date('Y-m-d') }}" required>
+                 </div>
+                 <div>
+                     <span class="fw-bold me-2">Código Factura:</span>
+                     <select name="codigo" class="form-select form-select-sm d-inline-block" style="width: auto;">
+                         <option value="">Seleccione código</option>
+                         @foreach($facturaCodigos as $codigo)
+                             <option value="{{ $codigo->id }}">{{ $codigo->nombre }}</option>
+                         @endforeach
+                     </select>
+                 </div>
+                 <div>
+                     <span class="fw-bold me-2">Nro Factura (opcional):</span>
+                     <input type="text" name="nro_factura" class="form-control form-control-sm d-inline-block"
+                         style="width: 150px;" placeholder="Ej: 0001-00001234">
+                 </div>
+                 <button type="submit" class="btn btn-success" id="btnGenerate" disabled>
+                     <i class="bi bi-plus-circle"></i> Generar Factura
+                 </button>
+             </div>
         </form>
     </div>
 </div>

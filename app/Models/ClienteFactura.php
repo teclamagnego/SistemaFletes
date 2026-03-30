@@ -13,6 +13,7 @@ class ClienteFactura extends Model
         'cliente_id',
         'forma_pago_id',
         'nro_factura',
+        'codigo',
         'fecha',
         'total',
         'falta_imputar',

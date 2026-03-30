@@ -134,7 +134,9 @@ class ClienteController extends Controller
             }
         }
 
-        return view('clientes.billing', compact('cliente', 'shipments', 'from', 'to', 'status_factura'));
+        $facturaCodigos = \App\Models\FacturaCodigo::all();
+
+        return view('clientes.billing', compact('cliente', 'shipments', 'from', 'to', 'status_factura', 'facturaCodigos'));
     }
 
     public function generateInvoice(Request $request, Cliente $cliente)
@@ -144,6 +146,7 @@ class ClienteController extends Controller
             'shipment_ids.*' => 'exists:shipments,id',
             'fecha' => 'required|date',
             'nro_factura' => 'nullable|string',
+            'codigo' => 'required|exists:factura_codigos,id',
         ]);
 
         return DB::transaction(function () use ($request, $cliente) {
@@ -162,6 +165,7 @@ class ClienteController extends Controller
                 'cliente_id' => $cliente->id,
                 'forma_pago_id' => $forma_pago_id,
                 'nro_factura' => $request->nro_factura,
+                'codigo' => $request->codigo,
                 'fecha' => $request->fecha,
                 'total' => $total,
                 'falta_imputar' => $falta_imputar,
