@@ -91,6 +91,7 @@ Route::middleware('auth')->group(function () {
     Route::post('shipments/{shipment}/receive', [ShipmentController::class, 'receive'])->name('shipments.receive')->middleware('permission:shipments.edit');
     Route::post('shipments/dispatch', [ShipmentController::class, 'dispatch'])->name('shipments.dispatch')->middleware('permission:shipments.edit');
     Route::post('qz/sign', [ShipmentController::class, 'signRequest'])->name('qz.sign');
+    Route::get('qz/certificate', [ShipmentController::class, 'getCertificate'])->name('qz.certificate');
     Route::get('shipments/print-filtered', [ShipmentController::class, 'printFiltered'])->name('shipments.print_filtered')->middleware('permission:shipments.index');
     Route::resource('shipments', ShipmentController::class)->middleware('permission:shipments.index');
 

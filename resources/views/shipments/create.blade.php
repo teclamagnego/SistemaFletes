@@ -371,7 +371,7 @@
 
         // Certificado de firma dinámico
         qz.security.setCertificatePromise(function(resolve, reject) {
-            fetch('/qz/digital-certificate.txt')
+            fetch('{{ route("qz.certificate") }}')
                 .then(r => r.ok ? r.text() : reject('No se encontró certificado'))
                 .then(resolve)
                 .catch(reject);
