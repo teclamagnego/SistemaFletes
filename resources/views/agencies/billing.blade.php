@@ -121,6 +121,12 @@
                             <td>
                                 <span class="badge bg-{{ $s->status->color ?? 'secondary' }} small">{{ $s->status->name
                                     ?? 'N/A' }}</span>
+
+                                @if($s->faltarendir <= 0)
+                                    <span class="badge bg-success-subtle text-success border border-success mt-1 d-block" style="width: fit-content;">Pagada</span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger border border-danger mt-1 d-block" style="width: fit-content;">Pendiente Pago</span>
+                                @endif
                             </td>
                             <td>
                                 @foreach($s->role_in_billing as $r)
