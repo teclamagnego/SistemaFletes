@@ -716,4 +716,14 @@ class ShipmentController extends Controller
             Contrareembolso::where('guia_id', $shipment->id)->delete();
         }
     }
+
+    public function togglePayment(Shipment $shipment)
+    {
+        if ($shipment->faltarendir <= 0) {
+            $shipment->update(['faltarendir' => $shipment->total_flete]);
+        } else {
+            $shipment->update(['faltarendir' => 0]);
+        }
+        return response()->json(['success' => true, 'faltarendir' => $shipment->faltarendir]);
+    }
 }

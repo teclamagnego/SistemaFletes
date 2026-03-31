@@ -14,6 +14,19 @@
         </div>
     </div>
     <div class="card-body">
+        @if($guiasNuevasCount > 0)
+        <div class="alert alert-warning d-flex align-items-center mb-4 border-warning-subtle shadow-sm alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+            <div>
+                Existen <strong>{{ $guiasNuevasCount }}</strong> guías para este cliente en estado Nuevo (sin entregar).
+                <a href="{{ route('shipments.index', ['cliente' => $cliente->nombre_fantasia, 'status_id' => 1]) }}" class="alert-link ms-1 text-decoration-underline" target="_blank">
+                    Haz clic aquí para verlas
+                </a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+
         <form action="{{ route('clientes.billing', $cliente) }}" method="GET" class="row g-2 mb-4">
             <div class="col-md-3">
                 <label class="form-label small fw-bold">Desde</label>
@@ -97,20 +110,17 @@
                             <td>{{ $s->ref_remito }}</td>
                             <td><small>{{ $s->formaPago?->nombre }}</small></td>
                             <td>
-                                @if($s->factura_id > 0)
-                                <span
-                                    class="badge bg-success-subtle text-success border border-success">Facturada</span>
+                                @if($s->factura_id != 0)
+                                <span class="badge bg-success-subtle text-success border border-success">Facturada</span>
                                 @else
-                                <span
-                                    class="badge bg-warning-subtle text-warning border border-warning">Pendiente</span>
+                                <span class="badge bg-warning-subtle text-warning border border-warning">Pendiente</span>
                                 @endif
                                 
+                                <br>
                                 @if($s->faltarendir <= 0)
-                                <span
-                                    class="badge bg-success-subtle text-success border border-success mt-1">Pagada</span>
+                                <span class="badge bg-success-subtle text-success border border-success mt-1 toggle-payment" data-id="{{ $s->id }}" style="cursor: pointer;" title="Clic para cambiar">Pagada</span>
                                 @else
-                                <span
-                                    class="badge bg-danger-subtle text-danger border border-danger mt-1">Pendiente Pago</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger mt-1 toggle-payment" data-id="{{ $s->id }}" style="cursor: pointer;" title="Clic para cambiar">Pendiente Pago</span>
                                 @endif
                             </td>
                             <td class="text-end fw-bold">$ {{ number_format($s->total_flete, 2) }}</td>
@@ -188,6 +198,29 @@
 
         checkboxes.forEach(cb => {
             cb.addEventListener('change', updateTotal);
+        });
+
+        // AJAX Toggle Payment Status
+        document.querySelectorAll('.toggle-payment').forEach(el => {
+            el.addEventListener('click', function() {
+                let id = this.getAttribute('data-id');
+                fetch(`/shipments/${id}/toggle-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload(); // Para que el backend recargue los filtros
+                    } else {
+                        alert('Error al cambiar el estado de pago');
+                    }
+                });
+            });
         });
     });
 </script>

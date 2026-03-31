@@ -106,11 +106,13 @@ class ClienteController extends Controller
         $to = $request->input('to', now()->endOfMonth()->format('Y-m-d'));
         $status_factura = $request->input('status_factura', 'all');
 
-        $query = $cliente->shipmentsPaid()->whereHas('logs', function($q) use ($from, $to) {
-            $q->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED)
-              ->whereDate('created_at', '>=', $from)
-              ->whereDate('created_at', '<=', $to);
-        });
+        $query = $cliente->shipmentsPaid()
+            ->where('status_id', \App\Models\ShipmentStatus::DELIVERED)
+            ->whereHas('logs', function($q) use ($from, $to) {
+                $q->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED)
+                  ->whereDate('created_at', '>=', $from)
+                  ->whereDate('created_at', '<=', $to);
+            });
 
         if ($status_factura === 'billed') {
             $query->where('factura_id', '>', 0);
@@ -136,7 +138,11 @@ class ClienteController extends Controller
 
         $facturaCodigos = \App\Models\FacturaCodigo::all();
 
-        return view('clientes.billing', compact('cliente', 'shipments', 'from', 'to', 'status_factura', 'facturaCodigos'));
+        $guiasNuevasCount = \App\Models\Shipment::where('cliente_id', $cliente->id)
+            ->where('status_id', \App\Models\ShipmentStatus::ADMITTED)
+            ->count();
+
+        return view('clientes.billing', compact('cliente', 'shipments', 'from', 'to', 'status_factura', 'facturaCodigos', 'guiasNuevasCount'));
     }
 
     public function generateInvoice(Request $request, Cliente $cliente)
