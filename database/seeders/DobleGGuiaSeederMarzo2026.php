@@ -21,11 +21,13 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
 
         Schema::disableForeignKeyConstraints();
 
-        // 0. Importación Staging (Solo si no existen)
-        if (!Schema::hasTable('temp_facturas')) {
+        // 0. Importación Staging (Solo si no existen O si están vacías)
+        $forceReload = env('SEED_FORCE_RELOAD', false); // No forzar por defecto para velocidad en re-ejecución
+
+        if ($forceReload || !Schema::hasTable('temp_facturas') || DB::table('temp_facturas')->count() == 0) {
             $this->importSqlAsStaging('documentacion/sql/dobleg_cliente_facturas.sql', 'temp_facturas', 'cliente_facturas');
         }
-        if (!Schema::hasTable('temp_items')) {
+        if ($forceReload || !Schema::hasTable('temp_items') || DB::table('temp_items')->count() == 0) {
             $this->importSqlAsStaging('documentacion/sql/dobleg_cliente_item_facturas.sql', 'temp_items', 'cliente_item_facturas');
         }
 
@@ -40,10 +42,10 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
             $this->command->info("Omitiendo truncado de tablas (SEED_START > 1 o SEED_TRUNCATE=false)");
         }
 
-        $marchCondition = " updated_at >= '2026-03-01 00:00:00' AND updated_at <= '2026-03-31 23:59:59'";
+        $marchCondition = " updated_at >= '2026-02-01 00:00:00'";
 
         // 1. Migración de Guías
-        $this->command->info("Insertando guías de Marzo 2026 en production...");
+        $this->command->info("Insertando guías de Febrero 2026 en production...");
         DB::statement("
             INSERT IGNORE INTO shipments (
                 id, tracking_number, status_id, sender_id, receiver_id, cliente_id, 
@@ -125,7 +127,7 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
             FROM shipments s
             LEFT JOIN temp_facturas t ON t.id = s.id
             WHERE s.forma_pago_id != 2
-               OR (s.forma_pago_id = 2 AND t.activo = 4 AND DATE(t.updated_at) <= '2026-02-28')
+               OR (s.forma_pago_id = 2 AND t.activo = 4 AND DATE(t.updated_at) < '2026-03-01')
         ");
 
         $this->command->info("Vinculando facturas a guías...");
@@ -176,9 +178,9 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
         $sql = File::get($realPath);
 
         // Limpiar comandos de transacción de phpMyAdmin que rompen el flujo de Laravel
-        $sql = preg_replace('/SET AUTOCOMMIT = 0;/i', '', $sql);
-        $sql = preg_replace('/START TRANSACTION;/i', '', $sql);
-        $sql = preg_replace('/COMMIT;/i', '', $sql);
+        $sql = str_ireplace('SET AUTOCOMMIT = 0;', '', $sql);
+        $sql = str_ireplace('START TRANSACTION;', '', $sql);
+        $sql = str_ireplace('COMMIT;', '', $sql);
 
         $sql = str_replace("`$originalTable`", "`$tempTableName`", $sql);
         $sql = "SET FOREIGN_KEY_CHECKS=0;\n" . $sql;
