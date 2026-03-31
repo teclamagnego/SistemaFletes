@@ -16,12 +16,12 @@
                 <div class="col-md-3">
                     <label for="fecha_desde" class="form-label fw-semibold">Fecha Desde</label>
                     <input type="date" class="form-control" id="fecha_desde" name="fecha_desde"
-                        value="{{ request('fecha_desde') }}">
+                        value="{{ $fecha_desde }}">
                 </div>
                 <div class="col-md-3">
                     <label for="fecha_hasta" class="form-label fw-semibold">Fecha Hasta</label>
                     <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta"
-                        value="{{ request('fecha_hasta') }}">
+                        value="{{ $fecha_hasta }}">
                 </div>
                 <div class="col-md-3">
                     <label for="codigos" class="form-label fw-semibold">Tipo de Factura</label>

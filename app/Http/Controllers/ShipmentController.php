@@ -13,6 +13,7 @@ use App\Models\ShipmentStatus;
 use App\Models\Articulo;
 use App\Models\Empresa;
 use App\Models\ClienteFactura;
+use App\Models\Contrareembolso;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -134,7 +135,7 @@ class ShipmentController extends Controller
             $comisionDestino = ($totalFlete * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
 
             $carrierId = $singleCarrierId ?? $request->carrier_id;
-            $statusId = $singleCarrierId ?ShipmentStatus::IN_TRANSIT : ShipmentStatus::ADMITTED;
+            $statusId = ShipmentStatus::ADMITTED; // Nuevo
 
             $notas = $request->notas;
             if ($request->filled('direccion_entrega')) {
@@ -156,6 +157,7 @@ class ShipmentController extends Controller
                 'direccion_entrega' => $request->direccion_entrega,
                 'status_id' => $statusId,
                 'total_flete' => $totalFlete,
+                'faltarendir' => (int)$request->forma_pago_id === 2 ? $totalFlete : 0,
                 'comision_origen' => $comisionOrigen,
                 'comision_destino' => $comisionDestino,
                 'notas' => $notas,
@@ -174,6 +176,9 @@ class ShipmentController extends Controller
                     'iva' => $itemData['iva'] ?? 0,
                 ]);
             }
+
+            // Contrareembolso: si algún item tiene artículo con código REE
+            $this->handleContrareembolso($shipment, $request->items);
 
             // Facturación Automática (Si no es Cuenta Corriente ID 2)
             if ($request->forma_pago_id != 2) {
@@ -232,9 +237,6 @@ class ShipmentController extends Controller
 
     public function edit(Shipment $shipment)
     {
-        if ($shipment->factura_id && $shipment->factura_id != 0) {
-            return redirect()->route('shipments.index')->with('error', 'No se puede editar una guía que ya ha sido facturada.');
-        }
 
         $shipment->load(['sender', 'receiver', 'items.articulo']);
         $agencies = Agency::where('activa', true)->orderBy('nombre')->get();
@@ -247,10 +249,6 @@ class ShipmentController extends Controller
     public function update(Request $request, Shipment $shipment)
     {
         \Log::debug("Update triggered for shipment {$shipment->id}", $request->all());
-
-        if ($shipment->factura_id && $shipment->factura_id != 0) {
-            return redirect()->route('shipments.index')->with('error', 'No se puede editar una guía que ya ha sido facturada.');
-        }
 
         $request->validate([
             'sender_id' => 'required|exists:clientes,id',
@@ -302,6 +300,10 @@ class ShipmentController extends Controller
                 'comision_destino' => $comisionDestino
             ]);
 
+            $oldMonto = (int)$shipment->forma_pago_id === 2 ? $shipment->total_flete : 0;
+            $newMonto = (int)$request->forma_pago_id === 2 ? $totalFlete : 0;
+            $newFaltarendir = max(0, $shipment->faltarendir + ($newMonto - $oldMonto));
+
             $shipment->update([
                 'sender_id' => $request->sender_id,
                 'receiver_id' => $request->receiver_id,
@@ -313,6 +315,7 @@ class ShipmentController extends Controller
                 'fecha' => $request->fecha ?? now(),
                 'direccion_entrega' => $request->direccion_entrega,
                 'total_flete' => $totalFlete,
+                'faltarendir' => $newFaltarendir,
                 'comision_origen' => $comisionOrigen,
                 'comision_destino' => $comisionDestino,
                 'notas' => $request->notas,
@@ -333,6 +336,21 @@ class ShipmentController extends Controller
                     'total' => $itemData['total'],
                     'iva' => $itemData['iva'] ?? 0,
                 ]);
+            }
+
+            // Actualizar contrareembolso
+            $this->handleContrareembolso($shipment, $request->items);
+
+            // Actualizar factura asociada si existe
+            if ($shipment->factura_id) {
+                $factura = ClienteFactura::find($shipment->factura_id);
+                if ($factura) {
+                    $factura->update([
+                        'cliente_id' => $shipment->cliente_id,
+                        'total' => $totalFlete,
+                        'fecha' => $shipment->fecha,
+                    ]);
+                }
             }
 
             ShipmentLog::create([
@@ -440,6 +458,12 @@ class ShipmentController extends Controller
         DB::transaction(function () use ($shipment) {
             $fromStatusId = $shipment->status_id;
             $shipment->update(['status_id' => ShipmentStatus::DELIVERED]);
+
+            // Setear fecha_cobrado en contrareembolso si existe
+            $contrareembolso = $shipment->contrareembolso;
+            if ($contrareembolso && !$contrareembolso->fecha_cobrado) {
+                $contrareembolso->update(['fecha_cobrado' => now()->toDateString()]);
+            }
 
             $notas = $fromStatusId === ShipmentStatus::IN_TRANSIT 
                 ? 'Guía entregada satisfactoriamente (entrega directa desde tránsito).'
@@ -620,6 +644,14 @@ class ShipmentController extends Controller
         $oldStatusId = $shipment->status_id;
         $shipment->update(['status_id' => $request->status_id]);
 
+        // Si el nuevo estado es ENTREGADO, setear fecha_cobrado en contrareembolso
+        if ((int)$request->status_id === ShipmentStatus::DELIVERED) {
+            $contrareembolso = $shipment->contrareembolso;
+            if ($contrareembolso && !$contrareembolso->fecha_cobrado) {
+                $contrareembolso->update(['fecha_cobrado' => now()->toDateString()]);
+            }
+        }
+
         ShipmentLog::create([
             'shipment_id' => $shipment->id,
             'user_id' => Auth::id(),
@@ -633,12 +665,55 @@ class ShipmentController extends Controller
 
     public function destroy(Shipment $shipment)
     {
-        if ($shipment->factura_id) {
-            return back()->with('error', 'No se puede eliminar una guía que ya ha sido facturada.');
-        }
+        DB::transaction(function () use ($shipment) {
+            // Eliminar contrareembolso asociado
+            if ($shipment->contrareembolso) {
+                $shipment->contrareembolso->delete();
+            }
 
-        $shipment->delete();
+            // Si tiene factura asociada, eliminarla
+            if ($shipment->factura_id) {
+                $factura = ClienteFactura::find($shipment->factura_id);
+                $shipment->update(['factura_id' => null]);
+                if ($factura) {
+                    $factura->delete();
+                }
+            }
+
+            $shipment->items()->delete();
+            $shipment->logs()->delete();
+            $shipment->delete();
+        });
 
         return redirect()->route('shipments.index')->with('success', 'Guía eliminada correctamente.');
+    }
+
+    /**
+     * Crea o actualiza contrareembolso si hay un artículo con código REE
+     */
+    private function handleContrareembolso(Shipment $shipment, array $items)
+    {
+        $montoREE = 0;
+        foreach ($items as $itemData) {
+            if (isset($itemData['articulo_id'])) {
+                $articulo = Articulo::find($itemData['articulo_id']);
+                if ($articulo && strtoupper($articulo->codigo) === 'REE') {
+                    $montoREE += $itemData['precio_unitario'];
+                }
+            }
+        }
+
+        if ($montoREE > 0) {
+            Contrareembolso::updateOrCreate(
+                ['guia_id' => $shipment->id],
+                [
+                    'cliente_id' => $shipment->cliente_id,
+                    'monto' => $montoREE,
+                ]
+            );
+        } else {
+            // Si ya no tiene REE, eliminar contrareembolso si existía
+            Contrareembolso::where('guia_id', $shipment->id)->delete();
+        }
     }
 }

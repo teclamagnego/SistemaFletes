@@ -21,6 +21,7 @@ use App\Models\ClienteFactura;
 use App\Http\Controllers\ClienteFacturaController;
 use App\Http\Controllers\SucursalController;
 use App\Http\Controllers\InformeController;
+use App\Http\Controllers\ContrareembolsoController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -115,6 +116,14 @@ Route::middleware('auth')->group(function () {
     Route::get('informes/saldos_agencias', [InformeController::class, 'saldosAgencias'])->name('informes.saldos_agencias');
     Route::get('informes/facturas_clientes', [InformeController::class, 'facturasClientes'])->name('informes.facturas_clientes');
     Route::get('informes/facturas_clientes/print', [InformeController::class, 'facturasClientesPrint'])->name('informes.facturas_clientes.print');
+    Route::get('informes/guias_contado', [InformeController::class, 'guiasContado'])->name('informes.guias_contado');
+    Route::get('informes/guias_contado/print', [InformeController::class, 'guiasContadoPrint'])->name('informes.guias_contado.print');
+
+    // Contrareembolsos
+    Route::get('contrareembolsos', [ContrareembolsoController::class, 'index'])->name('contrareembolsos.index');
+    Route::get('contrareembolsos/{contrareembolso}/print', [ContrareembolsoController::class, 'print'])->name('contrareembolsos.print');
+    Route::patch('contrareembolsos/{contrareembolso}/fecha-rendido', [ContrareembolsoController::class, 'updateFechaRendido'])->name('contrareembolsos.updateFechaRendido');
+    Route::delete('contrareembolsos/{contrareembolso}/clear-rendido', [ContrareembolsoController::class, 'clearFechaRendido'])->name('contrareembolsos.clearFechaRendido');
 
     Route::get('/test-pdf', function () {
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML('<h1>Test PDF</h1>');

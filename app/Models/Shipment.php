@@ -23,6 +23,7 @@ class Shipment extends Model
         'direccion_entrega',
         'status_id',
         'total_flete',
+        'faltarendir',
         'comision_origen',
         'comision_destino',
         'factura_id',
@@ -90,6 +91,11 @@ class Shipment extends Model
     public function formaPago()
     {
         return $this->belongsTo(FormaPago::class , 'forma_pago_id');
+    }
+
+    public function contrareembolso()
+    {
+        return $this->hasOne(Contrareembolso::class, 'guia_id');
     }
 
     public function getPayerAttribute()

@@ -83,6 +83,14 @@
                         </a>
                     </li>
                     @endcan
+                    @can('shipments.index')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('contrareembolsos.*') ? 'active' : '' }}"
+                            href="{{ route('contrareembolsos.index') }}">
+                            <i class="bi bi-cash-coin"></i> Contrareembolsos
+                        </a>
+                    </li>
+                    @endcan
                     @can('clientes.index')
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {{ request()->routeIs('informes.*') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown">
@@ -93,6 +101,7 @@
                             <li><a class="dropdown-item" href="{{ route('informes.saldos_agencias') }}"><i class="bi bi-shop"></i> Saldos de Agencias</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ route('informes.facturas_clientes') }}"><i class="bi bi-receipt"></i> Facturas de Clientes</a></li>
+                            <li><a class="dropdown-item" href="{{ route('informes.guias_contado') }}"><i class="bi bi-cash-stack"></i> Guías de Contado</a></li>
                         </ul>
                     </li>
                     @endcan

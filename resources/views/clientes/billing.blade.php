@@ -104,6 +104,14 @@
                                 <span
                                     class="badge bg-warning-subtle text-warning border border-warning">Pendiente</span>
                                 @endif
+                                
+                                @if($s->faltarendir <= 0)
+                                <span
+                                    class="badge bg-success-subtle text-success border border-success mt-1">Pagada</span>
+                                @else
+                                <span
+                                    class="badge bg-danger-subtle text-danger border border-danger mt-1">Pendiente Pago</span>
+                                @endif
                             </td>
                             <td class="text-end fw-bold">$ {{ number_format($s->total_flete, 2) }}</td>
                         </tr>

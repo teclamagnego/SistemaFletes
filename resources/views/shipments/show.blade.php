@@ -33,6 +33,10 @@
             </form>
             @endif
 
+            <a href="{{ route('shipments.edit', $shipment) }}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-pencil"></i> Editar Guía
+            </a>
+
             <a href="{{ route('shipments.print', $shipment) }}" target="_blank" class="btn btn-outline-dark me-2">
                 <i class="bi bi-printer"></i> Imprimir Guía
             </a>

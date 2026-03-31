@@ -50,7 +50,7 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
             INSERT IGNORE INTO shipments (
                 id, tracking_number, status_id, sender_id, receiver_id, cliente_id, 
                 origin_agency_id, destination_agency_id, carrier_id, commission_agency_id, forma_pago_id, 
-                fecha, direccion_entrega, total_flete, comision_origen, comision_destino, notas, ref_remito, created_at, updated_at
+                fecha, direccion_entrega, total_flete, faltarendir, comision_origen, comision_destino, notas, ref_remito, created_at, updated_at
             )
             SELECT 
                 id, 
@@ -67,6 +67,7 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
                 fecha,
                 lugardeentrega,
                 ROUND(total, 2),
+                CASE WHEN contado = 1 THEN 0 ELSE ROUND(total, 2) END,
                 com_venta,
                 com_reparto,
                 observacion,

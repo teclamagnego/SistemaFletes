@@ -223,7 +223,7 @@
                             <button type="button" id="btnCrearSinImprimir" class="btn btn-outline-primary px-4">
                                 <i class="bi bi-save me-1"></i>Crear sin Imprimir
                             </button>
-                            <button type="submit" id="btnCrearGuia" class="btn btn-primary px-4">
+                            <button type="button" id="btnCrearGuia" class="btn btn-primary px-4">
                                 <i class="bi bi-printer me-1"></i>Crear e Imprimir Guía
                             </button>
                         </div>
@@ -859,23 +859,19 @@
         setupAutocomplete('sender_search', 'sender_id', 'sender_results');
         setupAutocomplete('receiver_search', 'receiver_id', 'receiver_results');
 
-        // Prevent Enter from submitting the form, except on textareas
+        // Prevent Enter from submitting the form globally
         shipmentForm.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-                // We don't preventDefault here because specific listeners for inputs 
-                // like qtyInput and priceInput already handle Enter and call e.preventDefault()
-                // If it reaches here and it's an Enter, we prevent it to avoid submit.
-                // However, we must allow it if it's within an autocomplete result selection.
-                // To be safe, we only allow submit via click on the button.
-                if (e.target.closest('#shipmentForm') && !e.target.classList.contains('item-precio') && !e.target.classList.contains('item-cantidad')) {
-                   // e.preventDefault(); // This might interfere with autocomplete.
-                }
+                e.preventDefault();
             }
         });
 
         // -------------------------------------------------------
-        // Submit AJAX + QZ-Tray print
+        // Submit via click only (buttons are type="button")
         // -------------------------------------------------------
+        document.getElementById('btnCrearGuia').addEventListener('click', function() {
+            saveShipment(true);
+        });
         async function saveShipment(shouldPrint = true) {
             const originAgencyId = document.getElementById('origin_agency_id').value;
             const destinationAgencyId = document.getElementById('destination_agency_id').value;
@@ -993,11 +989,6 @@
             }
         }
 
-        shipmentForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            saveShipment(true);
-        });
-
         document.getElementById('btnCrearSinImprimir').addEventListener('click', function(e) {
             saveShipment(false);
         });
@@ -1011,14 +1002,12 @@
             const targetInputId = btn.getAttribute('data-target-input');
             const targetHiddenId = btn.getAttribute('data-target-hidden');
 
-            // Completamos el nombre sugerido desde el campo de búsqueda
             const searchInput = document.getElementById(targetInputId);
             document.getElementById('qc_nombre_fantasia').value = searchInput ? searchInput.value.trim() : '';
             document.getElementById('qc_direccion').value = '';
             document.getElementById('qc_target_input').value = targetInputId;
             document.getElementById('qc_target_hidden').value = targetHiddenId;
 
-            // Ocultar el dropdown antes de abrir el modal
             const resultsEl = document.getElementById(targetInputId === 'sender_search' ? 'sender_results' : 'receiver_results');
             if (resultsEl) resultsEl.style.display = 'none';
 
@@ -1045,37 +1034,6 @@
                     quickClientModal.hide(); btn.disabled = false; btn.innerHTML = 'Guardar Cliente';
                 })
                 .catch(() => { alert('Error al crear cliente'); btn.disabled = false; btn.innerHTML = 'Guardar Cliente'; });
-        });
-
-        // Bloquear el envío con Enter de forma global en el formulario
-        shipmentForm.onkeypress = function(e) {
-            var key = e.charCode || e.keyCode || 0;     
-            if (key == 13) {
-                if (e.target.tagName !== 'TEXTAREA') {
-                    // Si estamos en un campo que NO sea el de precio (que ya gestiona el Enter para nueva fila)
-                    // o el de cantidad, prevenimos el envío.
-                    if (!e.target.classList.contains('item-precio') && !e.target.classList.contains('item-cantidad')) {
-                        // e.preventDefault();
-                    }
-                }
-            }
-        }
-
-        // Una técnica más robusta para evitar submit por Enter:
-        shipmentForm.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                if (e.target.tagName !== 'TEXTAREA') {
-                    // Permitimos que los listeners específicos (de fila o autocomplete) sigan funcionando
-                    // pero evitamos que el evento llegue a disparar el submit del form por defecto.
-                    // Si el target no es uno de nuestros inputs controlados de Enter, lo paramos.
-                    const handledInputs = ['item-cantidad', 'item-precio', 'item-codigo', 'item-descripcion'];
-                    const isHandled = handledInputs.some(cls => e.target.classList.contains(cls));
-                    
-                    if (!isHandled && !e.target.closest('.list-group')) {
-                        e.preventDefault();
-                    }
-                }
-            }
         });
     });
 </script>

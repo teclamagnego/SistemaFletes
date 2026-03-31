@@ -57,7 +57,7 @@ class ClienteReciboController extends Controller
             $recibo = ClienteRecibo::create($request->all());
 
             // 2. Imputar facturas (FIFO: de más vieja a más nueva)
-            $montoARepartir = $request->monto;
+            $montoARepartirFacturas = $request->monto;
 
             $facturasPendientes = ClienteFactura::where('cliente_id', $request->cliente_id)
                 ->where('falta_imputar', '>', 0)
@@ -66,16 +66,36 @@ class ClienteReciboController extends Controller
                 ->get();
 
             foreach ($facturasPendientes as $factura) {
-                if ($montoARepartir <= 0) break;
+                if ($montoARepartirFacturas <= 0) break;
 
-                if ($montoARepartir >= $factura->falta_imputar) {
-                    // Cubre toda la factura
-                    $montoARepartir -= $factura->falta_imputar;
+                if ($montoARepartirFacturas >= $factura->falta_imputar) {
+                    $montoARepartirFacturas -= $factura->falta_imputar;
                     $factura->update(['falta_imputar' => 0]);
                 } else {
-                    // Cubre solo una parte
-                    $factura->update(['falta_imputar' => $factura->falta_imputar - $montoARepartir]);
-                    $montoARepartir = 0;
+                    $factura->update(['falta_imputar' => $factura->falta_imputar - $montoARepartirFacturas]);
+                    $montoARepartirFacturas = 0;
+                }
+            }
+
+            // 3. Imputar a envíos facturados (faltarendir > 0)
+            $montoARepartirGuias = $request->monto;
+            
+            $guiasPendientes = \App\Models\Shipment::where('cliente_id', $request->cliente_id)
+                ->where('factura_id', '>', 0)
+                ->where('faltarendir', '>', 0)
+                ->orderBy('fecha', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            foreach ($guiasPendientes as $guia) {
+                if ($montoARepartirGuias <= 0) break;
+
+                if ($montoARepartirGuias >= $guia->faltarendir) {
+                    $montoARepartirGuias -= $guia->faltarendir;
+                    $guia->update(['faltarendir' => 0]);
+                } else {
+                    $guia->update(['faltarendir' => $guia->faltarendir - $montoARepartirGuias]);
+                    $montoARepartirGuias = 0;
                 }
             }
         });
