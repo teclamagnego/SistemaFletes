@@ -55,7 +55,7 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
             SELECT 
                 id, 
                 numero, 
-                5, -- Siempre entregado por el where
+                activo, -- Mapeo directo del estado original
                 CASE WHEN origen_id = 0 THEN 1 ELSE origen_id END, -- sender_id
                 CASE WHEN destino_id = 0 THEN 1 ELSE destino_id END, -- receiver_id
                 cliente_id, -- Quien paga (Cuenta)
@@ -153,8 +153,8 @@ class DobleGGuiaSeederMarzo2026 extends Seeder
                 t.id, 
                 1, 
                 1, 
-                5, 
-                'Guía entregada (migración)', 
+                t.activo, 
+                'Migración de estado orig.', 
                 IFNULL(t.updated_at, NOW()), 
                 IFNULL(t.updated_at, NOW())
             FROM (
