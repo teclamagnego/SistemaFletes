@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
+use Illuminate\Support\Facades\DB;
 use App\Models\FormaPago;
 
 class FormasPagoSeeder extends Seeder
@@ -14,7 +13,11 @@ class FormasPagoSeeder extends Seeder
      */
     public function run(): void
     {
-        $formas = ['Contado', 'Cuenta Corriente', 'Transferencia'];
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        FormaPago::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        $formas = ['Contado', 'Cuenta Corriente', 'Transferencia', 'Cheques'];
         foreach ($formas as $forma) {
             FormaPago::firstOrCreate(['nombre' => $forma]);
         }

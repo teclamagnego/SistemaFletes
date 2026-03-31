@@ -90,6 +90,12 @@
                             <i class="bi bi-cash-coin"></i> Contrareembolsos
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('cheques.*') ? 'active' : '' }}"
+                            href="{{ route('cheques.index') }}">
+                            <i class="bi bi-wallet2"></i> Cheques
+                        </a>
+                    </li>
                     @endcan
                     @can('clientes.index')
                     <li class="nav-item dropdown">

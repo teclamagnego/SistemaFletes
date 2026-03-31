@@ -132,6 +132,32 @@
             TOTAL: $ {{ number_format($recibo->monto, 2) }}
         </div>
 
+        @if($recibo->formaPago && $recibo->formaPago->nombre == 'Cheques' && $recibo->cheques->count() > 0)
+        <div class="content-section">
+            <h4 style="margin-bottom: 10px; border-bottom: 1px solid #333;">Detalle de Cheques Entregados</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Número</th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Fecha</th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: end;">Monto</th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($recibo->cheques as $cheque)
+                    <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">{{ $cheque->numero }}</td>
+                        <td style="border: 1px solid #ccc; padding: 5px; text-align: center;">{{ \Carbon\Carbon::parse($cheque->fecha)->format('d/m/Y') }}</td>
+                        <td style="border: 1px solid #ccc; padding: 5px; text-align: end;">$ {{ number_format($cheque->monto, 2, ',', '.') }}</td>
+                        <td style="border: 1px solid #ccc; padding: 5px;">{{ $cheque->observacion_origen }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+
         <div class="footer">
             <p><strong>Nota:</strong> Este documento sirve como comprobante de pago.</p>
             <div class="signature-box">

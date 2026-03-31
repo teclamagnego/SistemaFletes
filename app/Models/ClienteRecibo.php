@@ -27,4 +27,9 @@ class ClienteRecibo extends Model
     {
         return $this->belongsTo(FormaPago::class);
     }
+
+    public function cheques()
+    {
+        return $this->hasMany(Cheque::class, 'recibo_id');
+    }
 }

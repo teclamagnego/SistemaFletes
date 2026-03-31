@@ -126,6 +126,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('contrareembolsos/{contrareembolso}/fecha-rendido', [ContrareembolsoController::class, 'updateFechaRendido'])->name('contrareembolsos.updateFechaRendido');
     Route::delete('contrareembolsos/{contrareembolso}/clear-rendido', [ContrareembolsoController::class, 'clearFechaRendido'])->name('contrareembolsos.clearFechaRendido');
 
+    // Cheques
+    Route::resource('cheques', \App\Http\Controllers\ChequeController::class)->except(['create', 'store', 'show']);
+
     Route::get('/test-pdf', function () {
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML('<h1>Test PDF</h1>');
         return $pdf->stream();

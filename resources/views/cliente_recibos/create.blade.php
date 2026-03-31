@@ -62,16 +62,40 @@
                             <select name="forma_pago_id" id="forma_pago_id"
                                 class="form-select @error('forma_pago_id') is-invalid @enderror" required>
                                 <option value="">Seleccionar...</option>
+                                @php $chequesId = 0; @endphp
                                 @foreach($formasPago as $fp)
-                                <option value="{{ $fp->id }}" {{ old('forma_pago_id')==$fp->id ? 'selected' : '' }}>
-                                    {{ $fp->nombre }}
-                                </option>
+                                    @if($fp->nombre == 'Cheques') @php $chequesId = $fp->id; @endphp @endif
+                                    <option value="{{ $fp->id }}" {{ old('forma_pago_id')==$fp->id ? 'selected' : '' }}>
+                                        {{ $fp->nombre }}
+                                    </option>
                                 @endforeach
                             </select>
                             @error('forma_pago_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
+
+                    {{-- Sección de Cheques --}}
+                    <div id="chequesSection" style="display: none;" class="border p-3 rounded mb-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0">Detalle de Cheques</h6>
+                            <button type="button" class="btn btn-sm btn-success" onclick="addChequeRow()">+ Agregar Cheque</button>
+                        </div>
+                        <table class="table table-sm table-bordered bg-white">
+                            <thead>
+                                <tr class="table-secondary">
+                                    <th>Nro Cheque</th>
+                                    <th>Fecha</th>
+                                    <th>Monto</th>
+                                    <th>Obs/Caja</th>
+                                    <th style="width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="chequesBody">
+                                {{-- Filas dinámicas --}}
+                            </tbody>
+                        </table>
                     </div>
 
                     <div class="mb-3">
@@ -103,4 +127,60 @@
         </div>
     </div>
 </div>
+
+<script>
+    const chequesId = "{{ $chequesId }}";
+    const formaPagoSelect = document.getElementById('forma_pago_id');
+    const chequesSection = document.getElementById('chequesSection');
+    const montoInput = document.getElementById('monto');
+    const chequesBody = document.getElementById('chequesBody');
+
+    formaPagoSelect.addEventListener('change', function() {
+        if (this.value == chequesId) {
+            chequesSection.style.display = 'block';
+            montoInput.readOnly = true;
+            if (chequesBody.rows.length === 0) addChequeRow();
+            calculateTotalCheques();
+        } else {
+            chequesSection.style.display = 'none';
+            montoInput.readOnly = false;
+        }
+    });
+
+    function addChequeRow() {
+        const index = chequesBody.rows.length;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" name="cheques[${index}][numero]" class="form-control form-control-sm" required></td>
+            <td><input type="date" name="cheques[${index}][fecha]" class="form-control form-control-sm" required></td>
+            <td><input type="number" step="0.01" name="cheques[${index}][monto]" class="form-control form-control-sm cheque-monto" onchange="calculateTotalCheques()" required></td>
+            <td><input type="text" name="cheques[${index}][observacion_origen]" class="form-control form-control-sm"></td>
+            <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeChequeRow(this)"><i class="bi bi-trash"></i></button></td>
+        `;
+        chequesBody.appendChild(row);
+    }
+
+    function removeChequeRow(btn) {
+        btn.closest('tr').remove();
+        calculateTotalCheques();
+    }
+
+    function calculateTotalCheques() {
+        if (formaPagoSelect.value != chequesId) return;
+        
+        let total = 0;
+        document.querySelectorAll('.cheque-monto').forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        montoInput.value = total.toFixed(2);
+    }
+
+    // Inicializar si ya hay algo (old value)
+    window.onload = function() {
+        if (formaPagoSelect.value == chequesId) {
+            chequesSection.style.display = 'block';
+            montoInput.readOnly = true;
+        }
+    }
+</script>
 @endsection
