@@ -91,6 +91,8 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ route('informes.saldos_clientes') }}"><i class="bi bi-person-lines-fill"></i> Saldos de Clientes</a></li>
                             <li><a class="dropdown-item" href="{{ route('informes.saldos_agencias') }}"><i class="bi bi-shop"></i> Saldos de Agencias</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('informes.facturas_clientes') }}"><i class="bi bi-receipt"></i> Facturas de Clientes</a></li>
                         </ul>
                     </li>
                     @endcan

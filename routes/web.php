@@ -113,6 +113,8 @@ Route::middleware('auth')->group(function () {
     // Informes
     Route::get('informes/saldos_clientes', [InformeController::class, 'saldosClientes'])->name('informes.saldos_clientes');
     Route::get('informes/saldos_agencias', [InformeController::class, 'saldosAgencias'])->name('informes.saldos_agencias');
+    Route::get('informes/facturas_clientes', [InformeController::class, 'facturasClientes'])->name('informes.facturas_clientes');
+    Route::get('informes/facturas_clientes/print', [InformeController::class, 'facturasClientesPrint'])->name('informes.facturas_clientes.print');
 
     Route::get('/test-pdf', function () {
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML('<h1>Test PDF</h1>');
