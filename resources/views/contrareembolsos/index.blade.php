@@ -80,6 +80,7 @@
             <thead class="table-light">
                 <tr>
                     <th class="ps-3">Guía #</th>
+                    <th>Nº CR</th>
                     <th>Cliente</th>
                     <th class="text-end">Monto</th>
                     <th class="text-center">Fecha Cobrado</th>
@@ -95,6 +96,7 @@
                             {{ $cr->shipment->tracking_number ?? $cr->guia_id }}
                         </a>
                     </td>
+                    <td><span class="text-muted">#{{ str_pad($cr->id, 6, '0', STR_PAD_LEFT) }}</span></td>
                     <td>{{ $cr->cliente->nombre_fantasia ?? $cr->cliente->razon_social ?? '-' }}</td>
                     <td class="text-end fw-semibold">$ {{ number_format($cr->monto, 2, ',', '.') }}</td>
                     <td class="text-center">

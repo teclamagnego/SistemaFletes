@@ -118,9 +118,9 @@
                                 
                                 <br>
                                 @if($s->faltarendir <= 0)
-                                <span class="badge bg-success-subtle text-success border border-success mt-1 toggle-payment" data-id="{{ $s->id }}" style="cursor: pointer;" title="Clic para cambiar">Pagada</span>
+                                <span class="badge bg-success-subtle text-success border border-success mt-1 toggle-payment" data-id="{{ $s->id }}" data-amount="{{ $s->total_flete }}" style="cursor: pointer;" title="Clic para cambiar">Pagada</span>
                                 @else
-                                <span class="badge bg-danger-subtle text-danger border border-danger mt-1 toggle-payment" data-id="{{ $s->id }}" style="cursor: pointer;" title="Clic para cambiar">Pendiente Pago</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger mt-1 toggle-payment" data-id="{{ $s->id }}" data-amount="{{ $s->total_flete }}" style="cursor: pointer;" title="Clic para cambiar">Pendiente Pago</span>
                                 @endif
                             </td>
                             <td class="text-end fw-bold">$ {{ number_format($s->total_flete, 2) }}</td>
@@ -169,6 +169,17 @@
     </div>
 </div>
 
+{{-- Flotante para Total Recaudado --}}
+<div id="floatingTotalContainer" class="position-fixed bottom-0 end-0 m-4 p-3 bg-white rounded shadow border border-success" style="z-index: 1050; display: none; min-width: 200px;">
+    <div class="small fw-bold text-muted mb-1"><i class="bi bi-calculator"></i> Total Modificado (Sesión)</div>
+    <div class="d-flex align-items-center justify-content-between gap-3">
+        <span class="fs-4 fw-bold text-success" id="floatingTotalAmount">$ 0.00</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="resetFloatingTotal" title="Reiniciar a cero">
+            <i class="bi bi-arrow-counterclockwise"></i>
+        </button>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const selectAll = document.getElementById('selectAll');
@@ -200,10 +211,34 @@
             cb.addEventListener('change', updateTotal);
         });
 
+        // Floating Total Logic
+        let sessionTotal = 0;
+        const floatingContainer = document.getElementById('floatingTotalContainer');
+        const floatingAmount = document.getElementById('floatingTotalAmount');
+        const resetBtn = document.getElementById('resetFloatingTotal');
+
+        function updateFloatingTotal() {
+            if(sessionTotal === 0) {
+                floatingContainer.style.display = 'none';
+            } else {
+                floatingContainer.style.display = 'block';
+                floatingAmount.innerText = '$ ' + sessionTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+        }
+
+        resetBtn.addEventListener('click', function() {
+            sessionTotal = 0;
+            updateFloatingTotal();
+        });
+
         // AJAX Toggle Payment Status
         document.querySelectorAll('.toggle-payment').forEach(el => {
             el.addEventListener('click', function() {
                 let id = this.getAttribute('data-id');
+                let amount = parseFloat(this.getAttribute('data-amount')) || 0;
+                let isCurrentlyPaid = this.classList.contains('bg-success-subtle');
+                
+                // Optic UI update immediately for snappiness, or wait for fetch. We'll wait.
                 fetch(`/shipments/${id}/toggle-payment`, {
                     method: 'POST',
                     headers: {
@@ -215,7 +250,17 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        location.reload(); // Para que el backend recargue los filtros
+                        let isNowPaid = data.faltarendir <= 0;
+                        if(isNowPaid) {
+                             this.className = "badge bg-success-subtle text-success border border-success mt-1 toggle-payment";
+                             this.innerText = "Pagada";
+                             if(!isCurrentlyPaid) sessionTotal += amount;
+                        } else {
+                             this.className = "badge bg-danger-subtle text-danger border border-danger mt-1 toggle-payment";
+                             this.innerText = "Pendiente Pago";
+                             if(isCurrentlyPaid) sessionTotal -= amount;
+                        }
+                        updateFloatingTotal();
                     } else {
                         alert('Error al cambiar el estado de pago');
                     }

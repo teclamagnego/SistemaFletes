@@ -227,22 +227,22 @@
             </table>
         </div>
 
-        {{-- Remitente y Destinatario --}}
+        {{-- Destinatario y Remitente --}}
         <table class="section-boxes">
             <tr>
-                <td class="section-box">
-                    <div class="section-title">REMITENTE (ORIGEN)</div>
-                    <p><strong>{{ $shipment->sender->nombre_fantasia ?? $shipment->sender->razon_social ?? '-' }}</strong></p>
-                    <p>Dir: {{ $shipment->sender->direccion ?? '-' }}
-                        {{ $shipment->sender->localidad ? '(' . $shipment->sender->localidad->nombre . ')' : '' }}</p>
-                    <p>Agencia: {{ $shipment->originAgency->nombre ?? '-' }}</p>
-                </td>
                 <td class="section-box">
                     <div class="section-title">DESTINATARIO (DESTINO)</div>
                     <p><strong>{{ $shipment->receiver->nombre_fantasia ?? $shipment->receiver->razon_social ?? '-' }}</strong></p>
                     <p>Dir: {{ $shipment->direccion_entrega ?? $shipment->receiver->direccion ?? '-' }}
                         {{ $shipment->receiver->localidad ? '(' . $shipment->receiver->localidad->nombre . ')' : '' }}</p>
                     <p>Destino: {{ $shipment->destinationAgency->nombre ?? '-' }}</p>
+                </td>
+                <td class="section-box">
+                    <div class="section-title">REMITENTE (ORIGEN)</div>
+                    <p><strong>{{ $shipment->sender->nombre_fantasia ?? $shipment->sender->razon_social ?? '-' }}</strong></p>
+                    <p>Dir: {{ $shipment->sender->direccion ?? '-' }}
+                        {{ $shipment->sender->localidad ? '(' . $shipment->sender->localidad->nombre . ')' : '' }}</p>
+                    <p>Agencia: {{ $shipment->originAgency->nombre ?? '-' }}</p>
                 </td>
             </tr>
         </table>
@@ -282,11 +282,7 @@
         {{-- Firma --}}
         <table class="signature-area">
             <tr>
-                <td>
-                    <div class="signature-line">
-                        Firma y Aclaración del que Entrega
-                    </div>
-                </td>
+                <td></td>
                 <td style="width: 10%;"></td>
                 <td>
                     <div class="signature-line">
