@@ -188,9 +188,8 @@
                                                         class="form-control form-control-sm item-bonif" value="100.00"
                                                         min="0"></td>
                                                 <td>
-                                                    <input type="number" step="0.01" name="items[0][total]"
-                                                        class="form-control form-control-sm item-total" value="0.00"
-                                                        readonly>
+                                                    <span class="item-total-text fw-bold">$ 0.00</span>
+                                                    <input type="hidden" name="items[0][total]" class="item-total" value="0.00">
                                                 </td>
                                                 <td class="text-center"></td>
                                             </tr>
@@ -490,6 +489,7 @@
             let total = (qty * price * bonif) / 100;
 
             row.querySelector('.item-total').value = total.toFixed(2);
+            row.querySelector('.item-total-text').innerText = '$ ' + total.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             calculateGrandTotal();
         }
 
@@ -524,7 +524,10 @@
                 <td><input type="number" name="items[${rowCount}][cantidad]" class="form-control form-control-sm item-cantidad" value="1" required min="1"></td>
                 <td><input type="number" step="0.01" name="items[${rowCount}][precio_unitario]" class="form-control form-control-sm item-precio" value="0.00" required min="0"></td>
                 <td><input type="number" step="0.01" name="items[${rowCount}][bonificacion]" class="form-control form-control-sm item-bonif" value="100.00" min="0"></td>
-                <td><input type="number" step="0.01" name="items[${rowCount}][total]" class="form-control form-control-sm item-total" value="0.00" readonly></td>
+                <td>
+                    <span class="item-total-text fw-bold">$ 0.00</span>
+                    <input type="hidden" name="items[${rowCount}][total]" class="item-total" value="0.00">
+                </td>
                 <td class="text-center"><button type="button" class="btn btn-sm btn-danger remove-item"><i class="bi bi-x"></i></button></td>
             `;
             tableBody.appendChild(newRow);
@@ -1038,6 +1041,13 @@
 
             quickClientModal.show();
         });
+
+        // Auto-select text on focus in form inputs
+        shipmentForm.addEventListener('focus', function (e) {
+            if (e.target.tagName === 'INPUT' && (e.target.type === 'text' || e.target.type === 'number')) {
+                e.target.select();
+            }
+        }, true);
 
         document.getElementById('quickClientForm').addEventListener('submit', function (e) {
             e.preventDefault();
