@@ -93,7 +93,23 @@ class AgencyController extends Controller
 
     public function billing(Request $request, Agency $agency)
     {
-        $from = $request->input('from', now()->startOfMonth()->format('Y-m-d'));
+        $defaultFrom = now()->startOfMonth()->format('Y-m-d');
+        if (!$request->has('from')) {
+            $oldestUnbilled = \App\Models\Shipment::where(function($q) use ($agency) {
+                $q->where(fn($sub) => $sub->where('origin_agency_id', $agency->id)->where('agencia_f_origen_id', 0))
+                  ->orWhere(fn($sub) => $sub->where('destination_agency_id', $agency->id)->where('agencia_f_destino_id', 0));
+            })
+            ->where('factura_id', '>', 0)
+            ->where('faltarendir', '<=', 0)
+            ->orderBy('fecha', 'asc')
+            ->first();
+
+            if ($oldestUnbilled) {
+                $defaultFrom = \Carbon\Carbon::parse($oldestUnbilled->fecha)->format('Y-m-d');
+            }
+        }
+
+        $from = $request->input('from', $defaultFrom);
         $to = $request->input('to', now()->endOfMonth()->format('Y-m-d'));
         $role = $request->input('role', 'all'); // 'origin', 'destination', 'all'
         $status_factura = $request->input('status_factura', 'all');
