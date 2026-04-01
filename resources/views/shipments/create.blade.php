@@ -647,6 +647,7 @@
                                         if (client.agenciaorigen_id) {
                                             document.getElementById('origin_agency_id').value = client.agenciaorigen_id;
                                         }
+                                        document.getElementById('receiver_search').focus();
                                     }
 
                                     if (inputId === 'receiver_search') {
