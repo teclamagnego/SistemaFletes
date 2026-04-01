@@ -55,7 +55,7 @@
                                 <div class="mt-2">
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="payer" id="payer_sender"
-                                            value="sender" checked>
+                                            value="sender">
                                         <label class="form-check-label text-primary fw-bold" for="payer_sender">Paga
                                             Remitente</label>
                                     </div>
@@ -884,6 +884,12 @@
             // 1. Validaciones básicas
             const formaPagoId = document.getElementById('forma_pago_id').value;
             const direccionEntrega = document.getElementById('direccion_entrega').value;
+            const payer = document.querySelector('input[name="payer"]:checked');
+
+            if (!payer) {
+                alert('Debe seleccionar quién paga el envío (Remitente o Destinatario).');
+                return;
+            }
 
             if (!formaPagoId) {
                 alert('Debe seleccionar una Forma de Pago.');
