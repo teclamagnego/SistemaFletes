@@ -108,10 +108,17 @@ class ClienteController extends Controller
 
         $query = $cliente->shipmentsPaid()
             ->where('status_id', \App\Models\ShipmentStatus::DELIVERED)
-            ->whereHas('logs', function($q) use ($from, $to) {
-                $q->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED)
-                  ->whereDate('created_at', '>=', $from)
-                  ->whereDate('created_at', '<=', $to);
+            ->where(function($q) use ($from, $to) {
+                $q->whereHas('logs', function($logQ) use ($from, $to) {
+                    $logQ->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED)
+                         ->whereDate('created_at', '>=', $from)
+                         ->whereDate('created_at', '<=', $to);
+                })->orWhere(function($subQ) use ($from, $to) {
+                    $subQ->whereDoesntHave('logs', function($logQ) {
+                        $logQ->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED);
+                    })->whereDate('fecha', '>=', $from)
+                      ->whereDate('fecha', '<=', $to);
+                });
             });
 
         if ($status_factura === 'billed') {

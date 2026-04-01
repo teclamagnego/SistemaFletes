@@ -100,10 +100,17 @@ class AgencyController extends Controller
         $query = \App\Models\Shipment::with(['items.articulo', 'originAgency', 'destinationAgency', 'formaPago', 'logs'])
             ->where('factura_id', '>', 0)
             ->where('faltarendir', '<=', 0)
-            ->whereHas('logs', function($q) use ($from, $to) {
-                $q->where('status_to_id', ShipmentStatus::DELIVERED)
-                  ->whereDate('created_at', '>=', $from)
-                  ->whereDate('created_at', '<=', $to);
+            ->where(function($q) use ($from, $to) {
+                $q->whereHas('logs', function($logQ) use ($from, $to) {
+                    $logQ->where('status_to_id', ShipmentStatus::DELIVERED)
+                         ->whereDate('created_at', '>=', $from)
+                         ->whereDate('created_at', '<=', $to);
+                })->orWhere(function($subQ) use ($from, $to) {
+                    $subQ->whereDoesntHave('logs', function($logQ) {
+                        $logQ->where('status_to_id', ShipmentStatus::DELIVERED);
+                    })->whereDate('fecha', '>=', $from)
+                      ->whereDate('fecha', '<=', $to);
+                });
             });
 
         if ($status_id !== 'all') {
