@@ -132,7 +132,7 @@
                             <div class="{{ $carriers->count() === 1 ? 'col-md-6' : 'col-md-4' }} mb-3">
                                 <label for="direccion_entrega" class="form-label fw-semibold">Lugar de Entrega</label>
                                 <input type="text" name="direccion_entrega" id="direccion_entrega" class="form-control"
-                                    placeholder="Dirección de entrega">
+                                    placeholder="Dirección de entrega" required>
                             </div>
                         </div>
 
@@ -466,6 +466,11 @@
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const senderSearch = document.getElementById('sender_search');
+        if (senderSearch) {
+            senderSearch.focus();
+        }
+
         printStatusModal = new bootstrap.Modal(document.getElementById('printStatusModal'));
         const quickClientModalElement = document.getElementById('quickClientModal');
         const quickClientModal = new bootstrap.Modal(quickClientModalElement);
@@ -873,6 +878,22 @@
             saveShipment(true);
         });
         async function saveShipment(shouldPrint = true) {
+            // 1. Validaciones básicas
+            const formaPagoId = document.getElementById('forma_pago_id').value;
+            const direccionEntrega = document.getElementById('direccion_entrega').value;
+
+            if (!formaPagoId) {
+                alert('Debe seleccionar una Forma de Pago.');
+                document.getElementById('forma_pago_id').focus();
+                return;
+            }
+
+            if (!direccionEntrega || direccionEntrega.trim() === '') {
+                alert('Debe ingresar el Lugar de Entrega.');
+                document.getElementById('direccion_entrega').focus();
+                return;
+            }
+
             const originAgencyId = document.getElementById('origin_agency_id').value;
             const destinationAgencyId = document.getElementById('destination_agency_id').value;
             
@@ -882,22 +903,26 @@
                 }
             }
 
-            // Cleanup empty last row
+            // 2. Limpieza de filas vacías (todas las que no tengan contenido)
             const rows = document.querySelectorAll('.item-row');
-            if (rows.length > 1) {
-                const lastRow = rows[rows.length - 1];
-                const artId  = lastRow.querySelector('.item-articulo-id').value;
-                const desc   = lastRow.querySelector('.item-descripcion').value.trim();
-                const codigo = lastRow.querySelector('.item-codigo').value.trim();
-                if (!artId && !desc && !codigo) lastRow.remove();
-            }
+            rows.forEach(row => {
+                const artId  = row.querySelector('.item-articulo-id').value;
+                const desc   = row.querySelector('.item-descripcion').value.trim();
+                const codigo = row.querySelector('.item-codigo').value.trim();
+                
+                // Si la fila está totalmente vacía y hay más de una, la eliminamos
+                if (!artId && !desc && !codigo && document.querySelectorAll('.item-row').length > 1) {
+                    row.remove();
+                }
+            });
 
-            // Validación mínima: Al menos una fila con descripción
+            // 3. Validación de al menos un ítem con descripción
             const remainingRows = document.querySelectorAll('.item-row');
             let hasValidItem = false;
             remainingRows.forEach(row => {
                 if (row.querySelector('.item-descripcion').value.trim() !== '') hasValidItem = true;
             });
+            
             if (!hasValidItem) {
                 alert('Debe agregar al menos un artículo con descripción.');
                 return;
@@ -912,7 +937,7 @@
             updatePrintModal('saving');
             printStatusModal.show();
 
-            // Recopilar datos del form
+            // AHORA creamos el FormData con el DOM ya limpio
             const formData = new FormData(shipmentForm);
 
             try {
