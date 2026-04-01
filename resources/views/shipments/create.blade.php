@@ -1053,11 +1053,17 @@
                 }
             });
 
+            const shipmentForm = document.getElementById('shipmentForm');
+            if (!shipmentForm.reportValidity()) {
+                return;
+            }
+
             // 3. Validación de al menos un ítem con descripción
             const remainingRows = document.querySelectorAll('.item-row');
             let hasValidItem = false;
             remainingRows.forEach(row => {
-                if (row.querySelector('.item-descripcion').value.trim() !== '') hasValidItem = true;
+                const desc = row.querySelector('.item-descripcion').value.trim();
+                if (desc !== '') hasValidItem = true;
             });
             
             if (!hasValidItem) {
