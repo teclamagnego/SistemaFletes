@@ -109,6 +109,7 @@ class ShipmentController extends Controller
             'carrier_id' => $singleCarrierId ? 'nullable' : 'required|exists:carriers,id',
             'fecha' => 'nullable|date',
             'direccion_entrega' => 'nullable|string|max:255',
+            'ref_remito' => 'nullable|string|max:255',
             'forma_pago_id' => 'required|exists:forma_pagos,id',
             'payer' => 'required|in:sender,receiver',
             'items' => 'required|array|min:1',
@@ -167,9 +168,9 @@ class ShipmentController extends Controller
                 'status_id' => $statusId,
                 'total_flete' => $totalFlete,
                 'faltarendir' => (int)$request->forma_pago_id === 2 ? $totalFlete : 0,
-                'comision_origen' => $comisionOrigen,
                 'comision_destino' => $comisionDestino,
                 'notas' => $notas,
+                'ref_remito' => $request->ref_remito,
             ]);
 
             $shipment->update(['tracking_number' => (string)$shipment->id]);
@@ -328,7 +329,15 @@ class ShipmentController extends Controller
                 'faltarendir' => $newFaltarendir,
                 'comision_origen' => $comisionOrigen,
                 'comision_destino' => $comisionDestino,
-                'notas' => $request->notas,
+                'notas' => (function() use ($request) {
+                    $notas = $request->notas;
+                    if ($request->filled('direccion_entrega')) {
+                        $direccionStr = "Lugar de Entrega: " . $request->direccion_entrega;
+                        $notas = $notas ? $direccionStr . " - " . $notas : $direccionStr;
+                    }
+                    return $notas;
+                })(),
+                'ref_remito' => $request->ref_remito,
             ]);
 
             \Log::info("Shipment updated in DB", ['id' => $shipment->id, 'origen' => $shipment->comision_origen, 'destino' => $shipment->comision_destino]);

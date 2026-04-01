@@ -394,7 +394,11 @@
                                     }
 
                                     if (inputId === 'receiver_search') {
-                                        document.getElementById('direccion_entrega').value = client.direccion || '';
+                                        let deliveryAddr = client.direccion || '';
+                                        if (client.localidad && client.localidad.nombre) {
+                                            deliveryAddr = deliveryAddr ? `${deliveryAddr} (${client.localidad.nombre})` : `(${client.localidad.nombre})`;
+                                        }
+                                        document.getElementById('direccion_entrega').value = deliveryAddr;
                                         if (client.agenciadestino_id) {
                                             document.getElementById('destination_agency_id').value = client.agenciadestino_id;
                                         }

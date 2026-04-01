@@ -176,6 +176,9 @@
                 </td>
                 <td style="text-align: right;">
                     FECHA: {{ \Carbon\Carbon::parse($shipment->fecha)->format('d/m/Y') }}
+                    @if($shipment->ref_remito)
+                    <br><strong>REF REMITO: {{ $shipment->ref_remito }}</strong>
+                    @endif
                 </td>
             </tr>
             <tr>
@@ -198,8 +201,7 @@
                 <td class="section-box">
                     <div class="section-title">DESTINATARIO {{ $shipment->payer === 'receiver' ? '(PAGA EN DESTINO - ' . ($shipment->formaPago?->nombre ?? 'N/A') . ')' : '' }}</div>
                     <div><strong>{{ $shipment->receiver?->nombre_fantasia }}</strong></div>
-                    <div>Dir: {{ $shipment->direccion_entrega ?? $shipment->receiver?->direccion }} ({{
-                        $shipment->receiver?->localidad?->nombre ?? 'N/A' }})</div>
+                    <div>Dir: {{ $shipment->direccion_entrega ?? ($shipment->receiver?->direccion . " (" . ($shipment->receiver?->localidad?->nombre ?? 'N/A') . ")") }}</div>
                     <div>Destino: {{ $shipment->destinationAgency?->nombre }}</div>
                 </td>
             </tr>

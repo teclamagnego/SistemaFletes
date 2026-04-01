@@ -61,7 +61,8 @@ class ClienteController extends Controller
                 $query->where(function($subquery) use ($term) {
                     $subquery->where('nombre_fantasia', 'LIKE', "%$term%")
                           ->orWhere('razon_social', 'LIKE', "%$term%")
-                          ->orWhere('documento_nro', 'LIKE', "%$term%");
+                          ->orWhere('documento_nro', 'LIKE', "%$term%")
+                          ->orWhere('direccion', 'LIKE', "%$term%");
                 });
             }
         }
@@ -70,7 +71,7 @@ class ClienteController extends Controller
             $query->where('activo', $request->query('activo'));
         }
 
-        $clientes = $query->limit(10)->get();
+        $clientes = $query->with('localidad')->limit(10)->get();
 
         return response()->json($clientes);
     }
