@@ -27,8 +27,13 @@ class ClienteController extends Controller
         if ($request->filled('nombre')) {
             $terms = explode(' ', $request->nombre);
             foreach ($terms as $term) {
-                if (trim($term) !== '') {
-                    $query->where('nombre_fantasia', 'LIKE', '%' . $term . '%');
+                $term = trim($term);
+                if ($term !== '') {
+                    $query->where(function($subquery) use ($term) {
+                        $subquery->where('nombre_fantasia', 'LIKE', '%' . $term . '%')
+                                 ->orWhere('razon_social', 'LIKE', '%' . $term . '%')
+                                 ->orWhere('documento_nro', 'LIKE', '%' . $term . '%');
+                    });
                 }
             }
         }
@@ -46,12 +51,20 @@ class ClienteController extends Controller
     public function search(Request $request)
     {
         $q = $request->query('q');
+        $terms = explode(' ', $q);
 
-        $query = Cliente::where(function($query) use ($q) {
-            $query->where('nombre_fantasia', 'LIKE', "%$q%")
-                  ->orWhere('razon_social', 'LIKE', "%$q%")
-                  ->orWhere('documento_nro', 'LIKE', "%$q%");
-        });
+        $query = Cliente::query();
+
+        foreach ($terms as $term) {
+            $term = trim($term);
+            if ($term !== '') {
+                $query->where(function($subquery) use ($term) {
+                    $subquery->where('nombre_fantasia', 'LIKE', "%$term%")
+                          ->orWhere('razon_social', 'LIKE', "%$term%")
+                          ->orWhere('documento_nro', 'LIKE', "%$term%");
+                });
+            }
+        }
 
         if ($request->has('activo')) {
             $query->where('activo', $request->query('activo'));

@@ -33,18 +33,25 @@ class ShipmentController extends Controller
 
         // Filtro por remitente o destinatario (vía relación con cliente)
         if ($request->filled('cliente')) {
-            $clienteSearch = $request->cliente;
-            $query->where(function ($q) use ($clienteSearch) {
-                $q->whereHas('sender', function ($sq) use ($clienteSearch) {
-                        $sq->where('nombre_fantasia', 'LIKE', "%{$clienteSearch}%")
-                            ->orWhere('razon_social', 'LIKE', "%{$clienteSearch}%");
-                    }
-                    )->orWhereHas('receiver', function ($sq) use ($clienteSearch) {
-                        $sq->where('nombre_fantasia', 'LIKE', "%{$clienteSearch}%")
-                            ->orWhere('razon_social', 'LIKE', "%{$clienteSearch}%");
-                    }
-                    );
-                });
+            $terms = explode(' ', $request->cliente);
+            foreach ($terms as $term) {
+                $term = trim($term);
+                if ($term !== '') {
+                    $query->where(function ($q) use ($term) {
+                        $q->whereHas('sender', function ($sq) use ($term) {
+                                $sq->where('nombre_fantasia', 'LIKE', "%{$term}%")
+                                    ->orWhere('razon_social', 'LIKE', "%{$term}%")
+                                    ->orWhere('documento_nro', 'LIKE', "%{$term}%");
+                            }
+                            )->orWhereHas('receiver', function ($sq) use ($term) {
+                                $sq->where('nombre_fantasia', 'LIKE', "%{$term}%")
+                                    ->orWhere('razon_social', 'LIKE', "%{$term}%")
+                                    ->orWhere('documento_nro', 'LIKE', "%{$term}%");
+                            }
+                            );
+                        });
+                }
+            }
         }
 
         // Filtro por agencia de origen
