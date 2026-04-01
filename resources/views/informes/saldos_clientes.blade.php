@@ -17,8 +17,6 @@
                     <tr>
                         <th class="ps-4">Cliente</th>
                         <th>Razón Social</th>
-                        <th class="text-end">Total Facturado</th>
-                        <th class="text-end">Total Pagado</th>
                         <th class="text-end pe-4 text-primary">Saldo Pendiente</th>
                     </tr>
                 </thead>
@@ -36,15 +34,13 @@
                                 </a>
                             </td>
                             <td class="text-muted small">{{ $cliente->razon_social }}</td>
-                            <td class="text-end">$ {{ number_format($totalFacturado, 2) }}</td>
-                            <td class="text-end text-success">$ {{ number_format($totalPagado, 2) }}</td>
                             <td class="text-end pe-4 fw-bold text-danger">
                                 $ {{ number_format($saldoPendiente, 2) }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
+                            <td colspan="3" class="text-center py-4 text-muted">
                                 <i class="bi bi-info-circle"></i> No hay clientes con saldos pendientes en este momento.
                             </td>
                         </tr>

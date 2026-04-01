@@ -73,8 +73,8 @@
             <tr>
                 <th>Fecha</th>
                 <th>Número de Guía</th>
+                <th>Remito Referencia</th>
                 <th>Forma de Pago</th>
-                <th>Estado Facturación</th>
                 <th class="text-end">Monto</th>
             </tr>
         </thead>
@@ -85,8 +85,8 @@
             <tr>
                 <td>{{ date('d/m/Y', strtotime($s->fecha)) }}</td>
                 <td>{{ $s->tracking_number }}</td>
+                <td>{{ $s->ref_remito }}</td>
                 <td>{{ $s->formaPago?->nombre }}</td>
-                <td>{{ $s->factura_id > 0 ? 'Facturada (#' . $s->factura_id . ')' : 'Pendiente' }}</td>
                 <td class="text-end">$ {{ number_format($s->total_flete, 2) }}</td>
             </tr>
             @endforeach
