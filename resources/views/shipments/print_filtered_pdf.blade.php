@@ -122,5 +122,13 @@
             </tr>
         </tbody>
     </table>
+    <script>
+        window.onload = function() {
+            window.print();
+            setTimeout(function() {
+                window.close();
+            }, 500);
+        };
+    </script>
 </body>
 </html>

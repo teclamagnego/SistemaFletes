@@ -189,14 +189,14 @@
         <table class="section-table">
             <tr>
                 <td class="section-box">
-                    <div class="section-title">REMITENTE {{ $shipment->payer === 'sender' ? '(PAGA EN ORIGEN)' : '' }}</div>
+                    <div class="section-title">REMITENTE {{ $shipment->payer === 'sender' ? '(PAGA EN ORIGEN - ' . ($shipment->formaPago?->nombre ?? 'N/A') . ')' : '' }}</div>
                     <div><strong>{{ $shipment->sender?->nombre_fantasia }}</strong></div>
                     <div>Dir: {{ $shipment->sender?->direccion }} ({{ $shipment->sender?->localidad?->nombre ?? 'N/A'
                         }})</div>
                     <div>Agencia: {{ $shipment->originAgency?->nombre }}</div>
                 </td>
                 <td class="section-box">
-                    <div class="section-title">DESTINATARIO {{ $shipment->payer === 'receiver' ? '(PAGA EN DESTINO)' : '' }}</div>
+                    <div class="section-title">DESTINATARIO {{ $shipment->payer === 'receiver' ? '(PAGA EN DESTINO - ' . ($shipment->formaPago?->nombre ?? 'N/A') . ')' : '' }}</div>
                     <div><strong>{{ $shipment->receiver?->nombre_fantasia }}</strong></div>
                     <div>Dir: {{ $shipment->direccion_entrega ?? $shipment->receiver?->direccion }} ({{
                         $shipment->receiver?->localidad?->nombre ?? 'N/A' }})</div>
@@ -270,6 +270,16 @@
         </div>
         </div>
         @endfor
+    <script>
+        window.onload = function() {
+            window.print();
+            // Intentar cerrar la ventana después de imprimir (funciona mejor si se abrió con target="_blank")
+            // Damos un pequeño margen para que el diálogo de impresión se abra
+            setTimeout(function() {
+                window.close();
+            }, 500);
+        };
+    </script>
 </body>
 
 </html>

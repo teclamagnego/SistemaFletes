@@ -511,9 +511,7 @@ class ShipmentController extends Controller
             $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
         }
 
-        $pdf = Pdf::loadView('shipments.pdf', compact('shipment', 'empresa', 'sucursal', 'logoBase64'));
-
-        return $pdf->stream("Guia_{$shipment->tracking_number}.pdf");
+        return view('shipments.pdf', compact('shipment', 'empresa', 'sucursal', 'logoBase64'));
     }
 
     public function printFiltered(Request $request)
@@ -575,9 +573,8 @@ class ShipmentController extends Controller
 
         $filters = $request->all();
 
-        $pdf = Pdf::loadView('shipments.print_filtered_pdf', compact('shipments', 'empresa', 'sucursal', 'logoBase64', 'filters'));
 
-        return $pdf->stream("Guias_Filtradas.pdf");
+        return view('shipments.print_filtered_pdf', compact('shipments', 'empresa', 'sucursal', 'logoBase64', 'filters'));
     }
 
     public function printBase64(Shipment $shipment)
