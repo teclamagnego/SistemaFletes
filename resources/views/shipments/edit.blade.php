@@ -40,7 +40,12 @@
 
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3 mb-md-0">
-                                <label for="sender_search" class="form-label fw-semibold">Remitente</label>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label for="sender_search" class="form-label fw-semibold mb-0">Remitente</label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-1 btn-quick-client" data-target-input="sender_search" data-target-hidden="sender_id" title="Agregar nuevo cliente">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
                                 <div class="position-relative">
                                     <input type="text" id="sender_search" class="form-control"
                                         placeholder="Buscar cliente..." autocomplete="off" value="{{ $shipment->sender->nombre_fantasia }}">
@@ -58,7 +63,12 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label for="receiver_search" class="form-label fw-semibold">Destinatario</label>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label for="receiver_search" class="form-label fw-semibold mb-0">Destinatario</label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-1 btn-quick-client" data-target-input="receiver_search" data-target-hidden="receiver_id" title="Agregar nuevo cliente">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
                                 <div class="position-relative">
                                     <input type="text" id="receiver_search" class="form-control"
                                         placeholder="Buscar cliente..." autocomplete="off" value="{{ $shipment->receiver->nombre_fantasia }}">
@@ -246,6 +256,14 @@
                     <div class="mb-3">
                         <label for="qc_direccion" class="form-label">Dirección</label>
                         <input type="text" class="form-control" id="qc_direccion">
+                    </div>
+                    <div class="mb-3">
+                        <label for="qc_localidad_search" class="form-label">Localidad</label>
+                        <div class="position-relative">
+                            <input type="text" id="qc_localidad_search" class="form-control" placeholder="Buscar localidad..." autocomplete="off">
+                            <input type="hidden" id="qc_localidad_id">
+                            <div id="qc_localidad_results" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; display: none;"></div>
+                        </div>
                     </div>
                     <input type="hidden" id="qc_target_input">
                     <input type="hidden" id="qc_target_hidden">
@@ -472,6 +490,111 @@
         setupAutocomplete('sender_search', 'sender_id', 'sender_results');
         setupAutocomplete('receiver_search', 'receiver_id', 'receiver_results');
 
+        // Autocomplete para Localidad en el Modal de Cliente Rápido
+        function setupLocalidadAutocomplete() {
+            const input = document.getElementById('qc_localidad_search');
+            const hidden = document.getElementById('qc_localidad_id');
+            const results = document.getElementById('qc_localidad_results');
+            let timeout = null;
+
+            input.addEventListener('input', function () {
+                clearTimeout(timeout);
+                const q = this.value.trim();
+                if (q.length < 2) {
+                    results.style.display = 'none';
+                    return;
+                }
+
+                timeout = setTimeout(() => {
+                    const url = `{{ route('localidades.search') }}?q=${encodeURIComponent(q)}`;
+                    fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(res => res.json())
+                        .then(data => {
+                            results.innerHTML = '';
+                            if (data.length === 0) {
+                                results.innerHTML = '<div class="list-group-item text-muted">No se encontraron localidades</div>';
+                                results.style.display = 'block';
+                                return;
+                            }
+                            data.forEach(loc => {
+                                const a = document.createElement('a');
+                                a.href = '#'; 
+                                a.className = 'list-group-item list-group-item-action py-2 d-flex justify-content-between align-items-center';
+                                a.innerHTML = `
+                                    <div class="flex-grow-1">
+                                        <strong>${loc.nombre}</strong>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger border-0 delete-localidad-ajax" data-id="${loc.id}" title="Eliminar localidad">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                `;
+                                
+                                a.onclick = function (e) {
+                                    if (e.target.closest('.delete-localidad-ajax')) return;
+                                    e.preventDefault();
+                                    input.value = loc.nombre;
+                                    hidden.value = loc.id;
+                                    results.style.display = 'none';
+                                };
+
+                                const btnDel = a.querySelector('.delete-localidad-ajax');
+                                btnDel.onclick = function(e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    function performDelete() {
+                                        const originalContent = btnDel.innerHTML;
+                                        btnDel.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                                        btnDel.disabled = true;
+
+                                        fetch(`/localidades/${loc.id}/ajax`, {
+                                            method: 'DELETE',
+                                            headers: {
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                'Accept': 'application/json'
+                                            }
+                                        })
+                                        .then(res => res.json())
+                                        .then(resData => {
+                                            if (resData.success) {
+                                                a.remove();
+                                                if (results.querySelectorAll('.list-group-item-action').length === 0) {
+                                                    results.style.display = 'none';
+                                                }
+                                            } else {
+                                                alert(resData.message || 'No se puede eliminar la localidad.');
+                                                btnDel.innerHTML = originalContent;
+                                                btnDel.disabled = false;
+                                            }
+                                        })
+                                        .catch(err => {
+                                            console.error(err);
+                                            alert('Error al intentar eliminar la localidad.');
+                                            btnDel.innerHTML = originalContent;
+                                            btnDel.disabled = false;
+                                        });
+                                    }
+
+                                    if (confirm('¿Está seguro de eliminar esta localidad?')) {
+                                        performDelete();
+                                    }
+                                };
+
+                                results.appendChild(a);
+                            });
+                            results.style.display = 'block';
+                        });
+                }, 300);
+            });
+
+            document.addEventListener('click', function (e) {
+                if (e.target !== input && e.target !== results && !results.contains(e.target)) {
+                    results.style.display = 'none';
+                }
+            });
+        }
+        setupLocalidadAutocomplete();
+
         // Form submission cleanup
         const shipmentForm = document.getElementById('shipmentForm');
         shipmentForm.addEventListener('submit', function (e) {
@@ -527,7 +650,11 @@
             fetch('{{ route("clientes.storeQuick") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ nombre_fantasia: document.getElementById('qc_nombre_fantasia').value, direccion: document.getElementById('qc_direccion').value })
+                body: JSON.stringify({ 
+                    nombre_fantasia: document.getElementById('qc_nombre_fantasia').value, 
+                    direccion: document.getElementById('qc_direccion').value,
+                    localidad_id: document.getElementById('qc_localidad_id').value
+                })
             })
                 .then(res => res.json())
                 .then(client => {

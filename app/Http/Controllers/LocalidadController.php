@@ -9,14 +9,15 @@ class LocalidadController extends Controller
 {
     public function index()
     {
-        $localidades = Localidad::orderBy('nombre')->paginate(15);
+        $localidades = Localidad::where('activo', 1)->orderBy('nombre')->paginate(15);
         return view('localidades.index', compact('localidades'));
     }
 
     public function search(Request $request)
     {
         $q = $request->query('q');
-        $localidades = Localidad::where('nombre', 'LIKE', "%$q%")
+        $localidades = Localidad::where('activo', 1)
+            ->where('nombre', 'LIKE', "%$q%")
             ->orderBy('nombre')
             ->limit(10)
             ->get();
@@ -26,15 +27,12 @@ class LocalidadController extends Controller
     public function destroyAjax(Localidad $localidad)
     {
         try {
-            \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
-            $localidad->delete();
-            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+            $localidad->update(['activo' => 0]);
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
             return response()->json([
                 'success' => false,
-                'message' => 'Error al eliminar la localidad: ' . $e->getMessage()
+                'message' => 'Error al desactivar la localidad: ' . $e->getMessage()
             ]);
         }
     }
@@ -74,14 +72,11 @@ class LocalidadController extends Controller
     public function destroy(Localidad $localidad)
     {
         try {
-            \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
-            $localidad->delete();
-            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
-            return redirect()->route('localidades.index')->with('success', 'Localidad eliminada correctamente.');
+            $localidad->update(['activo' => 0]);
+            return redirect()->route('localidades.index')->with('success', 'Localidad desactivada correctamente.');
         }
         catch (\Exception $e) {
-            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
-            return redirect()->route('localidades.index')->with('error', 'Error al eliminar la localidad: ' . $e->getMessage());
+            return redirect()->route('localidades.index')->with('error', 'Error al desactivar la localidad: ' . $e->getMessage());
         }
     }
 }

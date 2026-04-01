@@ -14,6 +14,7 @@ use App\Models\Articulo;
 use App\Models\Empresa;
 use App\Models\ClienteFactura;
 use App\Models\Contrareembolso;
+use App\Models\Localidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -91,7 +92,8 @@ class ShipmentController extends Controller
         $carriers = Carrier::where('activo', true)->get();
         $formasPago = FormaPago::orderBy('nombre')->get();
         $empresa = Empresa::first(); // Asumimos la primera como principal para configuración
-        return view('shipments.create', compact('agencies', 'carriers', 'formasPago', 'empresa'));
+        $localidades = Localidad::orderBy('nombre')->get();
+        return view('shipments.create', compact('agencies', 'carriers', 'formasPago', 'empresa', 'localidades'));
     }
 
     public function store(Request $request)
@@ -209,14 +211,14 @@ class ShipmentController extends Controller
                 'notas' => $singleCarrierId ? 'Guía admitida y puesta en tránsito automáticamente.' : 'Guía admitida en sistema.',
             ]);
 
-            // Actualizar agencias habituales de los clientes si no tienen
+            // Actualizar agencias habituales de los clientes con la agencia de la guía actual
             $sender = Cliente::find($request->sender_id);
-            if ($sender && (!$sender->agenciaorigen_id || $sender->agenciaorigen_id == 0)) {
+            if ($sender) {
                 $sender->update(['agenciaorigen_id' => $request->origin_agency_id]);
             }
 
             $receiver = Cliente::find($request->receiver_id);
-            if ($receiver && (!$receiver->agenciadestino_id || $receiver->agenciadestino_id == 0)) {
+            if ($receiver) {
                 $receiver->update(['agenciadestino_id' => $request->destination_agency_id]);
             }
 
@@ -249,8 +251,9 @@ class ShipmentController extends Controller
         $agencies = Agency::where('activa', true)->orderBy('nombre')->get();
         $carriers = Carrier::where('activo', true)->get();
         $formasPago = FormaPago::orderBy('nombre')->get();
+        $localidades = Localidad::orderBy('nombre')->get();
 
-        return view('shipments.edit', compact('shipment', 'agencies', 'carriers', 'formasPago'));
+        return view('shipments.edit', compact('shipment', 'agencies', 'carriers', 'formasPago', 'localidades'));
     }
 
     public function update(Request $request, Shipment $shipment)

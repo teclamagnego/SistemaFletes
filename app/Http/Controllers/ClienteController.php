@@ -80,6 +80,7 @@ class ClienteController extends Controller
         $request->validate([
             'nombre_fantasia' => 'required|string|max:255',
             'direccion' => 'nullable|string|max:255',
+            'localidad_id' => 'required|exists:localidades,id',
         ]);
 
         $cliente = Cliente::create([
@@ -88,7 +89,7 @@ class ClienteController extends Controller
             'direccion' => $request->direccion,
             'tipodoc_id' => 1,
             'documento_nro' => '0',
-            'localidad_id' => 1,
+            'localidad_id' => $request->localidad_id,
             'tipocuenta_id' => 1,
             'tipoiva_id' => 1,
             'agenciaorigen_id' => 1,
