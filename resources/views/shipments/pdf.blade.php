@@ -6,31 +6,28 @@
     <title>Guía de Carga - {{ $shipment->tracking_number }}</title>
     <style>
         @page {
-            margin: 0;
-            size: A4;
+            margin: 1cm;
         }
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
+        body {
             font-family: sans-serif;
             font-size: 11px;
             color: #000;
+            margin: 0;
+            padding: 0;
         }
 
         .copy-container {
-            height: 50%;
-            width: 100%;
+            height: 47%;
             position: relative;
             border-bottom: 1px dashed #000;
-            padding: 1.5cm 1cm;
+            padding: 10px 0;
             overflow: hidden;
-            box-sizing: border-box;
         }
 
         .copy-container:last-child {
             border-bottom: none;
+            padding-top: 20px;
         }
 
         .header-table {
