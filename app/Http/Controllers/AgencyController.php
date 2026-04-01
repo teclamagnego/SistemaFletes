@@ -15,6 +15,8 @@ use App\Models\Shipment;
 use App\Models\Empresa;
 use App\Models\Sucursal;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\AgencyShipmentsBillingExport;
 
 class AgencyController extends Controller
 {
@@ -168,6 +170,24 @@ class AgencyController extends Controller
             }
             $s->role_in_billing = $roles;
             $s->comision_total_agencia = $com;
+        }
+
+        if ($request->export === 'pdf') {
+            ini_set('memory_limit', '512M');
+            $empresa = Empresa::first();
+            $roles_list = ['all' => 'Todas', 'origin' => 'Origen', 'destination' => 'Destino'];
+            $facturation_list = ['all' => 'Todas', 'unbilled' => 'No Facturadas', 'billed' => 'Facturadas'];
+            $status_name = $status_id === 'all' ? 'Todos' : ShipmentStatus::find($status_id)?->name;
+
+            $pdf = Pdf::loadView('agencies.billing_pdf', compact(
+                'agency', 'shipments', 'from', 'to', 'role', 'status_factura', 'status_id', 
+                'empresa', 'roles_list', 'facturation_list', 'status_name'
+            ));
+            return $pdf->stream("Liquidacion_Comision_{$agency->nombre}.pdf");
+        }
+
+        if ($request->export === 'excel') {
+            return Excel::download(new AgencyShipmentsBillingExport($shipments, $agency), "Liquidacion_Comision_{$agency->nombre}.xlsx");
         }
 
         return view('agencies.billing', compact('agency', 'shipments', 'from', 'to', 'role', 'status_factura', 'status_id', 'statuses'));

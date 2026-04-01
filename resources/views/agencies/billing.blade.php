@@ -51,9 +51,15 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary btn-sm w-100">
+            <div class="col-md-2 d-flex align-items-end gap-1">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
                     <i class="bi bi-filter"></i> Filtrar
+                </button>
+                <button type="submit" name="export" value="pdf" class="btn btn-outline-danger btn-sm" title="Imprimir PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </button>
+                <button type="submit" name="export" value="excel" class="btn btn-outline-success btn-sm" title="Exportar Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
                 </button>
             </div>
         </form>
