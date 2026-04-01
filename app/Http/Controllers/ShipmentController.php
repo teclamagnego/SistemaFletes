@@ -323,7 +323,6 @@ class ShipmentController extends Controller
                 'destination_agency_id' => $request->destination_agency_id,
                 'carrier_id' => $request->carrier_id,
                 'forma_pago_id' => $request->forma_pago_id,
-                'fecha' => $request->fecha ?? now(),
                 'direccion_entrega' => $request->direccion_entrega,
                 'total_flete' => $totalFlete,
                 'faltarendir' => $newFaltarendir,
