@@ -8,6 +8,7 @@ Este es un README.md diseñado específicamente para que una IA (o un equipo de 
 
 El objetivo de este sistema es gestionar el ciclo de vida completo del transporte de mercancías entre múltiples agencias (sucursales). El sistema permite el registro de envíos (Guías), la asignación de transportistas y el control financiero de las comisiones por agencia.
 
+
 ## ---
 
 **🏗️ Arquitectura de Datos (Modelos Principales)**
