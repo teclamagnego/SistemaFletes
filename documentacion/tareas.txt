@@ -1,0 +1,10 @@
+1 - impresion automatica mas rapida.
+2 - cambiar logo doble g bs as x rosario
+4 - usar el tab com enter en create guia.
+5 - impresion del edit sin modificar la impresion por qz tray
+6 - facturar afip lleva + iva.
+7 - si es pago origen contado, imprimir un papel extra.
+8 - agencias balcarce hasta el 15 de marzo , el resto hasta el 29 incluido.
+
+hechos
+3 - el editar guia ver que andan todos los campos y en enter.

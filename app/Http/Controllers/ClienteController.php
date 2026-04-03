@@ -97,6 +97,8 @@ class ClienteController extends Controller
             'agenciadestino_id' => 1,
         ]);
 
+        $cliente->load('localidad');
+
         return response()->json($cliente);
     }
 
@@ -252,7 +254,7 @@ class ClienteController extends Controller
                     'fecha' => $r->fecha,
                     'tipo' => 'Recibo',
                     'referencia' => $r->nro_recibo ?? 'Recibo #' . $r->id,
-                    'detalle' => $r->formaPago?->nombre,
+                    'detalle' => ($r->formaPago ? $r->formaPago->nombre : null),
                     'debe' => 0,
                     'haber' => $r->monto,
                     'recibo_id' => $r->id,
@@ -272,7 +274,7 @@ class ClienteController extends Controller
                     'fecha' => $s->fecha,
                     'tipo' => 'Guia (Pend. Fact)',
                     'referencia' => $s->tracking_number,
-                    'detalle' => $s->formaPago?->nombre,
+                    'detalle' => ($s->formaPago ? $s->formaPago->nombre : null),
                     'debe' => $esCuentaCorriente ? $s->total_flete : 0,
                     'haber' => 0,
                     'factura_id' => 0,
