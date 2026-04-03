@@ -95,14 +95,15 @@ class AgencyController extends Controller
     {
         $defaultFrom = now()->startOfMonth()->format('Y-m-d');
         if (!$request->has('from')) {
-            $oldestUnbilled = \App\Models\Shipment::where(function($q) use ($agency) {
-                $q->where(fn($sub) => $sub->where('origin_agency_id', $agency->id)->where('agencia_f_origen_id', 0))
-                  ->orWhere(fn($sub) => $sub->where('destination_agency_id', $agency->id)->where('agencia_f_destino_id', 0));
-            })
-            ->where('factura_id', '>', 0)
-            ->where('faltarendir', '<=', 0)
-            ->orderBy('fecha', 'asc')
-            ->first();
+            $oldestUnbilled = \App\Models\Shipment::where('factura_id', '>', 0)
+                ->where('faltarendir', '<=', 0)
+                ->where('status_id', ShipmentStatus::DELIVERED)
+                ->where(function($q) use ($agency) {
+                    $q->where(fn($sub) => $sub->where('origin_agency_id', $agency->id)->where('agencia_f_origen_id', 0))
+                      ->orWhere(fn($sub) => $sub->where('destination_agency_id', $agency->id)->where('agencia_f_destino_id', 0));
+                })
+                ->orderBy('fecha', 'asc')
+                ->first();
 
             if ($oldestUnbilled) {
                 $defaultFrom = \Carbon\Carbon::parse($oldestUnbilled->fecha)->format('Y-m-d');
@@ -193,7 +194,8 @@ class AgencyController extends Controller
             $empresa = Empresa::first();
             $roles_list = ['all' => 'Todas', 'origin' => 'Origen', 'destination' => 'Destino'];
             $facturation_list = ['all' => 'Todas', 'unbilled' => 'No Facturadas', 'billed' => 'Facturadas'];
-            $status_name = $status_id === 'all' ? 'Todos' : ShipmentStatus::find($status_id)?->name;
+            $shipmentStatusFound = ShipmentStatus::find($status_id);
+            $status_name = $status_id === 'all' ? 'Todos' : ($shipmentStatusFound ? $shipmentStatusFound->name : '');
 
             $pdf = Pdf::loadView('agencies.billing_pdf', compact(
                 'agency', 'shipments', 'from', 'to', 'role', 'status_factura', 'status_id', 
@@ -302,7 +304,7 @@ class AgencyController extends Controller
                 'fecha' => $r->fecha,
                 'tipo' => 'Pago de Comisión',
                 'referencia' => $r->nro_recibo ?? 'Recibo #' . $r->id,
-                'detalle' => $r->formaPago?->nombre,
+                'detalle' => ($r->formaPago ? $r->formaPago->nombre : null),
                 'debe' => 0,
                 'haber' => $r->monto,
                 'id' => $r->id,
