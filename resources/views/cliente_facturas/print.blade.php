@@ -94,10 +94,10 @@
     </div>
 
     <div class="client-info">
-        <p style="margin: 0 0 5px 0;"><strong>CLIENTE:</strong> {{ $factura->cliente->nombre_fantasia }}</p>
-        <p style="margin: 0 0 5px 0;"><strong>RAZÓN SOCIAL:</strong> {{ $factura->cliente->razon_social }}</p>
-        <p style="margin: 0 0 5px 0;"><strong>DIRECCIÓN:</strong> {{ $factura->cliente->direccion }}</p>
-        <p style="margin: 0;"><strong>CUIT/DOC:</strong> {{ $factura->cliente->documento_nro }}</p>
+        <p style="margin: 0 0 5px 0;"><strong>CLIENTE:</strong> {{ $factura->cliente?->nombre_fantasia ?? '(S/D)' }}</p>
+        <p style="margin: 0 0 5px 0;"><strong>RAZÓN SOCIAL:</strong> {{ $factura->cliente?->razon_social ?? '(S/D)' }}</p>
+        <p style="margin: 0 0 5px 0;"><strong>DIRECCIÓN:</strong> {{ $factura->cliente?->direccion ?? '(S/D)' }}</p>
+        <p style="margin: 0;"><strong>CUIT/DOC:</strong> {{ $factura->cliente?->documento_nro ?? '(S/D)' }}</p>
     </div>
 
     <table>
@@ -115,8 +115,8 @@
                 <td>{{ date('d/m/Y', strtotime($s->fecha)) }}</td>
                 <td>{{ $s->tracking_number }}</td>
                 <td>
-                    {{ $s->sender->nombre_fantasia }} -> {{ $s->receiver->nombre_fantasia }}
-                    <br><small style="color: #666;">{{ $s->formaPago->nombre }}</small>
+                    {{ $s->sender?->nombre_fantasia ?? '(sin remitente)' }} -> {{ $s->receiver?->nombre_fantasia ?? '(sin destinatario)' }}
+                    <br><small style="color: #666;">{{ $s->formaPago?->nombre ?? '' }}</small>
                 </td>
                 <td class="text-end">$ {{ number_format($s->total_flete, 2) }}</td>
             </tr>

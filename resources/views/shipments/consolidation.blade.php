@@ -29,8 +29,8 @@
                                 <a href="{{ route('shipments.show', $s) }}" class="text-decoration-none">
                                     <strong>{{ $s->tracking_number }}</strong>
                                 </a>
-                                <div class="small text-muted">{{ $s->sender->nombre_fantasia }} -> {{
-                                    $s->receiver->nombre_fantasia }}
+                                <div class="small text-muted">{{ $s->sender?->nombre_fantasia ?? '(S/R)' }} -> {{
+                                    $s->receiver?->nombre_fantasia ?? '(S/D)' }}
                                 </div>
                             </div>
                             <div class="text-end">

@@ -232,14 +232,14 @@
             <tr>
                 <td class="section-box">
                     <div class="section-title">DESTINATARIO (DESTINO)</div>
-                    <p><strong>{{ $shipment->receiver->nombre_fantasia ?? $shipment->receiver->razon_social ?? '-' }}</strong></p>
+                    <p><strong>{{ $shipment->receiver?->nombre_fantasia ?? $shipment->receiver?->razon_social ?? '-' }}</strong></p>
                     <p>Dir: {{ $shipment->direccion_entrega ?? $shipment->receiver->direccion ?? '-' }}
                         {{ $shipment->receiver->localidad ? '(' . $shipment->receiver->localidad->nombre . ')' : '' }}</p>
                     <p>Destino: {{ $shipment->destinationAgency->nombre ?? '-' }}</p>
                 </td>
                 <td class="section-box">
                     <div class="section-title">REMITENTE (ORIGEN)</div>
-                    <p><strong>{{ $shipment->sender->nombre_fantasia ?? $shipment->sender->razon_social ?? '-' }}</strong></p>
+                    <p><strong>{{ $shipment->sender?->nombre_fantasia ?? $shipment->sender?->razon_social ?? '-' }}</strong></p>
                     <p>Dir: {{ $shipment->sender->direccion ?? '-' }}
                         {{ $shipment->sender->localidad ? '(' . $shipment->sender->localidad->nombre . ')' : '' }}</p>
                     <p>Agencia: {{ $shipment->originAgency->nombre ?? '-' }}</p>
@@ -251,7 +251,7 @@
         <table class="info-section">
             <tr>
                 <td class="info-label">Cliente (Paga):</td>
-                <td><strong>{{ $contrareembolso->cliente->nombre_fantasia ?? $contrareembolso->cliente->razon_social ?? '-' }}</strong></td>
+                <td><strong>{{ $contrareembolso->cliente?->nombre_fantasia ?? $contrareembolso->cliente?->razon_social ?? '-' }}</strong></td>
             </tr>
         </table>
 
