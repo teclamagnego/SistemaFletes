@@ -461,7 +461,10 @@
                             a.innerHTML = `
                                 <div class="flex-grow-1">
                                     <strong>${client.nombre_fantasia}</strong> <br>
-                                    <small class="text-muted">Dir: ${client.direccion || ''}</small>
+                                    <small class="text-muted">
+                                        ${client.direccion ? 'Dir: ' + client.direccion : ''} 
+                                        ${client.localidad ? (client.direccion ? ' — ' : '') + '<i class="bi bi-geo-alt"></i> ' + client.localidad.nombre : ''}
+                                    </small>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-danger border-0 delete-client-ajax" data-id="${client.id}" title="Eliminar cliente">
                                     <i class="bi bi-x-lg"></i>
