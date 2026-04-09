@@ -32,6 +32,11 @@ class ShipmentController extends Controller
             $query->where('tracking_number', 'LIKE', "%{$request->tracking_number}%");
         }
 
+        // Filtro por pagador (cliente_id)
+        if ($request->filled('cliente_id')) {
+            $query->where('cliente_id', $request->cliente_id);
+        }
+
         // Filtro por remitente o destinatario (vía relación con cliente)
         if ($request->filled('cliente')) {
             $terms = explode(' ', $request->cliente);

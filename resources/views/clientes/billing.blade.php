@@ -19,7 +19,7 @@
             <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
             <div>
                 Existen <strong>{{ $guiasNuevasCount }}</strong> guías para este cliente en estado Nuevo (sin entregar).
-                <a href="{{ route('shipments.index', ['cliente' => $cliente->nombre_fantasia, 'status_id' => 1]) }}" class="alert-link ms-1 text-decoration-underline" target="_blank">
+                <a href="{{ route('shipments.index', ['cliente_id' => $cliente->id, 'status_id' => 1]) }}" class="alert-link ms-1 text-decoration-underline" target="_blank">
                     Haz clic aquí para verlas
                 </a>
             </div>

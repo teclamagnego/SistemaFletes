@@ -162,7 +162,7 @@ class ClienteController extends Controller
 
         $facturaCodigos = \App\Models\FacturaCodigo::all();
 
-        $guiasNuevasCount = \App\Models\Shipment::where('cliente_id', $cliente->id)
+        $guiasNuevasCount = $cliente->shipmentsPaid()
             ->where('status_id', \App\Models\ShipmentStatus::ADMITTED)
             ->count();
 
