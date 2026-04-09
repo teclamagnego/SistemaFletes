@@ -25,7 +25,7 @@ class ShipmentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency']);
+        $query = Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency', 'deliveryLog']);
 
         // Filtro por guía (tracking number)
         if ($request->filled('tracking_number')) {
@@ -527,7 +527,7 @@ class ShipmentController extends Controller
 
     public function printFiltered(Request $request)
     {
-        $query = Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency']);
+        $query = Shipment::with(['sender', 'receiver', 'originAgency', 'destinationAgency', 'deliveryLog']);
 
         // Apply filters (same logic as index method)
         if ($request->filled('tracking_number')) {

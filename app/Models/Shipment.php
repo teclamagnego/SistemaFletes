@@ -88,6 +88,16 @@ class Shipment extends Model
         return $this->hasMany(ShipmentLog::class);
     }
 
+    public function deliveryLog()
+    {
+        return $this->hasOne(ShipmentLog::class)->where('status_to_id', ShipmentStatus::DELIVERED)->latestOfMany();
+    }
+
+    public function getDeliveryDateAttribute()
+    {
+        return $this->deliveryLog?->created_at;
+    }
+
     public function formaPago()
     {
         return $this->belongsTo(FormaPago::class , 'forma_pago_id');
