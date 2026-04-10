@@ -149,6 +149,12 @@ class ShipmentController extends Controller
             $comisionOrigen = ($totalFlete * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
             $comisionDestino = ($totalFlete * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
 
+            // Si origen y destino son distintos a ID 1, dividir comisiones x 2
+            if ($request->origin_agency_id != 1 && $request->destination_agency_id != 1) {
+                $comisionOrigen /= 2;
+                $comisionDestino /= 2;
+            }
+
             $carrierId = $singleCarrierId ?? $request->carrier_id;
             $statusId = ShipmentStatus::ADMITTED; // Nuevo
 
@@ -173,6 +179,7 @@ class ShipmentController extends Controller
                 'status_id' => $statusId,
                 'total_flete' => $totalFlete,
                 'faltarendir' => (int)$request->forma_pago_id === 2 ? $totalFlete : 0,
+                'comision_origen' => $comisionOrigen,
                 'comision_destino' => $comisionDestino,
                 'notas' => $notas,
                 'ref_remito' => $request->ref_remito,
@@ -307,6 +314,12 @@ class ShipmentController extends Controller
             
             $comisionOrigen = ($totalFlete * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
             $comisionDestino = ($totalFlete * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
+
+            // Si origen y destino son distintos a ID 1, dividir comisiones x 2
+            if ($request->origin_agency_id != 1 && $request->destination_agency_id != 1) {
+                $comisionOrigen /= 2;
+                $comisionDestino /= 2;
+            }
 
             \Log::info("Updating shipment {$shipment->tracking_number}", [
                 'total_flete' => $totalFlete,
