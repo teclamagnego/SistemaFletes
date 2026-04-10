@@ -28,22 +28,24 @@ class ShipmentsBillingExport implements FromCollection, WithHeadings, WithMappin
             'Ref Remito',
             'Remitente',
             'Destinatario',
-            'Forma de Pago',
-            'Factura ID',
+            'Valor Declarado',
             'Total Flete',
         ];
     }
 
     public function map($shipment): array
     {
+        $bultoxItem = $shipment->items->first(function($item) {
+            return $item->articulo && strtoupper($item->articulo->codigo) === 'BULTOX';
+        });
+
         return [
             $shipment->fecha,
             $shipment->tracking_number,
             $shipment->ref_remito,
             $shipment->sender?->nombre_fantasia,
             $shipment->receiver?->nombre_fantasia,
-            $shipment->formaPago?->nombre,
-            $shipment->factura_id > 0 ? $shipment->factura_id : 'Pendiente',
+            $bultoxItem ? $bultoxItem->precio_unitario : 0,
             $shipment->total_flete,
         ];
     }

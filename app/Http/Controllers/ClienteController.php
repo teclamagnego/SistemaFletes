@@ -144,9 +144,8 @@ class ClienteController extends Controller
             $query->where('factura_id', 0);
         }
 
-        $shipments = $query->with(['formaPago', 'logs'])->get()->sortBy(function($shipment) {
-            $deliveryLog = $shipment->logs->where('status_to_id', \App\Models\ShipmentStatus::DELIVERED)->first();
-            return $deliveryLog ? $deliveryLog->created_at : $shipment->fecha;
+        $shipments = $query->with(['formaPago', 'logs', 'items.articulo'])->get()->sortBy(function($shipment) {
+            return (int) $shipment->tracking_number;
         })->values();
 
         if ($request->has('export')) {
