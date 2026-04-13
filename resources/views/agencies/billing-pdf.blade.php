@@ -23,7 +23,7 @@
 
     <div class="info">
         <p><strong>Agencia:</strong> {{ $factura->agency->nombre }}</p>
-        <p><strong>Periodo:</strong> Del {{ \Carbon\Carbon::parse($factura->desde)->format('d/m/Y') }} al {{ \Carbon\Carbon::parse($factura->hasta)->format('d/m/Y') }}</p>
+
     </div>
 
     <table>
