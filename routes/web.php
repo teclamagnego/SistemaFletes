@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
     Route::get('agencies/{agency}/billing', [AgencyController::class , 'billing'])->name('agencies.billing')->middleware('permission:agencies.index');
     Route::post('agencies/{agency}/generate-invoice', [AgencyController::class , 'generateInvoice'])->name('agencies.generateInvoice')->middleware('permission:agencies.index');
     Route::get('agencies/facturas/{factura}/imprimir-detalle', [AgencyController::class, 'printDetail'])->name('agencies.facturas.printDetail')->middleware('permission:agencies.index');
+    Route::get('agencies/facturas/{factura}/modificar-detalle', [AgencyController::class, 'modificarDetalle'])->name('agencies.facturas.modificarDetalle')->middleware('permission:agencies.index');
+    Route::post('agencies/facturas/{factura}/modificar-detalle', [AgencyController::class, 'guardarModificacionDetalle'])->name('agencies.facturas.guardarModificacionDetalle')->middleware('permission:agencies.index');
     Route::get('agencies/{agency}/history', [AgencyController::class , 'history'])->name('agencies.history')->middleware('permission:agencies.index');
     Route::resource('agencies', AgencyController::class)->middleware('permission:agencies.index');
 

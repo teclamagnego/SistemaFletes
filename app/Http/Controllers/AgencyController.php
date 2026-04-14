@@ -339,6 +339,68 @@ class AgencyController extends Controller
         return $pdf->stream("Detalle_Liquidacion_{$factura->nro_factura}.pdf");
     }
 
+    public function modificarDetalle(AgenciaFactura $factura)
+    {
+        $shipments = Shipment::where('agencia_f_origen_id', $factura->id)
+            ->orWhere('agencia_f_destino_id', $factura->id)
+            ->with(['originAgency', 'destinationAgency', 'sender', 'receiver', 'logs'])
+            ->get()->sortBy(function($shipment) {
+                $deliveryLog = $shipment->logs->where('status_to_id', ShipmentStatus::DELIVERED)->first();
+                return $deliveryLog ? $deliveryLog->created_at : $shipment->fecha;
+            })->values();
+
+        return view('agencies.modificar-detalle', compact('shipments', 'factura'));
+    }
+
+    public function guardarModificacionDetalle(Request $request, AgenciaFactura $factura)
+    {
+        $mantener = $request->input('mantener', []);
+
+        $shipments = Shipment::where('agencia_f_origen_id', $factura->id)
+            ->orWhere('agencia_f_destino_id', $factura->id)
+            ->get();
+
+        foreach ($shipments as $shipment) {
+            if ($shipment->agencia_f_origen_id == $factura->id) {
+                if (!in_array('origen_' . $shipment->id, $mantener)) {
+                    $shipment->agencia_f_origen_id = 0;
+                }
+            }
+            if ($shipment->agencia_f_destino_id == $factura->id) {
+                if (!in_array('destino_' . $shipment->id, $mantener)) {
+                    $shipment->agencia_f_destino_id = 0;
+                }
+            }
+            $shipment->save();
+        }
+
+        // Recalcular total con los que quedaron
+        $newTotal = 0;
+        $remaining = Shipment::where('agencia_f_origen_id', $factura->id)
+            ->orWhere('agencia_f_destino_id', $factura->id)
+            ->get();
+
+        foreach ($remaining as $shipment) {
+            if ($shipment->agencia_f_origen_id == $factura->id) {
+                $newTotal += $shipment->comision_origen;
+            }
+            if ($shipment->agencia_f_destino_id == $factura->id) {
+                $newTotal += $shipment->comision_destino;
+            }
+        }
+
+        $yaImputado = $factura->total - $factura->falta_imputar;
+        $newFaltaImputar = max(0, $newTotal - $yaImputado);
+
+        $factura->total = $newTotal;
+        $factura->falta_imputar = $newFaltaImputar;
+        $factura->observacion = $request->input('observacion', $factura->observacion);
+        $factura->save();
+
+        return redirect()->route('agencies.history', $factura->agency_id)
+            ->with('success', 'Liquidación actualizada correctamente.');
+    }
+
     public function destroy(Agency $agency)
     {
         $agency->delete();

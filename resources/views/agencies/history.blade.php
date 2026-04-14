@@ -80,10 +80,15 @@
                              <td>
                                 <small class="text-muted">{{ $mov['detalle'] ?? '-' }}</small>
                                 @if($mov['tipo'] == 'Factura Comisión')
-                                    <a href="{{ route('agencies.facturas.printDetail', $mov['id']) }}" 
-                                       class="btn btn-sm btn-link text-primary p-0 ms-2" 
+                                    <a href="{{ route('agencies.facturas.printDetail', $mov['id']) }}"
+                                       class="btn btn-sm btn-link text-primary p-0 ms-2"
                                        title="Imprimir Detalle de esta liquidación" target="_blank">
                                         <i class="bi bi-printer-fill"></i> Imprimir Detalle
+                                    </a>
+                                    <a href="{{ route('agencies.facturas.modificarDetalle', $mov['id']) }}"
+                                       class="btn btn-sm btn-link text-warning p-0 ms-2"
+                                       title="Modificar guías de esta liquidación">
+                                        <i class="bi bi-pencil-fill"></i> Modificar
                                     </a>
                                 @endif
                             </td>
