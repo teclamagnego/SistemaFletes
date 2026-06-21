@@ -240,7 +240,12 @@
                         <input type="text" class="form-control" id="qc_direccion">
                     </div>
                     <div class="mb-3">
-                        <label for="qc_localidad_search" class="form-label">Localidad</label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="qc_localidad_search" class="form-label mb-0">Localidad</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-1 btn-quick-localidad" title="Agregar nueva localidad">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
                         <div class="position-relative">
                             <input type="text" id="qc_localidad_search" class="form-control" placeholder="Buscar localidad..." autocomplete="off">
                             <input type="hidden" id="qc_localidad_id">
@@ -253,6 +258,30 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary" id="qc_submit_btn">Guardar Cliente</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para creación rápida de localidad -->
+<div class="modal fade" id="quickLocalidadModal" tabindex="-1" aria-labelledby="quickLocalidadModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-sm">
+        <form id="quickLocalidadForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quickLocalidadModalLabel">Nueva Localidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="ql_nombre" class="form-label">Nombre de Localidad</label>
+                        <input type="text" class="form-control" id="ql_nombre" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="ql_submit_btn">Guardar</button>
                 </div>
             </div>
         </form>
@@ -892,6 +921,13 @@
 
         // Modal event delegation
         document.addEventListener('click', (e) => {
+            const btnLoc = e.target.closest('.btn-quick-localidad');
+            if (btnLoc) {
+                const searchVal = document.getElementById('qc_localidad_search').value;
+                document.getElementById('ql_nombre').value = searchVal;
+                new bootstrap.Modal(document.getElementById('quickLocalidadModal')).show();
+            }
+
             const btn = e.target.closest('.btn-quick-client');
             if (btn) {
                 const tid = btn.getAttribute('data-target-input');
@@ -932,6 +968,37 @@
                     }
 
                     bootstrap.Modal.getInstance(document.getElementById('quickClientModal')).hide();
+                    btn.disabled = false;
+                });
+            };
+        }
+
+        const qlf = document.getElementById('quickLocalidadForm');
+        if (qlf) {
+            qlf.onsubmit = (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('ql_submit_btn');
+                btn.disabled = true;
+                
+                fetch('{{ route("localidades.storeAjax") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ nombre: document.getElementById('ql_nombre').value })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        document.getElementById('qc_localidad_search').value = res.localidad.nombre;
+                        document.getElementById('qc_localidad_id').value = res.localidad.id;
+                        bootstrap.Modal.getInstance(document.getElementById('quickLocalidadModal')).hide();
+                    } else {
+                        alert(res.message || 'Error al guardar la localidad');
+                    }
+                })
+                .catch(err => {
+                    alert('Error de conexión o validación. Puede que la localidad ya exista.');
+                })
+                .finally(() => {
                     btn.disabled = false;
                 });
             };

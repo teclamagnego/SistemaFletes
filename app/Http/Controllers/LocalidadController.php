@@ -24,6 +24,26 @@ class LocalidadController extends Controller
         return response()->json($localidades);
     }
 
+    public function storeAjax(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255|unique:localidades',
+        ]);
+
+        try {
+            $localidad = Localidad::create($request->all());
+            return response()->json([
+                'success' => true,
+                'localidad' => $localidad
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear la localidad: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function destroyAjax(Localidad $localidad)
     {
         try {

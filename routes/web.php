@@ -102,6 +102,7 @@ Route::middleware('auth')->group(function () {
 
     // Localidades y Transportistas
     Route::get('localidades/search', [LocalidadController::class, 'search'])->name('localidades.search')->middleware('permission:localidades.index');
+    Route::post('localidades/ajax', [LocalidadController::class, 'storeAjax'])->name('localidades.storeAjax')->middleware('permission:localidades.create');
     Route::delete('localidades/{localidad}/ajax', [LocalidadController::class, 'destroyAjax'])->name('localidades.destroyAjax')->middleware('permission:localidades.index');
     Route::resource('localidades', LocalidadController::class)->parameters(['localidades' => 'localidad'])->except(['show'])->middleware('permission:localidades.index');
     Route::resource('carriers', CarrierController::class)->except(['show'])->middleware('permission:carriers.index');
