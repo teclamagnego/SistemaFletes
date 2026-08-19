@@ -28,15 +28,15 @@
         @endif
 
         <form action="{{ route('clientes.billing', $cliente) }}" method="GET" class="row g-2 mb-4">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small fw-bold">Desde</label>
                 <input type="date" name="from" class="form-control form-control-sm" value="{{ $from }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small fw-bold">Hasta</label>
                 <input type="date" name="to" class="form-control form-control-sm" value="{{ $to }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small fw-bold">Estado Facturación</label>
                 <select name="status_factura" class="form-select form-select-sm">
                     <option value="all" {{ $status_factura=='all' ? 'selected' : '' }}>Todas</option>
@@ -44,16 +44,36 @@
                     <option value="billed" {{ $status_factura=='billed' ? 'selected' : '' }}>Facturadas</option>
                 </select>
             </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary btn-sm w-100">
-                    <i class="bi bi-filter"></i>
-                </button>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Origen</label>
+                <select name="origin_agency_id" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    @foreach($agencies as $agency)
+                    <option value="{{ $agency->id }}" {{ $origin_agency_id == $agency->id ? 'selected' : '' }}>
+                        {{ $agency->nombre }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Destino</label>
+                <select name="destination_agency_id" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    @foreach($agencies as $agency)
+                    <option value="{{ $agency->id }}" {{ $destination_agency_id == $agency->id ? 'selected' : '' }}>
+                        {{ $agency->nombre }}
+                    </option>
+                    @endforeach
+                </select>
             </div>
             <div class="col-md-2 d-flex align-items-end gap-1">
-                <button type="submit" name="export" value="excel" class="btn btn-outline-success btn-sm flex-fill">
+                <button type="submit" class="btn btn-primary btn-sm flex-fill" title="Filtrar">
+                    <i class="bi bi-filter"></i>
+                </button>
+                <button type="submit" name="export" value="excel" class="btn btn-outline-success btn-sm flex-fill" title="Exportar Excel">
                     <i class="bi bi-file-earmark-excel"></i>
                 </button>
-                <button type="submit" name="export" value="pdf" class="btn btn-outline-danger btn-sm flex-fill">
+                <button type="submit" name="export" value="pdf" class="btn btn-outline-danger btn-sm flex-fill" title="Exportar PDF">
                     <i class="bi bi-file-earmark-pdf"></i>
                 </button>
             </div>
@@ -72,6 +92,8 @@
                             <th>F. Entrega</th>
                             <th>Guía</th>
                             <th>Ref Remito</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
                             <th>F. Pago</th>
                             <th>Estado</th>
                             <th class="text-end">Monto</th>
@@ -108,6 +130,8 @@
                                 </a>
                             </td>
                             <td>{{ $s->ref_remito }}</td>
+                            <td><small>{{ $s->originAgency?->nombre ?? '-' }}</small></td>
+                            <td><small>{{ $s->destinationAgency?->nombre ?? '-' }}</small></td>
                             <td><small>{{ $s->formaPago?->nombre }}</small></td>
                             <td>
                                 @if($s->factura_id != 0)
@@ -127,14 +151,14 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">No se encontraron guías para este
+                            <td colspan="10" class="text-center py-4 text-muted">No se encontraron guías para este
                                 periodo.</td>
                         </tr>
                         @endforelse
                     </tbody>
                     <tfoot>
                         <tr class="table-light">
-                            <td colspan="7" class="text-end fw-bold">TOTAL SELECCIONADO:</td>
+                            <td colspan="9" class="text-end fw-bold">TOTAL SELECCIONADO:</td>
                             <td class="text-end fw-bold text-primary" id="totalDisplay">$ 0.00</td>
                         </tr>
                     </tfoot>

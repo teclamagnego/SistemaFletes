@@ -1,6 +1,6 @@
 #/bin/bash
-composer dump-autoload
-php artisan config:cache
-php artisan route:clear
-php artisan view:clear
-php artisan cache:clear
+/usr/local/bin/composer dump-autoload
+php8.3 artisan config:cache
+php8.3 artisan route:clear
+php8.3 artisan view:clear
+php8.3 artisan cache:clear

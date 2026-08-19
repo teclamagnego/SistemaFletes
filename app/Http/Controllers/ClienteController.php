@@ -122,6 +122,8 @@ class ClienteController extends Controller
         $from = $request->input('from', now()->startOfMonth()->format('Y-m-d'));
         $to = $request->input('to', now()->endOfMonth()->format('Y-m-d'));
         $status_factura = $request->input('status_factura', 'all');
+        $origin_agency_id = $request->input('origin_agency_id');
+        $destination_agency_id = $request->input('destination_agency_id');
 
         $query = $cliente->shipmentsPaid()
             ->where('status_id', \App\Models\ShipmentStatus::DELIVERED)
@@ -144,7 +146,15 @@ class ClienteController extends Controller
             $query->where('factura_id', 0);
         }
 
-        $shipments = $query->with(['formaPago', 'logs', 'items.articulo'])->get()->sortBy(function($shipment) {
+        if ($request->filled('origin_agency_id')) {
+            $query->where('origin_agency_id', $origin_agency_id);
+        }
+
+        if ($request->filled('destination_agency_id')) {
+            $query->where('destination_agency_id', $destination_agency_id);
+        }
+
+        $shipments = $query->with(['formaPago', 'logs', 'items.articulo', 'originAgency', 'destinationAgency'])->get()->sortBy(function($shipment) {
             return (int) $shipment->tracking_number;
         })->values();
 
@@ -160,12 +170,13 @@ class ClienteController extends Controller
         }
 
         $facturaCodigos = \App\Models\FacturaCodigo::all();
+        $agencies = \App\Models\Agency::orderBy('nombre')->get();
 
         $guiasNuevasCount = $cliente->shipmentsPaid()
             ->where('status_id', \App\Models\ShipmentStatus::ADMITTED)
             ->count();
 
-        return view('clientes.billing', compact('cliente', 'shipments', 'from', 'to', 'status_factura', 'facturaCodigos', 'guiasNuevasCount'));
+        return view('clientes.billing', compact('cliente', 'shipments', 'from', 'to', 'status_factura', 'facturaCodigos', 'guiasNuevasCount', 'agencies', 'origin_agency_id', 'destination_agency_id'));
     }
 
     public function generateInvoice(Request $request, Cliente $cliente)

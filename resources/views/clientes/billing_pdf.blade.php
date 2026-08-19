@@ -74,6 +74,8 @@
                 <th>Fecha</th>
                 <th>Número de Guía</th>
                 <th>Remito Referencia</th>
+                <th>Origen</th>
+                <th>Destino</th>
                 <th>Forma de Pago</th>
                 <th class="text-end">Monto</th>
             </tr>
@@ -86,6 +88,8 @@
                 <td>{{ date('d/m/Y', strtotime($s->fecha)) }}</td>
                 <td>{{ $s->tracking_number }}</td>
                 <td>{{ $s->ref_remito }}</td>
+                <td>{{ $s->originAgency?->nombre ?? '-' }}</td>
+                <td>{{ $s->destinationAgency?->nombre ?? '-' }}</td>
                 <td>{{ $s->formaPago?->nombre }}</td>
                 <td class="text-end">$ {{ number_format($s->total_flete, 2) }}</td>
             </tr>
@@ -93,7 +97,7 @@
         </tbody>
         <tfoot>
             <tr class="total-row">
-                <td colspan="4" class="text-end">TOTAL:</td>
+                <td colspan="6" class="text-end">TOTAL:</td>
                 <td class="text-end">$ {{ number_format($total, 2) }}</td>
             </tr>
         </tfoot>

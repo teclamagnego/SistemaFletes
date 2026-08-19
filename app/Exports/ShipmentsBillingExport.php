@@ -28,6 +28,8 @@ class ShipmentsBillingExport implements FromCollection, WithHeadings, WithMappin
             'Ref Remito',
             'Remitente',
             'Destinatario',
+            'Origen',
+            'Destino',
             'Valor Declarado',
             'Total Flete',
         ];
@@ -45,6 +47,8 @@ class ShipmentsBillingExport implements FromCollection, WithHeadings, WithMappin
             $shipment->ref_remito,
             $shipment->sender?->nombre_fantasia,
             $shipment->receiver?->nombre_fantasia,
+            $shipment->originAgency?->nombre,
+            $shipment->destinationAgency?->nombre,
             $bultoxItem ? $bultoxItem->precio_unitario : 0,
             $shipment->total_flete,
         ];
