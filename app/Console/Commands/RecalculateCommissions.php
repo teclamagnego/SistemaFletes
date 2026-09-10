@@ -43,12 +43,24 @@ class RecalculateCommissions extends Command
         foreach ($shipments as $shipment) {
             $comisionArticulosOrigen = 0;
             $comisionArticulosDestino = 0;
-            $totalFlete = $shipment->total_flete;
+            $baseComisionableOrigen = 0;
+            $baseComisionableDestino = 0;
 
             foreach ($shipment->items as $item) {
-                if ($item->articulo) {
-                    $comisionArticulosOrigen += ($item->articulo->com_origen / 100) * $item->total;
-                    $comisionArticulosDestino += ($item->articulo->com_destino / 100) * $item->total;
+                $articulo = $item->articulo;
+
+                if (!$articulo) {
+                    continue;
+                }
+
+                if ($articulo->com_origen > 0) {
+                    $comisionArticulosOrigen += ($articulo->com_origen / 100) * $item->total;
+                    $baseComisionableOrigen += $item->total;
+                }
+
+                if ($articulo->com_destino > 0) {
+                    $comisionArticulosDestino += ($articulo->com_destino / 100) * $item->total;
+                    $baseComisionableDestino += $item->total;
                 }
             }
 
@@ -61,9 +73,10 @@ class RecalculateCommissions extends Command
                 continue;
             }
 
-            // Cálculo base igual que en ShipmentController
-            $comisionOrigen = ($totalFlete * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
-            $comisionDestino = ($totalFlete * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
+            // Cálculo base igual que en ShipmentController (el % global de agencia solo
+            // se aplica sobre los ítems que tienen comisión propia)
+            $comisionOrigen = ($baseComisionableOrigen * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
+            $comisionDestino = ($baseComisionableDestino * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
 
             // Lógica especial: si ninguna agencia es la ID 1, dividir por 2
             if ($shipment->origin_agency_id != 1 && $shipment->destination_agency_id != 1) {

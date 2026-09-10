@@ -130,24 +130,32 @@ class ShipmentController extends Controller
             $totalFlete = 0;
             $comisionArticulosOrigen = 0;
             $comisionArticulosDestino = 0;
+            $baseComisionableOrigen = 0;
+            $baseComisionableDestino = 0;
 
             foreach ($request->items as $itemData) {
                 $totalFlete += $itemData['total'];
-                
+
                 if (isset($itemData['articulo_id'])) {
                     $articulo = Articulo::find($itemData['articulo_id']);
                     if ($articulo) {
-                        $comisionArticulosOrigen += ($articulo->com_origen / 100) * $itemData['total'];
-                        $comisionArticulosDestino += ($articulo->com_destino / 100) * $itemData['total'];
+                        if ($articulo->com_origen > 0) {
+                            $comisionArticulosOrigen += ($articulo->com_origen / 100) * $itemData['total'];
+                            $baseComisionableOrigen += $itemData['total'];
+                        }
+                        if ($articulo->com_destino > 0) {
+                            $comisionArticulosDestino += ($articulo->com_destino / 100) * $itemData['total'];
+                            $baseComisionableDestino += $itemData['total'];
+                        }
                     }
                 }
             }
 
             $originAgency = Agency::findOrFail($request->origin_agency_id);
             $destinationAgency = Agency::findOrFail($request->destination_agency_id);
-            
-            $comisionOrigen = ($totalFlete * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
-            $comisionDestino = ($totalFlete * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
+
+            $comisionOrigen = ($baseComisionableOrigen * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
+            $comisionDestino = ($baseComisionableDestino * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
 
             // Si origen y destino son distintos a ID 1, dividir comisiones x 2
             if ($request->origin_agency_id != 1 && $request->destination_agency_id != 1) {
@@ -296,24 +304,32 @@ class ShipmentController extends Controller
             $totalFlete = 0;
             $comisionArticulosOrigen = 0;
             $comisionArticulosDestino = 0;
+            $baseComisionableOrigen = 0;
+            $baseComisionableDestino = 0;
 
             foreach ($request->items as $itemData) {
                 $totalFlete += $itemData['total'];
-                
+
                 if (isset($itemData['articulo_id'])) {
                     $articulo = Articulo::find($itemData['articulo_id']);
                     if ($articulo) {
-                        $comisionArticulosOrigen += ($articulo->com_origen / 100) * $itemData['total'];
-                        $comisionArticulosDestino += ($articulo->com_destino / 100) * $itemData['total'];
+                        if ($articulo->com_origen > 0) {
+                            $comisionArticulosOrigen += ($articulo->com_origen / 100) * $itemData['total'];
+                            $baseComisionableOrigen += $itemData['total'];
+                        }
+                        if ($articulo->com_destino > 0) {
+                            $comisionArticulosDestino += ($articulo->com_destino / 100) * $itemData['total'];
+                            $baseComisionableDestino += $itemData['total'];
+                        }
                     }
                 }
             }
 
             $originAgency = Agency::findOrFail($request->origin_agency_id);
             $destinationAgency = Agency::findOrFail($request->destination_agency_id);
-            
-            $comisionOrigen = ($totalFlete * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
-            $comisionDestino = ($totalFlete * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
+
+            $comisionOrigen = ($baseComisionableOrigen * ($originAgency->com_origen / 100)) + $comisionArticulosOrigen;
+            $comisionDestino = ($baseComisionableDestino * ($destinationAgency->com_destino / 100)) + $comisionArticulosDestino;
 
             // Si origen y destino son distintos a ID 1, dividir comisiones x 2
             if ($request->origin_agency_id != 1 && $request->destination_agency_id != 1) {
