@@ -519,6 +519,15 @@ class ShipmentController extends Controller
 
     public function print(Shipment $shipment)
     {
+        // Se embebe el PDF (mismo que genera printFile, vía dompdf) en vez de dejar que el
+        // navegador renderice el HTML directo: el layout de las dos copias usa alturas en %,
+        // que dompdf resuelve contra el tamaño de página A4 pero un navegador no (html/body
+        // no tienen altura definida), y eso hacía que la reimpresión manual saliera corrida.
+        return view('shipments.print_pdf', ['shipment' => $shipment]);
+    }
+
+    public function printFile(Shipment $shipment)
+    {
         $shipment->load([
             'sender.localidad',
             'receiver.localidad',
@@ -540,7 +549,9 @@ class ShipmentController extends Controller
             $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
         }
 
-        return view('shipments.pdf', compact('shipment', 'empresa', 'sucursal', 'logoBase64'));
+        $pdf = Pdf::loadView('shipments.pdf', compact('shipment', 'empresa', 'sucursal', 'logoBase64'));
+
+        return $pdf->stream("Guia_{$shipment->tracking_number}.pdf");
     }
 
     public function printFiltered(Request $request)

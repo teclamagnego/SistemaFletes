@@ -17,6 +17,11 @@
             padding: 0;
         }
 
+        .half-page {
+            height: 47%;
+            overflow: hidden;
+        }
+
         .document {
             border: 2px solid #000;
             padding: 15px;
@@ -102,9 +107,9 @@
 
         .amount-box {
             border: 2px solid #000;
-            padding: 15px;
+            padding: 10px;
             text-align: center;
-            margin: 20px 0;
+            margin: 10px 0;
             background-color: #f5f5f5;
         }
 
@@ -116,14 +121,14 @@
         }
 
         .amount-value {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
             color: #000;
             margin-top: 5px;
         }
 
         .signature-area {
-            margin-top: 40px;
+            margin-top: 15px;
             width: 100%;
         }
 
@@ -131,7 +136,7 @@
             width: 45%;
             text-align: center;
             vertical-align: bottom;
-            padding-top: 60px;
+            padding-top: 30px;
         }
 
         .signature-line {
@@ -166,13 +171,13 @@
         }
 
         .legal-legend {
-            margin-top: 20px;
+            margin-top: 10px;
             font-size: 8px;
             text-align: justify;
             line-height: 1.2;
             color: #555;
             border-top: 1px solid #ccc;
-            padding-top: 8px;
+            padding-top: 6px;
         }
 
         .guia-info {
@@ -189,6 +194,7 @@
 </head>
 
 <body>
+    <div class="half-page">
     <div class="document">
         {{-- Encabezado --}}
         <table class="header-table">
@@ -298,6 +304,7 @@
             El receptor del dinero firma conforme la recepción del importe total detallado. Cualquier reclamo deberá realizarse indicando
             el número de comprobante y guía asociada dentro de los 30 días de emitido.
         </div>
+    </div>
     </div>
 </body>
 
